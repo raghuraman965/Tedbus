@@ -1,0 +1,45 @@
+<div class="bell-wrap" *ngIf="isLoggedIn">
+  <button class="bell-btn" (click)="toggle()" [title]="'community.notifications' | translate">
+    <mat-icon>notifications</mat-icon>
+    <span class="badge" *ngIf="unreadCount > 0">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+  </button>
+
+  <div class="bell-backdrop" *ngIf="open" (click)="close()"></div>
+
+  <div class="bell-panel" *ngIf="open" (click)="$event.stopPropagation()">
+    <div class="bell-header">
+      <h3>{{ 'community.notifications' | translate }}</h3>
+      <button class="mark-all-btn" *ngIf="unreadCount > 0" (click)="markAllRead()">{{ 'community.markAllRead' | translate }}</button>
+      <button class="close-btn" (click)="close()"><mat-icon>close</mat-icon></button>
+    </div>
+
+    <div class="bell-list">
+      <div class="notif-skeleton" *ngIf="loading">
+        <div class="skeleton-premium" style="width: 100%; height: 52px;"></div>
+        <div class="skeleton-premium" style="width: 100%; height: 52px;"></div>
+      </div>
+
+      <ng-container *ngIf="!loading">
+        <button
+          class="notif-item"
+          *ngFor="let n of notifications"
+          [class.unread]="!n.read"
+          (click)="onNotificationClick(n)">
+          <img class="notif-avatar" [src]="n.actor?.avatar || ''" alt="" (error)="onImageError($event)">
+          <div class="notif-body">
+            <span class="notif-message">{{ n.message | cityName }}</span>
+            <span class="notif-time">{{ n.timePosted }}</span>
+          </div>
+          <span class="unread-dot" *ngIf="!n.read"></span>
+        </button>
+
+        <button class="load-more-link" *ngIf="hasMore && notifications.length" (click)="loadMore()">{{ 'community.loadMore' | translate }}</button>
+
+        <div class="notif-empty" *ngIf="!hasMore && !notifications.length">
+          <mat-icon>notifications_none</mat-icon>
+          <p>{{ 'community.noNotifications' | translate }}</p>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

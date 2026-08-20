@@ -1,0 +1,237 @@
+.login-modal {
+  position: relative;
+  padding: 36px 32px 28px;
+  width: 380px;
+  max-width: 100%;
+  font-family: var(--brand-font);
+}
+
+.close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: var(--brand-light-gray);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--brand-dark-gray);
+}
+
+.info-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--brand-info-bg, rgba(29, 111, 235, 0.08));
+  color: var(--brand-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 18px;
+}
+
+.info-banner mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: var(--brand-primary);
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 14px;
+}
+
+.modal-body h2 {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--brand-dark-gray);
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+}
+
+.modal-subtitle {
+  font-size: 0.85rem;
+  color: var(--brand-text-muted);
+  margin: 0 0 22px;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--brand-error-bg);
+  color: var(--brand-error);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.error-banner mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.success-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--brand-success-bg);
+  color: var(--brand-success);
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 14px;
+  border-radius: 10px;
+}
+
+.field-group {
+  margin-bottom: 16px;
+}
+
+.field-group label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--brand-dark-gray);
+  margin-bottom: 6px;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 42px;
+}
+
+.visibility-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--brand-text-muted);
+  cursor: pointer;
+  display: flex;
+}
+
+.options-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.remember-me {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--brand-dark-gray);
+  cursor: pointer;
+  margin-bottom: 16px;
+}
+
+.remember-me input {
+  accent-color: var(--brand-primary);
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--brand-primary);
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0;
+  color: var(--brand-text-muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--brand-mid-gray);
+}
+
+.divider span {
+  padding: 0 12px;
+}
+
+.google-btn-slot {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+  min-height: 44px;
+}
+
+.phone-toggle {
+  margin-top: 4px;
+}
+
+.signup-hint {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--brand-text-muted);
+  margin: 18px 0 0;
+}
+
+.optional-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--brand-text-muted);
+}
+
+.dev-hint {
+  font-size: 0.74rem;
+  color: var(--brand-primary-dark);
+  background: var(--brand-primary-light);
+  padding: 8px 10px;
+  border-radius: 8px;
+  margin: 8px 0 0;
+}

@@ -1,0 +1,278 @@
+<div class="results-page">
+
+  <div class="results-summary-bar">
+    <div class="summary-inner">
+      <span class="breadcrumb">{{ 'search.breadcrumbHome' | translate }} &gt; {{ 'search.breadcrumbBusTickets' | translate }} &gt; {{ departure | cityName }} {{ 'search.to' | translate }} {{ arrival | cityName }}</span>
+      <h1>{{ departure | cityName }} <mat-icon>arrow_right_alt</mat-icon> {{ arrival | cityName }}</h1>
+      <div class="summary-meta">
+        <span><mat-icon>event</mat-icon>{{ date | date:'mediumDate' }}</span>
+        <span><mat-icon>group</mat-icon>{{ passengers }} {{ passengers === '1' ? ('search.traveller' | translate) : ('search.travellers' | translate) }}</span>
+        <span *ngIf="!loading"><mat-icon>directions_bus</mat-icon>{{ 'search.busesFound' | translate:{ count: filteredBuses.length } }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="results-layout">
+
+    <!-- ================= FILTERS SIDEBAR ================= -->
+    <aside class="filters-sidebar card-premium">
+      <div class="filters-header">
+        <h3>{{ 'search.filters' | translate }}</h3>
+        <button class="clear-btn" (click)="clearFilters()">{{ 'search.clearAll' | translate }}</button>
+      </div>
+
+      <div class="filter-group">
+        <h4>{{ 'search.busType' | translate }}</h4>
+        <label class="filter-checkbox">
+          <input type="checkbox" [checked]="busTypeFilters['standard']" (change)="toggleBusType('standard')">
+          <span>{{ 'search.types.standard' | translate }}</span>
+        </label>
+        <label class="filter-checkbox">
+          <input type="checkbox" [checked]="busTypeFilters['sleeper']" (change)="toggleBusType('sleeper')">
+          <span>{{ 'search.types.sleeper' | translate }}</span>
+        </label>
+        <label class="filter-checkbox">
+          <input type="checkbox" [checked]="busTypeFilters['A/C Seater']" (change)="toggleBusType('A/C Seater')">
+          <span>{{ 'search.types.acSeater' | translate }}</span>
+        </label>
+        <label class="filter-checkbox">
+          <input type="checkbox" [checked]="busTypeFilters['other']" (change)="toggleBusType('other')">
+          <span>{{ 'search.types.nonAc' | translate }}</span>
+        </label>
+      </div>
+
+      <div class="filter-group">
+        <h4>{{ 'search.departureTime' | translate }}</h4>
+        <label class="filter-checkbox" *ngFor="let bucket of ['before6am','6amTo12pm','12pmTo6pm','after6pm']">
+          <input type="checkbox" [checked]="departureBuckets[bucket]" (change)="toggleDepartureBucket(bucket)">
+          <span>{{ bucketLabels[bucket] | translate }}</span>
+        </label>
+      </div>
+
+      <div class="filter-group">
+        <h4>{{ 'search.busFacilities' | translate }}</h4>
+        <label class="filter-checkbox">
+          <input type="checkbox" [checked]="liveTrackingOnly" (change)="toggleLiveTracking()">
+          <span>{{ 'search.liveTracking' | translate }}</span>
+        </label>
+        <label class="filter-checkbox">
+          <input type="checkbox" [checked]="reschedulableOnly" (change)="toggleReschedulable()">
+          <span>{{ 'search.reschedulable' | translate }}</span>
+        </label>
+      </div>
+    </aside>
+
+    <!-- ================= RESULTS ================= -->
+    <main class="results-main">
+
+      <div class="sort-bar card-premium">
+        <span class="sort-label">{{ 'search.sortBy' | translate }}</span>
+        <button
+          class="sort-chip"
+          *ngFor="let opt of sortOptions"
+          [class.active]="sortBy === opt.key"
+          (click)="setSortBy(opt.key)">
+          {{ opt.label | translate }}
+        </button>
+      </div>
+
+      <!-- Loading skeletons -->
+      <ng-container *ngIf="loading">
+        <div class="bus-card card-premium skeleton-card" *ngFor="let i of [1,2,3]">
+          <div class="skeleton-top">
+            <div class="skeleton-premium skeleton-avatar"></div>
+            <div class="skeleton-lines">
+              <div class="skeleton-premium skeleton-line" style="width: 55%; height: 18px;"></div>
+              <div class="skeleton-premium skeleton-line" style="width: 35%; height: 12px; margin-top: 8px;"></div>
+            </div>
+          </div>
+          <div class="skeleton-mid">
+            <div class="skeleton-premium skeleton-line" style="width: 100%; height: 48px; margin-top: 18px;"></div>
+          </div>
+          <div class="skeleton-bottom">
+            <div class="skeleton-premium skeleton-line" style="width: 40%; height: 26px;"></div>
+            <div class="skeleton-premium skeleton-line" style="width: 30%; height: 26px;"></div>
+            <div class="skeleton-premium skeleton-line" style="width: 35%; height: 36px;"></div>
+          </div>
+        </div>
+      </ng-container>
+
+      <div class="error-banner" *ngIf="!loading && errorMessage">
+        <app-error-state [errorMessage]="errorMessage" (retry)="fetchBuses()"></app-error-state>
+      </div>
+
+      <div class="empty-state card-premium" *ngIf="!loading && !errorMessage && filteredBuses.length === 0">
+        <app-empty-state icon="directions_bus" titleKey="states.empty.noBuses" subtitleKey="states.empty.noBusesSub"></app-empty-state>
+      </div>
+
+      <div class="next-dates card-premium" *ngIf="!loading && !errorMessage && filteredBuses.length === 0 && nextAvailableDates.length > 0">
+        <h3>{{ 'search.nextAvailable' | translate }}</h3>
+        <div class="date-chips">
+          <button *ngFor="let d of nextAvailableDates" class="date-chip" (click)="searchDate(d)">
+            {{ d | date:'mediumDate' }}
+          </button>
+        </div>
+      </div>
+
+      <div class="bus-card card-premium" *ngFor="let bus of pagedBuses; let i = index; trackBy: trackByBusId" [@cardEntrance]="lang">
+        <div class="bus-card-header">
+          <div class="bus-brand">
+            <div class="bus-avatar" [style.background]="avatarColor(i)">{{ getOperatorInitial(bus.operatorName) }}</div>
+            <div class="bus-brand-info">
+              <h3>{{ bus.operatorName }}</h3>
+              <div class="bus-type-row">
+                <span class="bus-type-tag">{{ busTypeKey(bus.busType) | translate }}</span>
+                <span class="bus-meta-dot">•</span>
+                <span class="bus-meta">{{ 'search.seats' | translate:{ count: bus.totalSeats || 40 } }}</span>
+              </div>
+            </div>
+          </div>
+          <div class="rating-pill">
+            <mat-icon>star</mat-icon>
+            <span class="rating-value">{{ bus.avgRating }}</span>
+            <span class="rating-reviews">({{ bus.totalReviews }})</span>
+          </div>
+          <button class="view-route-btn" (click)="toggleRouteTimeline(bus._id!)">
+            <mat-icon>route</mat-icon>
+            {{ 'search.viewRoute' | translate }}
+          </button>
+        </div>
+
+        <div class="bus-card-body">
+
+          <div class="timeline">
+            <div class="time-block">
+              <span class="time-value">{{ formatTime(bus.departureHour) }}</span>
+              <span class="time-city">{{ matchedRoute?.departureLocation?.name | cityName }}</span>
+              <span class="time-day">{{ 'search.today' | translate }}</span>
+            </div>
+            <div class="timeline-mid">
+              <span class="duration-label">{{ formatDurationFunc(matchedRoute?.duration || 0) }}</span>
+              <div class="timeline-rail">
+                <span class="rail-dot start"></span>
+                <span class="rail-line"></span>
+                <mat-icon class="rail-bus">directions_bus</mat-icon>
+                <span class="rail-line"></span>
+                <span class="rail-dot end"></span>
+              </div>
+              <span class="via-label">{{ 'search.nonStop' | translate }}</span>
+              <span class="segment-info" *ngIf="bus._searchResult?.segment?.fromStop && bus._searchResult?.segment?.toStop">
+                {{ bus._searchResult.segment.distanceKm }} km · {{ bus._searchResult.segment.fromStop?.stopName | cityName }} → {{ bus._searchResult.segment.toStop?.stopName | cityName }}
+              </span>
+            </div>
+            <div class="time-block right">
+              <span class="time-value">{{ formatTime(bus.arrivalHour) }}</span>
+              <span class="time-city">{{ matchedRoute?.arrivalLocation?.name | cityName }}</span>
+              <span class="time-day">{{ 'search.today' | translate }}</span>
+            </div>
+          </div>
+
+          <div class="seats-col">
+            <span class="seats-count">{{ bus.availableSeats }}</span>
+            <span class="seats-label">{{ 'search.seatsAvailable' | translate }}</span>
+            <div class="seats-progress">
+              <div class="seats-progress-fill" [style.width.%]="seatFillPercent(bus)"></div>
+            </div>
+          </div>
+
+          <div class="price-col">
+            <div class="price-row">
+              <span class="price-currency">₹</span>
+              <span class="price-value">{{ bus.fare | number:'1.0-0' }}</span>
+            </div>
+            <button class="btn-premium select-seats-btn" (click)="toggleSeatSelection(bus._id!)">
+              <mat-icon>{{ expandedBusId === bus._id ? 'expand_less' : 'event_seat' }}</mat-icon>
+              {{ expandedBusId === bus._id ? ('search.hideSeats' | translate) : ('search.viewSeats' | translate) }}
+            </button>
+          </div>
+        </div>
+
+        <div class="bus-card-footer">
+          <div class="amenities">
+            <span class="amenity-icon" [matTooltip]="'search.amenities.charging' | translate"><mat-icon>power</mat-icon></span>
+            <span class="amenity-icon" [matTooltip]="'search.amenities.movie' | translate"><mat-icon>movie_filter</mat-icon></span>
+            <span class="amenity-icon" [matTooltip]="'search.amenities.reading' | translate"><mat-icon>light_mode</mat-icon></span>
+            <span class="amenity-icon" [matTooltip]="'search.amenities.blanket' | translate"><mat-icon>bedtime</mat-icon></span>
+            <span class="amenity-icon" [matTooltip]="'search.amenities.water' | translate"><mat-icon>water_drop</mat-icon></span>
+            <span class="amenity-icon" [matTooltip]="'search.amenities.cctv' | translate"><mat-icon>videocam</mat-icon></span>
+          </div>
+          <div class="feature-badges">
+            <span class="feature-badge live" *ngIf="bus.liveTracking === 1"><mat-icon>gps_fixed</mat-icon> {{ 'search.liveTracking' | translate }}</span>
+            <span class="feature-badge" *ngIf="bus.reschedulable === 1"><mat-icon>restore</mat-icon> {{ 'search.reschedulable' | translate }}</span>
+          </div>
+        </div>
+
+        <div class="route-timeline-panel" *ngIf="showRouteTimeline[bus._id!] && bus._searchResult">
+          <div class="timeline-header">
+            <mat-icon>route</mat-icon>
+            <h4>{{ 'search.routeDetails' | translate }}</h4>
+            <button class="close-timeline-btn" (click)="toggleRouteTimeline(bus._id!)">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          <div *ngIf="!bus._searchResult.route?.stops?.length" class="non-stop-message">
+            <mat-icon>check_circle</mat-icon>
+            <span>{{ 'search.nonStop' | translate }}</span>
+          </div>
+          <div class="route-stops" *ngIf="bus._searchResult.route?.stops?.length">
+            <div class="route-stop" *ngFor="let stop of bus._searchResult.route.stops; let last = last"
+                 [class.active]="bus._searchResult.segment.fromStop && bus._searchResult.segment.toStop && stop.sequence >= bus._searchResult.segment.fromStop.sequence && stop.sequence <= bus._searchResult.segment.toStop.sequence"
+                 [class.highlight]="(bus._searchResult.segment.fromStop && stop.sequence === bus._searchResult.segment.fromStop.sequence) || (bus._searchResult.segment.toStop && stop.sequence === bus._searchResult.segment.toStop.sequence)">
+              <div class="stop-indicator">
+                <span class="stop-dot" [class.origin]="bus._searchResult.segment.fromStop && stop.sequence === bus._searchResult.segment.fromStop.sequence"
+                      [class.destination]="bus._searchResult.segment.toStop && stop.sequence === bus._searchResult.segment.toStop.sequence"></span>
+                <span class="stop-line" *ngIf="!last"></span>
+              </div>
+              <div class="stop-info">
+                <span class="stop-name">{{ stop.stopName }}</span>
+                <span class="stop-time">{{ stop.departureTime }}</span>
+                <span class="stop-distance" *ngIf="stop.distanceFromOrigin > 0">{{ stop.distanceFromOrigin }} km</span>
+              </div>
+            </div>
+          </div>
+          <div class="route-summary">
+            <span>{{ (bus._searchResult.route?.stops?.length || 0) }} {{ 'search.stops' | translate }}</span>
+            <span>{{ bus._searchResult.segment.distanceKm }} km</span>
+            <span>{{ bus._searchResult.segment.durationMinutes }} min</span>
+          </div>
+        </div>
+
+        <div class="seat-selection-panel" *ngIf="expandedBusId === bus._id">
+          <div class="light-island">
+            <app-view-seats
+              [busid]="bus._id!"
+              [filledseats]="bus.filledSeats"
+              [seatprice]="bus.fare"
+              [routedetails]="matchedRoute || bus._searchResult?.route"
+              [busarrivaltime]="bus.arrivalHour"
+              [busdeparturetime]="bus.departureHour"
+              [operatorname]="bus.operatorName"
+              [date]="date"
+              [searchResult]="bus._searchResult || null"
+              [segmentDistance]="bus._searchResult?.segment?.distanceKm || 0"
+              [routeId]="matchedRoute?._id || matchedRoute?.id || ''"
+              (seatsTaken)="onSeatsTaken(bus._id!, $event)">
+            </app-view-seats>
+          </div>
+        </div>
+      </div>
+
+      <div class="pagination-bar" *ngIf="!loading && totalPages > 1">
+        <button class="page-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button
+          class="page-btn"
+          *ngFor="let page of pageNumbers"
+          [class.active]="page === currentPage"
+          (click)="goToPage(page)">
+          {{ page }}
+        </button>
+        <button class="page-btn" [disabled]="currentPage === totalPages" (click)="goToPage(currentPage + 1)">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+
+    </main>
+  </div>
+</div>

@@ -1,0 +1,446 @@
+/* ═══════════════════════════════════════════
+   Email OTP Login – Premium Styles
+   ═══════════════════════════════════════════ */
+
+/* ── Wrapper / Centering ── */
+.email-otp-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px 16px;
+  background: var(--brand-light-gray, #f5f5f5);
+  font-family: inherit, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  transition: background 0.3s ease;
+}
+
+/* ── Card ── */
+.email-otp-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--brand-white, #ffffff);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease, background 0.3s ease;
+}
+
+.card-body {
+  padding: 40px 32px;
+  animation: fadeInUp 0.35s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ── Header ── */
+.card-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.brand-icon {
+  margin-bottom: 16px;
+}
+
+.auth-logo {
+  height: 40px;
+  width: auto;
+}
+
+.card-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--brand-dark-gray, #1a1a2e);
+  margin: 0 0 6px 0;
+  line-height: 1.3;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--brand-text-muted, #6b7280);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.email-highlight {
+  font-weight: 600;
+  color: var(--brand-primary, #E53935);
+  word-break: break-all;
+}
+
+/* ── Error Banner ── */
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--community-error-bg, #fef2f2);
+  border: 1px solid var(--community-error-border, #fecaca);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  color: var(--community-error, #dc2626);
+  animation: shakeIn 0.3s ease;
+}
+
+.error-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--community-error, #dc2626);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+@keyframes shakeIn {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-4px); }
+  40% { transform: translateX(4px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
+
+/* ── Field Group ── */
+.field-group {
+  margin-bottom: 20px;
+}
+
+.field-group label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand-dark-gray, #1a1a2e);
+  margin-bottom: 6px;
+  letter-spacing: 0.02em;
+}
+
+.input-wrapper {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--brand-text-muted, #9ca3af);
+  display: flex;
+  align-items: center;
+}
+
+.input-icon mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 14px 12px 40px;
+  border: 1.5px solid var(--brand-mid-gray, #e5e7eb);
+  border-radius: 10px;
+  font-size: 15px;
+  color: var(--brand-dark-gray, #1a1a2e);
+  background: var(--brand-light-gray, #fafafa);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-sizing: border-box;
+}
+
+.form-input::placeholder {
+  color: var(--brand-text-muted, #b0b7c3);
+}
+
+.form-input:focus {
+  border-color: var(--brand-primary, #E53935);
+  box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.12);
+  background: var(--brand-white, #ffffff);
+}
+
+.form-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Primary Button ── */
+.btn-primary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 20px;
+  background: var(--brand-primary, #E53935);
+  color: var(--brand-white, #ffffff);
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+  letter-spacing: 0.02em;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--brand-primary-dark, #c62828);
+  box-shadow: 0 4px 12px rgba(229, 57, 53, 0.3);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* ── Spinner ── */
+.spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Divider ── */
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 22px 0;
+  gap: 12px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--brand-mid-gray, #e5e7eb);
+}
+
+.divider span {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--brand-text-muted, #9ca3af);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+/* ── Google Button Slot ── */
+.google-btn-slot {
+  display: flex;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.google-btn-slot iframe {
+  border-radius: 10px !important;
+}
+
+/* ── Alt Action ── */
+.alt-action {
+  text-align: center;
+  font-size: 13px;
+  color: var(--brand-text-muted, #6b7280);
+  margin-top: 22px;
+  margin-bottom: 0;
+}
+
+/* ── Link Button ── */
+.link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--brand-primary, #E53935);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 2px;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+
+.link-btn:hover:not(:disabled) {
+  color: var(--brand-primary-dark, #c62828);
+  text-decoration: underline;
+}
+
+.link-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.link-btn mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+/* ── Back Link ── */
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--brand-text-muted, #6b7280);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 16px;
+  transition: color 0.2s ease;
+}
+
+.back-link:hover {
+  color: var(--brand-primary, #E53935);
+}
+
+.back-link mat-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+/* ═══════ OTP STATE ═══════ */
+
+/* ── OTP Digit Inputs ── */
+.otp-input-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 24px 0 20px 0;
+}
+
+.otp-digit {
+  width: 48px;
+  height: 56px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--brand-dark-gray, #1a1a2e);
+  background: var(--brand-light-gray, #fafafa);
+  border: 2px solid var(--brand-mid-gray, #e5e7eb);
+  border-radius: 12px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  caret-color: var(--brand-primary, #E53935);
+}
+
+.otp-digit:focus {
+  border-color: var(--brand-primary, #E53935);
+  box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.15);
+  background: var(--brand-white, #ffffff);
+}
+
+.otp-digit.filled {
+  border-color: var(--brand-primary, #E53935);
+  background: rgba(229, 57, 53, 0.04);
+}
+
+/* ── Countdown Row ── */
+.countdown-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+
+.countdown-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+  color: var(--brand-primary, #E53935);
+}
+
+.countdown-text {
+  font-size: 14px;
+  color: var(--brand-text-muted, #6b7280);
+}
+
+.countdown-text strong {
+  color: var(--brand-dark-gray, #1a1a2e);
+  font-variant-numeric: tabular-nums;
+}
+
+.countdown-row.expired .countdown-icon {
+  color: var(--community-error, #dc2626);
+}
+
+.countdown-row.expired .countdown-text {
+  color: var(--community-error, #dc2626);
+  font-weight: 500;
+}
+
+/* ── OTP Actions ── */
+.otp-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 16px;
+}
+
+/* ═══════ Responsive ═══════ */
+@media (max-width: 480px) {
+  .card-body {
+    padding: 28px 20px;
+  }
+
+  .otp-digit {
+    width: 42px;
+    height: 50px;
+    font-size: 20px;
+    border-radius: 10px;
+  }
+
+  .otp-input-group {
+    gap: 6px;
+  }
+
+  .card-header h1 {
+    font-size: 20px;
+  }
+
+  .otp-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+
+@media (max-width: 360px) {
+  .otp-digit {
+    width: 36px;
+    height: 44px;
+    font-size: 18px;
+  }
+}

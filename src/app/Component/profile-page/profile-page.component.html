@@ -1,0 +1,302 @@
+<!-- Mobile top bar -->
+<div class="pp-mobile-bar">
+  <button class="pp-hamburger" (click)="toggleMobileMenu()">
+    <mat-icon>{{ mobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+  </button>
+  <span class="pp-mobile-title">{{ 'profile.' + (selecteditem === 'trips' ? 'myTrips' : selecteditem === 'dashboard' ? 'dashboard' : selecteditem === 'profile' ? 'myProfile' : selecteditem === 'wallet' ? 'wallet' : 'myRoutes') | translate }}</span>
+</div>
+
+<!-- Mobile overlay -->
+<div class="pp-mobile-overlay" *ngIf="mobileMenuOpen" (click)="closeMobileMenu()"></div>
+
+<div class="pp-shell">
+  <!-- LEFT SIDEBAR -->
+  <aside class="pp-sidebar" [class.pp-sidebar--open]="mobileMenuOpen">
+    <div class="pp-sidebar-header">
+      <div class="pp-avatar" *ngIf="!showAvatar">{{ getInitials(currentname) }}</div>
+      <img class="pp-avatar pp-avatar--img" *ngIf="showAvatar" [src]="userAvatar" [alt]="currentname" (error)="onAvatarError()" />
+      <div class="pp-sidebar-user">
+        <div class="pp-sidebar-name">{{ currentname || ('profile.user' | translate) }}</div>
+        <div class="pp-sidebar-email">{{ currentemail }}</div>
+      </div>
+    </div>
+
+    <nav class="pp-nav">
+      <button class="pp-nav-item" [class.pp-nav-item--active]="selecteditem === 'dashboard'"
+              (click)="handlelistitemclick('dashboard')">
+        <span class="pp-nav-icon"><mat-icon>dashboard</mat-icon></span>
+        <span class="pp-nav-label">{{ 'profile.dashboard' | translate }}</span>
+      </button>
+      <button class="pp-nav-item" [class.pp-nav-item--active]="selecteditem === 'trips'"
+              (click)="handlelistitemclick('trips')">
+        <span class="pp-nav-icon"><mat-icon>luggage</mat-icon></span>
+        <span class="pp-nav-label">{{ 'profile.myTrips' | translate }}</span>
+      </button>
+      <button class="pp-nav-item" [class.pp-nav-item--active]="selecteditem === 'profile'"
+              (click)="handlelistitemclick('profile')">
+        <span class="pp-nav-icon"><mat-icon>person</mat-icon></span>
+        <span class="pp-nav-label">{{ 'profile.myProfile' | translate }}</span>
+      </button>
+      <button class="pp-nav-item" [class.pp-nav-item--active]="selecteditem === 'wallet'"
+              (click)="handlelistitemclick('wallet')">
+        <span class="pp-nav-icon"><mat-icon>account_balance_wallet</mat-icon></span>
+        <span class="pp-nav-label">{{ 'profile.wallet' | translate }}</span>
+      </button>
+      <button class="pp-nav-item" [class.pp-nav-item--active]="selecteditem === 'routes'"
+              (click)="handlelistitemclick('routes')">
+        <span class="pp-nav-icon"><mat-icon>alt_route</mat-icon></span>
+        <span class="pp-nav-label">{{ 'profile.myRoutes' | translate }}</span>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="pp-content" (click)="closeMobileMenu()">
+
+    <!-- ===== DASHBOARD TAB ===== -->
+    <section *ngIf="selecteditem === 'dashboard'" class="pp-section brand-fade-in">
+      <div class="pp-section-head">
+        <h1 class="pp-page-title">{{ 'dashboard.welcomeBack' | translate: { name: currentname || '' } }}</h1>
+        <p class="pp-page-subtitle">{{ 'dashboard.subtitle' | translate }}</p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="pp-stats-grid">
+        <div class="pp-stat-card">
+          <div class="pp-stat-icon pp-stat-icon--primary"><mat-icon>luggage</mat-icon></div>
+          <div class="pp-stat-info">
+            <div class="pp-stat-value">{{ totalTrips }}</div>
+            <div class="pp-stat-label">{{ 'dashboard.totalTrips' | translate }}</div>
+          </div>
+        </div>
+        <div class="pp-stat-card">
+          <div class="pp-stat-icon pp-stat-icon--success"><mat-icon>upcoming</mat-icon></div>
+          <div class="pp-stat-info">
+            <div class="pp-stat-value">{{ upcomingTrips }}</div>
+            <div class="pp-stat-label">{{ 'dashboard.upcomingTrips' | translate }}</div>
+          </div>
+        </div>
+        <div class="pp-stat-card">
+          <div class="pp-stat-icon pp-stat-icon--completed"><mat-icon>check_circle</mat-icon></div>
+          <div class="pp-stat-info">
+            <div class="pp-stat-value">{{ completedTrips }}</div>
+            <div class="pp-stat-label">{{ 'dashboard.completedTrips' | translate }}</div>
+          </div>
+        </div>
+        <div class="pp-stat-card">
+          <div class="pp-stat-icon pp-stat-icon--cancelled"><mat-icon>cancel</mat-icon></div>
+          <div class="pp-stat-info">
+            <div class="pp-stat-value">{{ cancelledTrips + expiredTrips }}</div>
+            <div class="pp-stat-label">{{ 'dashboard.cancelledTrips' | translate }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Journey -->
+      <div class="pp-card pp-upcoming" *ngIf="upcomingBooking">
+        <div class="pp-card-head">
+          <h2 class="pp-card-title">{{ 'dashboard.upcomingJourney' | translate }}</h2>
+          <button class="pp-link-btn" (click)="goToTrips()">{{ 'dashboard.viewAllTrips' | translate }}</button>
+        </div>
+        <div class="pp-upcoming-body">
+          <div class="pp-upcoming-route">
+            <div class="pp-upcoming-point">
+              <div class="pp-upcoming-city">{{ getDepartureCity(upcomingBooking) }}</div>
+              <div class="pp-upcoming-time">{{ getDepartureTime(upcomingBooking) }}</div>
+              <div class="pp-upcoming-date">{{ upcomingBooking.departureDetails?.date || upcomingBooking.bookingDate }}</div>
+            </div>
+            <div class="pp-upcoming-divider">
+              <div class="pp-upcoming-dot"></div>
+              <div class="pp-upcoming-line"></div>
+              <mat-icon class="pp-upcoming-bus">directions_bus</mat-icon>
+              <div class="pp-upcoming-line"></div>
+              <div class="pp-upcoming-dot"></div>
+            </div>
+            <div class="pp-upcoming-point pp-upcoming-point--right">
+              <div class="pp-upcoming-city">{{ getArrivalCity(upcomingBooking) }}</div>
+              <div class="pp-upcoming-time">{{ getArrivalTime(upcomingBooking) }}</div>
+              <div class="pp-upcoming-date">{{ upcomingBooking.arrivalDetails?.date || upcomingBooking.bookingDate }}</div>
+            </div>
+          </div>
+          <div class="pp-upcoming-meta">
+            <div class="pp-upcoming-meta-item">
+              <mat-icon>business</mat-icon>
+              <span>{{ upcomingBooking.busDetails?.operatorName || '--' }}</span>
+            </div>
+            <div class="pp-upcoming-meta-item">
+              <mat-icon>confirmation_number</mat-icon>
+              <span>{{ pnr(upcomingBooking) }}</span>
+            </div>
+            <div class="pp-upcoming-meta-item">
+              <mat-icon>event_seat</mat-icon>
+              <span>{{ upcomingBooking.seats?.length || 0 }} {{ 'trips.seats' | translate }}</span>
+            </div>
+            <div class="pp-upcoming-meta-item">
+              <mat-icon>payments</mat-icon>
+              <span>{{ formatMoney(upcomingBooking.fare) }}</span>
+            </div>
+          </div>
+          <div class="pp-upcoming-actions">
+            <button class="pp-btn pp-btn--primary" (click)="viewTicket(upcomingBooking)">{{ 'trips.viewTicket' | translate }}</button>
+            <button class="pp-btn pp-btn--outline" (click)="goToTrips()">{{ 'trips.cancelTicket' | translate }}</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- No Upcoming Journey -->
+      <div class="pp-card pp-empty-card" *ngIf="!upcomingBooking">
+        <div class="pp-empty-content">
+          <mat-icon class="pp-empty-icon">flight_takeoff</mat-icon>
+          <h3>{{ 'dashboard.noUpcoming' | translate }}</h3>
+          <p>{{ 'dashboard.noUpcomingHint' | translate }}</p>
+          <button class="pp-btn pp-btn--primary" (click)="searchBuses()">{{ 'dashboard.bookNow' | translate }}</button>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="pp-card">
+        <div class="pp-card-head">
+          <h2 class="pp-card-title">{{ 'dashboard.quickActions' | translate }}</h2>
+        </div>
+        <div class="pp-quick-actions">
+          <button class="pp-quick-action" (click)="searchBuses()">
+            <mat-icon>directions_bus</mat-icon>
+            <span>{{ 'dashboard.bookBus' | translate }}</span>
+          </button>
+          <button class="pp-quick-action" (click)="planRoute()">
+            <mat-icon>alt_route</mat-icon>
+            <span>{{ 'dashboard.routePlanner' | translate }}</span>
+          </button>
+          <button class="pp-quick-action" (click)="goToTrips()">
+            <mat-icon>luggage</mat-icon>
+            <span>{{ 'dashboard.viewAllTrips' | translate }}</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MY TRIPS TAB ===== -->
+    <section *ngIf="selecteditem === 'trips'" class="pp-section brand-fade-in">
+      <app-my-trip [booking]="mytrip" (refresh)="loadBookings()"></app-my-trip>
+    </section>
+
+    <!-- ===== MY PROFILE TAB ===== -->
+    <section *ngIf="selecteditem === 'profile'" class="pp-section brand-fade-in">
+      <!-- Edit Profile View -->
+      <app-edit-profile *ngIf="editMode" (saved)="exitEditMode()" (cancelled)="exitEditMode()"></app-edit-profile>
+
+      <!-- Read-only Profile View -->
+      <div *ngIf="!editMode">
+        <div class="pp-section-head">
+          <h1 class="pp-page-title">{{ 'profile.myProfile' | translate }}</h1>
+          <p class="pp-page-subtitle">{{ 'profile.profileSubtitle' | translate }}</p>
+          <button class="pp-btn pp-btn--primary pp-edit-btn" (click)="enterEditMode()">
+            <mat-icon>edit</mat-icon> {{ 'editProfile.editProfile' | translate }}
+          </button>
+        </div>
+
+        <!-- Profile Header Card -->
+        <div class="pp-card pp-profile-header">
+          <div class="pp-profile-avatar-wrap">
+            <div class="pp-profile-avatar" *ngIf="!showAvatar">{{ getInitials(currentname) }}</div>
+            <img class="pp-profile-avatar pp-profile-avatar--img" *ngIf="showAvatar" [src]="userAvatar" [alt]="currentname" (error)="onAvatarError()" />
+          </div>
+          <div class="pp-profile-info">
+            <h2 class="pp-profile-name">{{ currentname || ('profile.user' | translate) }}</h2>
+            <div class="pp-profile-badges">
+              <span class="pp-badge pp-badge--verified" *ngIf="currentcustomer?.token">
+                <mat-icon>verified</mat-icon> {{ 'profile.verified' | translate }}
+              </span>
+              <span class="pp-badge pp-badge--unverified" *ngIf="!currentcustomer?.token">
+                {{ 'profile.notVerified' | translate }}
+              </span>
+            </div>
+            <p class="pp-profile-email">{{ currentemail }}</p>
+          </div>
+        </div>
+
+        <!-- Personal Information -->
+        <div class="pp-card">
+          <div class="pp-card-head">
+            <h2 class="pp-card-title">{{ 'profile.personalInfo' | translate }}</h2>
+          </div>
+          <div class="pp-info-grid">
+            <div class="pp-info-item">
+              <div class="pp-info-label">
+                <mat-icon>person</mat-icon> {{ 'profile.yourName' | translate }}
+              </div>
+              <div class="pp-info-value">{{ currentname || ('profile.na' | translate) }}</div>
+            </div>
+            <div class="pp-info-item">
+              <div class="pp-info-label">
+                <mat-icon>cake</mat-icon> {{ 'profile.dateOfBirth' | translate }}
+              </div>
+              <div class="pp-info-value">{{ currentdob || ('profile.na' | translate) }}</div>
+            </div>
+            <div class="pp-info-item">
+              <div class="pp-info-label">
+                <mat-icon>wc</mat-icon> {{ 'profile.gender' | translate }}
+              </div>
+              <div class="pp-info-value">{{ currentgender || ('profile.na' | translate) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="pp-card">
+          <div class="pp-card-head">
+            <h2 class="pp-card-title">{{ 'profile.contactInfo' | translate }}</h2>
+          </div>
+          <div class="pp-info-grid">
+            <div class="pp-info-item">
+              <div class="pp-info-label">
+                <mat-icon>email</mat-icon> {{ 'profile.email' | translate }}
+              </div>
+              <div class="pp-info-value">{{ currentemail || ('profile.na' | translate) }}</div>
+            </div>
+            <div class="pp-info-item">
+              <div class="pp-info-label">
+                <mat-icon>phone</mat-icon> {{ 'profile.phone' | translate }}
+              </div>
+              <div class="pp-info-value">{{ currentphone || ('profile.na' | translate) }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== WALLET TAB ===== -->
+    <section *ngIf="selecteditem === 'wallet'" class="pp-section brand-fade-in">
+      <div class="pp-section-head">
+        <h1 class="pp-page-title">{{ 'wallet.title' | translate }}</h1>
+        <p class="pp-page-subtitle">{{ 'wallet.subtitle' | translate }}</p>
+      </div>
+
+      <!-- Wallet Balance Card -->
+      <div class="pp-card pp-wallet-balance">
+        <div class="pp-wallet-balance-inner">
+          <div class="pp-wallet-balance-icon"><mat-icon>account_balance_wallet</mat-icon></div>
+          <div>
+            <div class="pp-wallet-balance-label">{{ 'wallet.currentBalance' | translate }}</div>
+            <div class="pp-wallet-balance-amount">Rs. 0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Coming Soon State -->
+      <div class="pp-card pp-empty-card">
+        <div class="pp-empty-content">
+          <mat-icon class="pp-empty-icon">lock</mat-icon>
+          <h3>{{ 'wallet.comingSoon' | translate }}</h3>
+          <p class="pp-empty-hint">{{ 'wallet.noTransactionsHint' | translate }}</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== MY ROUTES TAB ===== -->
+    <section *ngIf="selecteditem === 'routes'" class="pp-section brand-fade-in">
+      <app-saved-routes></app-saved-routes>
+    </section>
+
+  </main>
+</div>

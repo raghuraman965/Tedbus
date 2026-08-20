@@ -1,0 +1,27 @@
+<div class="lang-wrap">
+  <button #trigger class="lang-selector" [class.open]="open" (click)="toggle()" type="button">
+    <span class="lang-current">
+      <span class="lang-flag">{{ current.flag }}</span>
+      <span class="lang-name">{{ current.nativeName }}</span>
+    </span>
+    <mat-icon class="lang-chevron">expand_more</mat-icon>
+  </button>
+
+  <div class="lang-panel" *ngIf="open" [ngStyle]="panelStyle" @langPanel>
+    <button *ngFor="let lang of languages"
+            class="lang-item"
+            [class.active]="lang.code === currentLang"
+            (click)="select(lang.code)"
+            @langItem
+            type="button">
+      <div class="lang-item-row">
+        <span class="lang-flag">{{ lang.flag }}</span>
+        <div class="lang-meta">
+          <span class="lang-label">{{ lang.label }}</span>
+          <span class="lang-native">{{ lang.nativeName }}</span>
+        </div>
+        <mat-icon class="lang-check" *ngIf="lang.code === currentLang">check</mat-icon>
+      </div>
+    </button>
+  </div>
+</div>

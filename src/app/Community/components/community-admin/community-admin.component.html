@@ -1,0 +1,154 @@
+<div class="admin-page" *ngIf="isAdmin">
+  <div class="admin-header">
+    <h1>{{ 'community.moderationDashboard' | translate }}</h1>
+    <p>{{ 'community.moderationSubtitle' | translate }}</p>
+    <button class="refresh-btn" (click)="loadAll()">
+      <mat-icon>refresh</mat-icon> {{ 'community.refresh' | translate }}
+    </button>
+  </div>
+
+  <div class="success-banner" *ngIf="actionMessage">
+    <mat-icon>check_circle</mat-icon> {{ actionMessage }}
+  </div>
+  <div class="error-banner" *ngIf="actionError">
+    <mat-icon>error_outline</mat-icon> {{ actionError }}
+  </div>
+  <div class="error-banner" *ngIf="!loading && errorMessage">
+    <mat-icon>error_outline</mat-icon> {{ errorMessage }}
+    <button (click)="loadAll()">{{ 'common.retry' | translate }}</button>
+  </div>
+
+  <div class="stats-grid" *ngIf="stats">
+    <div class="stat-card">
+      <mat-icon>group</mat-icon>
+      <span class="stat-value">{{ stats.totalUsers }}</span>
+      <span class="stat-label">{{ 'community.totalUsers' | translate }}</span>
+    </div>
+    <div class="stat-card">
+      <mat-icon>auto_stories</mat-icon>
+      <span class="stat-value">{{ stats.totalPosts }}</span>
+      <span class="stat-label">{{ 'community.totalPosts' | translate }}</span>
+    </div>
+    <div class="stat-card">
+      <mat-icon>chat_bubble</mat-icon>
+      <span class="stat-value">{{ stats.totalComments }}</span>
+      <span class="stat-label">{{ 'community.comments' | translate }}</span>
+    </div>
+    <div class="stat-card">
+      <mat-icon>favorite</mat-icon>
+      <span class="stat-value">{{ stats.totalLikes }}</span>
+      <span class="stat-label">{{ 'community.likes' | translate }}</span>
+    </div>
+    <div class="stat-card">
+      <mat-icon>person_add</mat-icon>
+      <span class="stat-value">{{ stats.totalFollows }}</span>
+      <span class="stat-label">{{ 'community.follows' | translate }}</span>
+    </div>
+    <div class="stat-card warn">
+      <mat-icon>flag</mat-icon>
+      <span class="stat-value">{{ stats.pendingReports }}</span>
+      <span class="stat-label">{{ 'community.pendingReports' | translate }}</span>
+    </div>
+  </div>
+
+  <section class="admin-section" *ngIf="reportedPosts.length">
+    <h2>{{ 'community.reportedStories' | translate }} ({{ reportedPosts.length }})</h2>
+    <div class="reported-post" *ngFor="let post of reportedPosts">
+      <img class="post-thumb" [src]="getImageUrl(post.images[0]) || post.user.avatar" alt="" (error)="onImageError($event)">
+      <div class="post-info">
+        <button class="post-title" (click)="openPost(post.id)">{{ post.title }}</button>
+        <span class="post-meta">
+          {{ 'community.by' | translate }} {{ post.user.name }} &middot; {{ post.commentsCount }} {{ 'community.comments' | translate }} &middot; {{ post.likes }} {{ 'community.likes' | translate }}
+        </span>
+        <span class="flag-chip" *ngIf="post.reportCount > 0">
+          <mat-icon>flag</mat-icon> {{ post.reportCount }} {{ post.reportCount > 1 ? ('community.reports' | translate) : ('community.report' | translate) }}
+        </span>
+      </div>
+      <div class="post-actions">
+        <button class="action-btn" [disabled]="busyPostId === post.id" (click)="moderatePost(post, 'remove')">
+          <mat-icon>block</mat-icon> {{ 'community.remove' | translate }}
+        </button>
+        <button class="action-btn dismiss" [disabled]="busyPostId === post.id" (click)="moderatePost(post, 'dismiss')">
+          <mat-icon>check</mat-icon> {{ 'community.dismiss' | translate }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="admin-section" *ngIf="recentReports.length">
+    <h2>{{ 'community.recentReports' | translate }} ({{ recentReports.length }})</h2>
+    <div class="report-row" *ngFor="let report of recentReports">
+      <img class="report-avatar" [src]="report.reporter.avatar" alt="" (error)="onImageError($event)">
+      <div class="report-info">
+        <span class="report-line">
+          <strong>{{ report.reporter.name }}</strong> {{ 'community.reported' | translate }}
+          <span *ngIf="report.postTitle"><button class="link-btn" (click)="openPost(report.postId)">{{ report.postTitle }}</button></span>
+          <span *ngIf="!report.postTitle && report.targetUser"><span class="handle">{{ '@' + report.targetUser.name }}</span></span>
+        </span>
+        <span class="reason-chip">{{ report.reason }}</span>
+        <p class="report-details" *ngIf="report.details">{{ report.details }}</p>
+        <span class="report-time">{{ report.timePosted }}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="admin-section" *ngIf="reportedUsers.length">
+    <h2>{{ 'community.reportedTravellers' | translate }} ({{ reportedUsers.length }})</h2>
+    <div class="reported-user" *ngFor="let user of reportedUsers">
+      <img class="user-avatar" [src]="user.user.avatar" alt="" (error)="onImageError($event)">
+      <div class="user-info">
+        <button class="user-name" (click)="openProfile(user.user.id)">
+          {{ user.user.name }}
+          <mat-icon *ngIf="user.user.verified" class="verified-mini">verified</mat-icon>
+        </button>
+        <span class="user-meta">{{ user.reportCount }} {{ user.reportCount > 1 ? ('community.reports' | translate) : ('community.report' | translate) }}</span>
+        <span class="suspend-chip" *ngIf="user.suspended">{{ 'community.suspended' | translate }}</span>
+        <div class="reason-tags">
+          <span class="reason-chip" *ngFor="let reason of user.reasons">{{ reason }}</span>
+        </div>
+      </div>
+      <div class="user-actions">
+        <button class="action-btn" *ngIf="!user.suspended" [disabled]="busyUserId === user.user.id" (click)="moderateUser(user, 'suspend')">
+          <mat-icon>block</mat-icon> {{ 'community.suspend' | translate }}
+        </button>
+        <button class="action-btn restore" *ngIf="user.suspended" [disabled]="busyUserId === user.user.id" (click)="moderateUser(user, 'restore')">
+          <mat-icon>restore</mat-icon> {{ 'community.restore' | translate }}
+        </button>
+        <button class="action-btn verify" *ngIf="!user.user.verified" [disabled]="busyUserId === user.user.id" (click)="verifyUser(user, 'approve')">
+          <mat-icon>verified</mat-icon> {{ 'community.approveVerification' | translate }}
+        </button>
+        <button class="action-btn dismiss" *ngIf="user.user.verified" [disabled]="busyUserId === user.user.id" (click)="verifyUser(user, 'revoke')">
+          <mat-icon>person_off</mat-icon> {{ 'community.revokeVerification' | translate }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="admin-section" *ngIf="unverifiedUsers.length">
+    <h2>{{ 'community.unverifiedMembers' | translate }} ({{ unverifiedUsers.length }})</h2>
+    <p class="section-hint">{{ 'community.unverifiedHint' | translate }}</p>
+    <div class="reported-user" *ngFor="let member of unverifiedUsers">
+      <img class="user-avatar" [src]="member.avatar" alt="" (error)="onImageError($event)">
+      <div class="user-info">
+        <button class="user-name" (click)="openProfile(member.id)">
+          {{ member.name }}
+          <mat-icon *ngIf="member.verified" class="verified-mini">verified</mat-icon>
+        </button>
+        <span class="user-meta">{{ member.email }}</span>
+        <div class="reason-tags">
+          <span class="reason-chip">{{ 'community.pendingVerification' | translate }}</span>
+        </div>
+      </div>
+      <div class="user-actions">
+        <button class="action-btn verify" [disabled]="busyUserId === member.id" (click)="verifyMember(member)">
+          <mat-icon>verified</mat-icon> {{ 'community.approveVerification' | translate }}
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="empty-state" *ngIf="!loading && !errorMessage && !reportedPosts.length && !recentReports.length && !reportedUsers.length && !unverifiedUsers.length">
+    <mat-icon>verified_user</mat-icon>
+    <p>{{ 'community.allClear' | translate }}</p>
+  </div>
+</div>

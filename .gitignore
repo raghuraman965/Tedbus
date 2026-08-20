@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+server/node_modules/
+
+# Angular
+.angular/
+dist/
+
+# Environment secrets
+.env
+server/.env
+server/.env.*
+!.env.example
+!server/.env.example
+
+# VAPID / private keys
+.vapid-keys.json
+server/.vapid-keys.json
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

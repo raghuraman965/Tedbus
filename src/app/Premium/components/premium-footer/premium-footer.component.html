@@ -1,0 +1,40 @@
+<footer class="premium-footer">
+  <div class="footer-inner">
+
+    <div class="footer-top">
+      <div class="footer-col" *ngFor="let col of columns">
+        <h4 tedTextTransition>{{ col.titleKey | translate }}</h4>
+        <ul>
+          <li *ngFor="let link of col.linkKeys"><a href="javascript:void(0)" tedTextTransition>{{ link | translate }}</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <hr class="footer-divider">
+
+    <div class="footer-bottom">
+      <div class="footer-brand">
+        <img src="../../../../assets/redbus-logo.svg" alt="TedBus" class="footer-logo">
+        <p tedTextTransition>{{ 'footer.description' | translate }}</p>
+        <div class="social-row">
+          <button class="social-btn" *ngFor="let s of socialLinks" [attr.aria-label]="s.labelKey | translate">
+            <mat-icon>{{ s.icon }}</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="footer-col" *ngFor="let col of aboutColumns">
+        <h4 tedTextTransition>{{ col.titleKey | translate }}</h4>
+        <ul>
+          <li *ngFor="let link of col.linkKeys"><a href="javascript:void(0)" tedTextTransition>{{ link | translate }}</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-legal">
+      <span tedTextTransition>&copy; {{ currentYear }} {{ 'footer.allRightsReserved' | translate }}</span>
+      <a routerLink="/admin/payment-settings" class="footer-admin-link" tedTextTransition>{{ 'footer.admin' | translate }}</a>
+    </div>
+
+  </div>
+</footer>

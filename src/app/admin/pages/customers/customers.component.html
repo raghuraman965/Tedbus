@@ -1,0 +1,123 @@
+<div class="page-head">
+  <h2>{{ 'admin.customers.title' | translate }}</h2>
+  <p class="muted">{{ 'admin.customers.subtitle' | translate }}</p>
+</div>
+
+<div *ngIf="error" class="page-error-bar">
+  <mat-icon>error_outline</mat-icon>
+  <span>{{ error | translate }}</span>
+  <button mat-flat-button color="warn" (click)="load()">
+    <mat-icon>refresh</mat-icon> {{ 'admin.common.retry' | translate }}
+  </button>
+</div>
+
+<div class="toolbar">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>{{ 'admin.customers.searchPlaceholder' | translate }}</mat-label>
+    <input matInput [(ngModel)]="search" (ngModelChange)="onSearchInput()" />
+    <mat-icon matPrefix>search</mat-icon>
+  </mat-form-field>
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>{{ 'admin.customers.filterStatus' | translate }}</mat-label>
+    <mat-select [(ngModel)]="statusFilter" (selectionChange)="onFilter()">
+      <mat-option value="">{{ 'admin.customers.allStatuses' | translate }}</mat-option>
+      <mat-option value="active">{{ 'admin.customers.statusActive' | translate }}</mat-option>
+      <mat-option value="suspended">{{ 'admin.customers.statusSuspended' | translate }}</mat-option>
+      <mat-option value="unverified">{{ 'admin.customers.statusUnverified' | translate }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<div *ngIf="loading" class="loading-wrap">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>
+
+<div *ngIf="!loading && !error && items.length === 0" class="empty">
+  <mat-icon style="font-size:48px;width:48px;height:48px;opacity:0.4;margin-bottom:8px;">people_outline</mat-icon>
+  <p>{{ 'admin.customers.empty' | translate }}</p>
+</div>
+
+<div *ngIf="!loading && items.length > 0" class="table-scroll">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ 'admin.customers.colCustomer' | translate }}</th>
+        <th>{{ 'admin.customers.colEmail' | translate }}</th>
+        <th>{{ 'admin.customers.colPhone' | translate }}</th>
+        <th>{{ 'admin.customers.colProvider' | translate }}</th>
+        <th>{{ 'admin.customers.colVerified' | translate }}</th>
+        <th>{{ 'admin.customers.colStatus' | translate }}</th>
+        <th>{{ 'admin.customers.colJoined' | translate }}</th>
+        <th>{{ 'admin.customers.colActions' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let u of items">
+        <td>
+          <div class="user-cell">
+            <img
+              *ngIf="u.profilePicture"
+              class="avatar-img"
+              [src]="u.profilePicture"
+              [alt]="u.name"
+              (error)="onImgError(u, $event)"
+            />
+            <div class="avatar initials-avatar hidden" [id]="'av-' + (u._id || u.id)">{{ initials(u) }}</div>
+            <div class="user-meta">
+              <strong>{{ u.name || '—' }}</strong>
+            </div>
+          </div>
+        </td>
+        <td class="mono">{{ u.email || '—' }}</td>
+        <td>{{ u.phone || '—' }}</td>
+        <td><span class="badge st-info">{{ u.authProvider || 'local' }}</span></td>
+        <td>
+          <span class="badge" [ngClass]="u.isVerified ? 'st-ok' : 'st-warn'">
+            {{ u.isVerified ? ('admin.customers.verified' | translate) : ('admin.customers.unverified' | translate) }}
+          </span>
+        </td>
+        <td>
+          <span class="badge" [ngClass]="u.isSuspended ? 'st-err' : 'st-ok'">
+            {{ u.isSuspended ? ('admin.customers.suspended' | translate) : ('admin.customers.active' | translate) }}
+          </span>
+        </td>
+        <td class="mono">{{ fmtD(u.createdAt) }}</td>
+        <td class="actions-col">
+          <button
+            class="icon-btn"
+            matTooltip="{{ u.isVerified ? ('admin.customers.markUnverified' | translate) : ('admin.customers.markVerified' | translate) }}"
+            (click)="toggleVerified(u)"
+          >
+            <mat-icon>{{ u.isVerified ? 'verified' : 'how_to_reg' }}</mat-icon>
+          </button>
+          <button
+            class="icon-btn"
+            [class.danger]="!u.isSuspended"
+            matTooltip="{{ u.isSuspended ? ('admin.customers.unsuspend' | translate) : ('admin.customers.suspend' | translate) }}"
+            (click)="toggleSuspend(u)"
+          >
+            <mat-icon>{{ u.isSuspended ? 'undo' : 'block' }}</mat-icon>
+          </button>
+          <button class="icon-btn danger" matTooltip="{{ 'admin.customers.deleteUser' | translate }}" (click)="deleteUser(u)">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div *ngIf="!loading && items.length > 0" class="pager">
+  <span class="pager-info">
+    {{ 'admin.common.showing' | translate }} {{ items.length }} {{ 'admin.common.of' | translate }} {{ total }}
+  </span>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="icon-btn" [disabled]="page <= 1" (click)="pageChange(page - 1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="mono" style="font-size:13px;font-weight:600;">{{ page }} / {{ totalPages }}</span>
+    <button class="icon-btn" [disabled]="page >= totalPages" (click)="pageChange(page + 1)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>

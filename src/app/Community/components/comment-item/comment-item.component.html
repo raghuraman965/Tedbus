@@ -1,0 +1,48 @@
+<div class="comment-item">
+  <img class="comment-avatar" [src]="comment.user.avatar" [alt]="comment.user.name">
+  <div class="comment-body">
+    <div class="comment-bubble">
+      <div class="comment-header">
+        <span class="comment-username">{{ comment.user.name }}</span>
+        <mat-icon *ngIf="comment.user.verified" class="verified-mini">verified</mat-icon>
+        <span class="edited-label" *ngIf="comment.edited">({{ 'community.edited' | translate }})</span>
+      </div>
+
+      <p class="comment-text" *ngIf="!comment.editing">{{ comment.content }}</p>
+
+      <div class="comment-edit-box" *ngIf="comment.editing">
+        <textarea rows="2" [(ngModel)]="editText"></textarea>
+        <div class="edit-actions">
+          <button class="link-btn" (click)="saveEdit()">{{ 'common.save' | translate }}</button>
+          <button class="link-btn muted" (click)="cancelEdit()">{{ 'common.cancel' | translate }}</button>
+        </div>
+      </div>
+    </div>
+
+      <div class="comment-actions">
+        <button class="comment-action" [class.active]="comment.liked" (click)="toggleLike()">
+          <mat-icon>{{ comment.liked ? 'favorite' : 'favorite_border' }}</mat-icon>
+          {{ comment.likes }}
+        </button>
+        <button class="comment-action" (click)="toggleReplyBox()">{{ 'community.reply' | translate }}</button>
+        <button class="comment-action" *ngIf="isOwner" (click)="startEdit()">{{ 'common.edit' | translate }}</button>
+        <button class="comment-action" *ngIf="isOwner" (click)="deleteComment()">{{ 'common.delete' | translate }}</button>
+        <span class="comment-time">{{ comment.timePosted | timeAgo }}</span>
+      </div>
+      <button class="view-profile-btn" (click)="goToProfile(comment.user.id)">{{ 'community.viewProfile' | translate }}</button>
+
+    <div class="reply-box" *ngIf="showReplyBox">
+      <input type="text" [placeholder]="'community.replyPlaceholder' | translate" [(ngModel)]="replyText" (keyup.enter)="submitReply()">
+      <button class="link-btn" [disabled]="submitting" (click)="submitReply()">{{ submitting ? ('community.posting' | translate) : ('community.post' | translate) }}</button>
+    </div>
+
+    <div class="nested-replies" *ngIf="comment.replies?.length">
+      <app-comment-item
+        *ngFor="let reply of comment.replies"
+        [comment]="reply"
+        [postId]="postId"
+        (refresh)="refresh.emit()">
+      </app-comment-item>
+    </div>
+  </div>
+</div>

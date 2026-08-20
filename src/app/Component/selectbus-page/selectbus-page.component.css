@@ -1,0 +1,16 @@
+.SelectBUS_MAINCONTENT{
+    display:grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 18px;
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 20px;
+    min-height: calc(100vh - 200px);
+}
+
+@media (max-width: 900px) {
+    .SelectBUS_MAINCONTENT {
+        grid-template-columns: 1fr;
+        padding: 12px;
+    }
+}

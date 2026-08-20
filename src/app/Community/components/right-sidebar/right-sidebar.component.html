@@ -1,0 +1,62 @@
+<aside class="right-sidebar">
+
+  <div class="widget" *ngIf="trendingRoutes.length">
+    <h4 class="widget-title"><mat-icon>trending_up</mat-icon> {{ 'community.trendingRoutes' | translate }}</h4>
+    <div class="route-row" *ngFor="let r of trendingRoutes">
+      <span class="route-name">{{ r.route | cityName }}</span>
+      <span class="route-count">{{ r.postsCount }} {{ 'community.posts' | translate }}</span>
+    </div>
+  </div>
+
+  <div class="widget" *ngIf="popularDestinations.length">
+    <h4 class="widget-title"><mat-icon>photo_camera</mat-icon> {{ 'community.popularDestinations' | translate }}</h4>
+    <div class="destination-grid">
+      <div class="destination-item" *ngFor="let d of popularDestinations">
+        <img [src]="getImageUrl(d.image) || fallbackImage" [alt]="d.name" (error)="onImageError($event)">
+        <div class="destination-overlay">
+          <span class="destination-name">{{ d.name | cityName }}</span>
+          <span class="destination-count">{{ d.postsCount }} {{ 'community.posts' | translate }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="widget" *ngIf="trendingHashtags.length">
+    <h4 class="widget-title"><mat-icon>tag</mat-icon> {{ 'community.trendingHashtags' | translate }}</h4>
+    <div class="hashtag-row" *ngFor="let h of trendingHashtags; let i = index">
+      <button class="hashtag-name" (click)="openHashtag(h.name)">#{{ h.name }}</button>
+      <span class="hashtag-count">{{ h.count }} {{ h.count === 1 ? ('community.postCount' | translate) : ('community.posts' | translate) }}</span>
+    </div>
+  </div>
+
+  <div class="widget" *ngIf="isLoggedIn && suggestedUsers.length">
+    <h4 class="widget-title"><mat-icon>explore</mat-icon> {{ 'community.suggestedTravellers' | translate }}</h4>
+    <div class="contributor-row" *ngFor="let u of suggestedUsers">
+      <img class="contributor-avatar" [src]="u.avatar" [alt]="u.name" (error)="onImageError($event)">
+      <div class="contributor-info" (click)="openProfile(u.id)">
+        <span class="contributor-name">
+          {{ u.name }}
+          <mat-icon *ngIf="u.verified" class="mini-verified">verified</mat-icon>
+        </span>
+        <span class="contributor-points">{{ u.postsCount || 0 }} {{ 'community.posts' | translate }}</span>
+      </div>
+      <button class="view-btn" (click)="openProfile(u.id)">{{ 'community.view' | translate }}</button>
+    </div>
+  </div>
+
+  <div class="widget" *ngIf="topContributors.length">
+    <h4 class="widget-title"><mat-icon>emoji_events</mat-icon> {{ 'community.topContributors' | translate }}</h4>
+    <div class="contributor-row" *ngFor="let c of topContributors; let i = index">
+      <span class="rank">{{ i + 1 }}</span>
+      <img class="contributor-avatar" [src]="c.user.avatar" [alt]="c.user.name" (error)="onImageError($event)">
+      <div class="contributor-info" (click)="openProfile(c.user.id)">
+        <span class="contributor-name">
+          {{ c.user.name }}
+          <mat-icon *ngIf="c.user.verified" class="mini-verified">verified</mat-icon>
+        </span>
+        <span class="contributor-points">{{ c.points }} {{ 'community.points' | translate }}</span>
+      </div>
+    </div>
+  </div>
+
+</aside>

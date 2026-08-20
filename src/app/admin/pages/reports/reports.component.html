@@ -1,0 +1,128 @@
+<div class="reports-page">
+  <div class="page-header">
+    <h2>{{ 'admin.reports.title' | translate }}</h2>
+    <p class="subtitle">{{ 'admin.reports.subtitle' | translate }}</p>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-state" *ngIf="!loading && error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ 'admin.reports.loadError' | translate }}</p>
+    <button class="btn-secondary" (click)="retryLoad()">{{ 'admin.reports.retry' | translate }}</button>
+  </div>
+
+  <div class="report-grid" *ngIf="!loading && !error">
+
+    <!-- 1. Bookings Per Day -->
+    <div class="panel">
+      <h3 class="panel-title">{{ 'admin.reports.bookingsPerDay' | translate }}</h3>
+      <div class="empty-state" *ngIf="data.bookingsByDay.length === 0">
+        <mat-icon>bar_chart</mat-icon>
+        <span>{{ 'admin.reports.noBookingData' | translate }}</span>
+      </div>
+      <div class="bar-chart" *ngIf="data.bookingsByDay.length > 0">
+        <div class="bar-col" *ngFor="let day of data.bookingsByDay">
+          <div class="bar-track">
+            <div class="bar-fill" [style.height]="barH(day.count, maxDay())">
+              <span class="bar-val">{{ fmtN(day.count) }}</span>
+            </div>
+          </div>
+          <span class="bar-label">{{ day._id || day.label }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Booking Status -->
+    <div class="panel">
+      <h3 class="panel-title">{{ 'admin.reports.bookingStatus' | translate }}</h3>
+      <div class="empty-state" *ngIf="data.statusBreakdown.length === 0">
+        <mat-icon>donut_large</mat-icon>
+        <span>{{ 'admin.reports.noStatusData' | translate }}</span>
+      </div>
+      <div class="status-list" *ngIf="data.statusBreakdown.length > 0">
+        <div class="status-row" *ngFor="let s of data.statusBreakdown">
+          <span class="status-dot" [style.background]="statusColor(s._id)"></span>
+          <span class="status-name">{{ s._id }}</span>
+          <span class="status-count">{{ fmtN(s.count) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Revenue by City -->
+    <div class="panel wide">
+      <h3 class="panel-title">{{ 'admin.reports.revenueByCity' | translate }}</h3>
+      <div class="empty-state" *ngIf="data.revenueByRoute.length === 0">
+        <mat-icon>attach_money</mat-icon>
+        <span>{{ 'admin.reports.noRevenueData' | translate }}</span>
+      </div>
+      <div class="rev-list" *ngIf="data.revenueByRoute.length > 0">
+        <div *ngFor="let r of data.revenueByRoute">
+          <div class="rev-head">
+            <span class="rev-city">{{ r._id || r.route }}</span>
+            <span class="rev-amt">{{ fmt(r.revenue) }}</span>
+          </div>
+          <div class="rev-track">
+            <div class="rev-fill" [style.width]="barH(r.revenue, maxRev())"></div>
+          </div>
+        </div>
+        <div class="rev-total">
+          {{ 'admin.reports.totalRevenue' | translate }}: {{ fmt(totalRev()) }}
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Top Routes -->
+    <div class="panel wide">
+      <h3 class="panel-title">{{ 'admin.reports.topRoutes' | translate }}</h3>
+      <div class="empty-state" *ngIf="data.topRoutes.length === 0">
+        <mat-icon>trending_up</mat-icon>
+        <span>{{ 'admin.reports.noRouteData' | translate }}</span>
+      </div>
+      <table class="routes-table" *ngIf="data.topRoutes.length > 0">
+        <thead>
+          <tr>
+            <th>{{ 'admin.reports.colRoute' | translate }}</th>
+            <th>{{ 'admin.reports.colBookings' | translate }}</th>
+            <th>{{ 'admin.reports.colRevenue' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let r of data.topRoutes; let i = index">
+            <td>
+              <span class="route-rank">{{ i + 1 }}</span>
+              {{ r._id || r.route }}
+            </td>
+            <td>{{ fmtN(r.count || r.bookings) }}</td>
+            <td>{{ fmt(r.revenue) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 5. Bus Occupancy -->
+    <div class="panel wide">
+      <h3 class="panel-title">{{ 'admin.reports.busOccupancy' | translate }}</h3>
+      <div class="empty-state" *ngIf="data.busOccupancy.length === 0">
+        <mat-icon>directions_bus</mat-icon>
+        <span>{{ 'admin.reports.noOccupancyData' | translate }}</span>
+      </div>
+      <div class="occ-list" *ngIf="data.busOccupancy.length > 0">
+        <div *ngFor="let b of data.busOccupancy">
+          <div class="occ-head">
+            <span class="occ-name">{{ b._id || b.busName }}</span>
+            <span class="occ-count">{{ fmtN(b.occupied) }} / {{ fmtN(b.total) }} {{ 'admin.reports.seats' | translate }}</span>
+          </div>
+          <div class="occ-track">
+            <div class="occ-fill" [style.width]="barH(b.occupied, b.total)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

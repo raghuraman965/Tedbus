@@ -1,0 +1,5 @@
+# Local environment / secrets — never commit.
+.env
+
+# Auto-generated VAPID key pair (contains the push private key).
+.vapid-keys.json

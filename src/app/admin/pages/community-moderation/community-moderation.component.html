@@ -1,0 +1,294 @@
+<div class="mod-page">
+  <!-- Stats Summary -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon"><mat-icon>article</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.totalPosts || 0 }}</span>
+        <span class="stat-label">{{ 'admin.moderation.totalPosts' | translate }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon warning"><mat-icon>visibility_off</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.hiddenPosts || 0 }}</span>
+        <span class="stat-label">{{ 'admin.moderation.hiddenPosts' | translate }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon danger"><mat-icon>report</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.pendingReports || 0 }}</span>
+        <span class="stat-label">{{ 'admin.moderation.pendingReports' | translate }}</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon info"><mat-icon>history</mat-icon></div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.moderationActions || 0 }}</span>
+        <span class="stat-label">{{ 'admin.moderation.actions' | translate }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs + Controls -->
+  <div class="controls-bar">
+    <div class="tabs">
+      <button class="tab-btn" [class.active]="activeTab === 'reports'" (click)="setTab('reports')">
+        <mat-icon>flag</mat-icon>
+        {{ 'admin.moderation.reports' | translate }}
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'posts'" (click)="setTab('posts')">
+        <mat-icon>article</mat-icon>
+        {{ 'admin.moderation.posts' | translate }}
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'comments'" (click)="setTab('comments')">
+        <mat-icon>comment</mat-icon>
+        {{ 'admin.moderation.comments' | translate }}
+      </button>
+      <button class="tab-btn" [class.active]="activeTab === 'log'" (click)="setTab('log')">
+        <mat-icon>history</mat-icon>
+        {{ 'admin.moderation.auditLog' | translate }}
+      </button>
+    </div>
+
+    <div class="controls-right">
+      <div class="search-box" *ngIf="activeTab !== 'log'">
+        <mat-icon>search</mat-icon>
+        <input [(ngModel)]="search" (keyup.enter)="onSearch()" placeholder="{{ 'admin.moderation.search' | translate }}">
+      </div>
+
+      <select *ngIf="activeTab === 'posts'" [(ngModel)]="statusFilter" (change)="applyFilter()" class="filter-select">
+        <option value="">{{ 'admin.moderation.allStatus' | translate }}</option>
+        <option value="active">{{ 'admin.moderation.active' | translate }}</option>
+        <option value="hidden">{{ 'admin.moderation.hidden' | translate }}</option>
+        <option value="removed">{{ 'admin.moderation.removed' | translate }}</option>
+      </select>
+
+      <select *ngIf="activeTab === 'reports'" [(ngModel)]="statusFilter" (change)="applyFilter()" class="filter-select">
+        <option value="">{{ 'admin.moderation.allStatus' | translate }}</option>
+        <option value="pending">{{ 'admin.moderation.pending' | translate }}</option>
+        <option value="actioned">{{ 'admin.moderation.actioned' | translate }}</option>
+        <option value="dismissed">{{ 'admin.moderation.dismissed' | translate }}</option>
+      </select>
+
+      <select *ngIf="activeTab === 'comments'" [(ngModel)]="statusFilter" (change)="applyFilter()" class="filter-select">
+        <option value="">{{ 'admin.moderation.allStatus' | translate }}</option>
+        <option value="active">{{ 'admin.moderation.active' | translate }}</option>
+        <option value="deleted">{{ 'admin.moderation.hidden' | translate }}</option>
+      </select>
+
+      <select *ngIf="activeTab === 'log'" [(ngModel)]="statusFilter" (change)="applyFilter()" class="filter-select">
+        <option value="">{{ 'admin.moderation.allActions' | translate }}</option>
+        <option value="post_hide">{{ 'admin.moderation.postHide' | translate }}</option>
+        <option value="post_restore">{{ 'admin.moderation.postRestore' | translate }}</option>
+        <option value="post_remove">{{ 'admin.moderation.postRemove' | translate }}</option>
+        <option value="comment_hide">{{ 'admin.moderation.commentHide' | translate }}</option>
+        <option value="comment_restore">{{ 'admin.moderation.commentRestore' | translate }}</option>
+        <option value="report_actioned">{{ 'admin.moderation.reportActioned' | translate }}</option>
+        <option value="report_dismiss">{{ 'admin.moderation.reportDismissed' | translate }}</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-spinner" *ngIf="loading">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <!-- Reports Tab -->
+  <div class="data-table" *ngIf="activeTab === 'reports' && !loading">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'admin.moderation.reporter' | translate }}</th>
+          <th>{{ 'admin.moderation.reason' | translate }}</th>
+          <th>{{ 'admin.moderation.details' | translate }}</th>
+          <th>{{ 'admin.moderation.target' | translate }}</th>
+          <th>{{ 'admin.moderation.targetTitle' | translate }}</th>
+          <th>{{ 'admin.moderation.status' | translate }}</th>
+          <th>{{ 'admin.moderation.date' | translate }}</th>
+          <th>{{ 'admin.moderation.actions' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of reports">
+          <td>
+            <div class="user-cell" *ngIf="r.reporterName || r.reporterEmail">
+              <span class="user-name">{{ r.reporterName || r.reporterUserId }}</span>
+              <span class="user-email" *ngIf="r.reporterEmail">{{ r.reporterEmail }}</span>
+            </div>
+            <span *ngIf="!r.reporterName && !r.reporterEmail">{{ r.reporterUserId || '—' }}</span>
+          </td>
+          <td><span class="reason-badge">{{ r.reason }}</span></td>
+          <td>{{ truncate(r.details) }}</td>
+          <td>
+            <span class="target-chip" *ngIf="r.postId">{{ 'admin.moderation.post' | translate }}: {{ truncate(r.postTitle || r.postId, 20) }}</span>
+            <span class="target-chip" *ngIf="r.commentId">{{ 'admin.moderation.comment' | translate }}: {{ truncate(r.commentContent || r.commentId, 20) }}</span>
+          </td>
+          <td>{{ truncate(r.postTitle || r.postStory || r.commentContent || '', 40) || '—' }}</td>
+          <td><span class="badge" [ngClass]="statusBadge(r.status)">{{ r.status }}</span></td>
+          <td>{{ formatDate(r.createdAt) }}</td>
+          <td class="actions-cell">
+            <button *ngIf="r.status === 'pending'" class="action-btn primary" (click)="updateReportStatus(r._id, 'actioned')" matTooltip="{{ 'admin.moderation.actionTooltip' | translate }}">
+              <mat-icon>check</mat-icon>
+            </button>
+            <button *ngIf="r.status === 'pending'" class="action-btn" (click)="updateReportStatus(r._id, 'dismissed')" matTooltip="{{ 'admin.moderation.dismissTooltip' | translate }}">
+              <mat-icon>close</mat-icon>
+            </button>
+            <span *ngIf="r.status !== 'pending'" class="text-muted">-</span>
+          </td>
+        </tr>
+        <tr *ngIf="reports.length === 0">
+          <td colspan="8" class="empty-state">{{ 'admin.moderation.noData' | translate }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Posts Tab -->
+  <div class="data-table" *ngIf="activeTab === 'posts' && !loading">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'admin.moderation.title' | translate }}</th>
+          <th>{{ 'admin.moderation.owner' | translate }}</th>
+          <th>{{ 'admin.moderation.route' | translate }}</th>
+          <th>{{ 'admin.moderation.category' | translate }}</th>
+          <th>{{ 'admin.moderation.reports' | translate }}</th>
+          <th>{{ 'admin.moderation.status' | translate }}</th>
+          <th>{{ 'admin.moderation.date' | translate }}</th>
+          <th>{{ 'admin.moderation.actions' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of posts">
+          <td>{{ truncate(p.title, 40) }}</td>
+          <td>
+            <div class="user-cell" *ngIf="p.ownerName || p.ownerEmail">
+              <span class="user-name">{{ p.ownerName || '—' }}</span>
+              <span class="user-email" *ngIf="p.ownerEmail">{{ p.ownerEmail }}</span>
+            </div>
+            <span *ngIf="!p.ownerName && !p.ownerEmail">{{ truncate(p.userId, 12) || '—' }}</span>
+          </td>
+          <td>{{ p.route }}</td>
+          <td>{{ p.category }}</td>
+          <td><span class="report-count">{{ p.reportCount || 0 }}</span></td>
+          <td><span class="badge" [ngClass]="statusBadge(p.moderationStatus || 'active')">{{ p.moderationStatus || 'active' }}</span></td>
+          <td>{{ formatDate(p.createdAt) }}</td>
+          <td class="actions-cell">
+            <button *ngIf="p.moderationStatus !== 'hidden'" class="action-btn warning" (click)="moderatePost(p._id, 'hide')" matTooltip="{{ 'admin.moderation.hideTooltip' | translate }}">
+              <mat-icon>visibility_off</mat-icon>
+            </button>
+            <button *ngIf="p.moderationStatus === 'hidden'" class="action-btn primary" (click)="moderatePost(p._id, 'restore')" matTooltip="{{ 'admin.moderation.restoreTooltip' | translate }}">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button *ngIf="p.moderationStatus !== 'removed'" class="action-btn danger" (click)="moderatePost(p._id, 'remove')" matTooltip="{{ 'admin.moderation.removeTooltip' | translate }}">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="posts.length === 0">
+          <td colspan="8" class="empty-state">{{ 'admin.moderation.noData' | translate }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Comments Tab -->
+  <div class="data-table" *ngIf="activeTab === 'comments' && !loading">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'admin.moderation.content' | translate }}</th>
+          <th>{{ 'admin.moderation.user' | translate }}</th>
+          <th>{{ 'admin.moderation.onPost' | translate }}</th>
+          <th>{{ 'admin.moderation.status' | translate }}</th>
+          <th>{{ 'admin.moderation.date' | translate }}</th>
+          <th>{{ 'admin.moderation.actions' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of comments">
+          <td>{{ truncate(c.content, 60) }}</td>
+          <td>
+            <div class="user-cell" *ngIf="c.userName || c.userEmail">
+              <span class="user-name">{{ c.userName || '—' }}</span>
+              <span class="user-email" *ngIf="c.userEmail">{{ c.userEmail }}</span>
+            </div>
+            <span *ngIf="!c.userName && !c.userEmail">{{ truncate(c.userId, 12) || '—' }}</span>
+          </td>
+          <td>{{ truncate(c.postTitle, 30) || truncate(c.postId, 12) || '—' }}</td>
+          <td><span class="badge" [ngClass]="statusBadge(c.deleted ? 'deleted' : 'active')">{{ c.deleted ? 'hidden' : 'active' }}</span></td>
+          <td>{{ formatDate(c.createdAt) }}</td>
+          <td class="actions-cell">
+            <button *ngIf="!c.deleted" class="action-btn warning" (click)="moderateComment(c._id, 'hide')" matTooltip="{{ 'admin.moderation.hideTooltip' | translate }}">
+              <mat-icon>visibility_off</mat-icon>
+            </button>
+            <button *ngIf="c.deleted" class="action-btn primary" (click)="moderateComment(c._id, 'restore')" matTooltip="{{ 'admin.moderation.restoreTooltip' | translate }}">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button class="action-btn danger" (click)="moderateComment(c._id, 'remove')" matTooltip="{{ 'admin.moderation.removeTooltip' | translate }}">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="comments.length === 0">
+          <td colspan="6" class="empty-state">{{ 'admin.moderation.noData' | translate }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Audit Log Tab -->
+  <div class="data-table" *ngIf="activeTab === 'log' && !loading">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ 'admin.moderation.action' | translate }}</th>
+          <th>{{ 'admin.moderation.target' | translate }}</th>
+          <th>{{ 'admin.moderation.admin' | translate }}</th>
+          <th>{{ 'admin.moderation.reason' | translate }}</th>
+          <th>{{ 'admin.moderation.statusChange' | translate }}</th>
+          <th>{{ 'admin.moderation.date' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let entry of log">
+          <td><span class="action-chip">{{ entry.action }}</span></td>
+          <td>{{ entry.targetType }}: {{ truncate(entry.targetId, 16) }}</td>
+          <td>{{ entry.adminId }}</td>
+          <td>{{ truncate(entry.reason) || '-' }}</td>
+          <td>{{ entry.previousStatus || '-' }} <mat-icon class="arrow-icon">arrow_forward</mat-icon> {{ entry.newStatus || '-' }}</td>
+          <td>{{ formatDate(entry.createdAt) }}</td>
+        </tr>
+        <tr *ngIf="log.length === 0">
+          <td colspan="6" class="empty-state">{{ 'admin.moderation.noData' | translate }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="currentTotal > pageSize">
+    <button class="page-btn" [disabled]="currentPage <= 1" (click)="prevPage()">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+    <button class="page-btn" [disabled]="!hasMore" (click)="nextPage()">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <!-- Confirm Dialog -->
+  <div class="confirm-overlay" *ngIf="confirmAction" (click)="cancelConfirm()">
+    <div class="confirm-dialog" (click)="$event.stopPropagation()">
+      <h3>{{ 'admin.moderation.confirmAction' | translate }}</h3>
+      <p>{{ 'admin.moderation.confirmPrompt' | translate: { action: confirmAction.type } }}</p>
+      <div class="confirm-actions">
+        <button class="btn-cancel" (click)="cancelConfirm()">{{ 'admin.moderation.cancel' | translate }}</button>
+        <button class="btn-confirm" (click)="executeConfirm()">{{ 'admin.moderation.confirm' | translate }}</button>
+      </div>
+    </div>
+  </div>
+</div>

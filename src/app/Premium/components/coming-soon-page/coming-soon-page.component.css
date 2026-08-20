@@ -1,0 +1,101 @@
+.csp-page {
+  min-height: 68vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 20px 64px;
+  font-family: var(--brand-font);
+}
+
+.csp-card {
+  max-width: 560px;
+  width: 100%;
+  background: var(--brand-white);
+  border: 1px solid var(--brand-light-gray);
+  border-radius: var(--brand-radius);
+  box-shadow: var(--brand-shadow-lift);
+  padding: 48px 40px;
+  text-align: center;
+}
+
+.csp-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--brand-primary-light);
+  color: var(--brand-primary-dark);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border-radius: 999px;
+  margin-bottom: 22px;
+}
+.csp-badge mat-icon { font-size: 16px; height: 16px; width: 16px; }
+
+.csp-icon {
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-primary-light);
+  color: var(--brand-primary);
+  animation: cspFloat 3s ease-in-out infinite;
+}
+.csp-icon--train {
+  background: var(--brand-accent-light, var(--brand-primary-light));
+  color: var(--brand-accent, var(--brand-primary));
+}
+.csp-icon mat-icon { font-size: 48px; height: 48px; width: 48px; }
+
+@keyframes cspFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.csp-title {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--brand-dark-gray);
+  margin: 0 0 12px;
+}
+
+.csp-subtitle {
+  font-size: 1.05rem;
+  color: var(--brand-text);
+  margin: 0 0 8px;
+}
+
+.csp-eta {
+  font-size: 0.9rem;
+  color: var(--brand-text-muted);
+  line-height: 1.55;
+  margin: 0 0 30px;
+}
+
+.csp-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.csp-actions a {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 170px;
+  justify-content: center;
+  text-decoration: none;
+}
+.csp-actions mat-icon { font-size: 18px; height: 18px; width: 18px; }
+
+@media (max-width: 480px) {
+  .csp-card { padding: 36px 20px 28px; }
+  .csp-title { font-size: 1.5rem; }
+  .csp-actions { flex-direction: column; }
+  .csp-actions a { width: 100%; }
+}

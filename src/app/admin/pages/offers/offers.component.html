@@ -1,0 +1,209 @@
+<div class="offers-page">
+  <div class="page-header">
+    <h2>{{ 'admin.offers.title' | translate }}</h2>
+    <p class="subtitle">{{ 'admin.offers.subtitle' | translate }}</p>
+  </div>
+
+  <div class="offers-actions">
+    <div class="search-wrap">
+      <mat-icon>search</mat-icon>
+      <input
+        class="search-input"
+        [placeholder]="t('admin.offers.searchPlaceholder')"
+        [(ngModel)]="search"
+        (keydown.enter)="onSearch()"
+      />
+    </div>
+    <select class="filter-select" [(ngModel)]="activeFilter" (change)="filterActive(activeFilter)">
+      <option value="">{{ 'admin.offers.allStatus' | translate }}</option>
+      <option value="true">{{ 'admin.offers.active' | translate }}</option>
+      <option value="false">{{ 'admin.offers.inactive' | translate }}</option>
+    </select>
+    <button class="btn-primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      {{ 'admin.offers.newOffer' | translate }}
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <!-- Error -->
+  <div class="error-state" *ngIf="!loading && error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ 'admin.offers.loadError' | translate }}</p>
+    <button class="btn-secondary" (click)="retryLoad()">{{ 'admin.offers.retry' | translate }}</button>
+  </div>
+
+  <!-- Empty -->
+  <div class="empty-state" *ngIf="!loading && !error && offers.length === 0">
+    <mat-icon>local_offer</mat-icon>
+    <p>{{ 'admin.offers.empty' | translate }}</p>
+  </div>
+
+  <!-- Table -->
+  <div class="offers-table-wrap" *ngIf="!loading && !error && offers.length > 0">
+    <table class="offers-table">
+      <thead>
+        <tr>
+          <th>{{ 'admin.offers.colTitle' | translate }}</th>
+          <th>{{ 'admin.offers.colCode' | translate }}</th>
+          <th>{{ 'admin.offers.colDiscount' | translate }}</th>
+          <th>{{ 'admin.offers.colValidPeriod' | translate }}</th>
+          <th>{{ 'admin.offers.colTarget' | translate }}</th>
+          <th>{{ 'admin.offers.colUsage' | translate }}</th>
+          <th>{{ 'admin.offers.colActive' | translate }}</th>
+          <th>{{ 'admin.offers.colActions' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let offer of offers">
+          <td class="td-title">{{ offer.title }}</td>
+          <td><span class="code-badge">{{ offer.code }}</span></td>
+          <td class="td-discount">{{ fmtDiscount(offer) }}</td>
+          <td class="td-dates">
+            <span>{{ fmtDate(offer.validFrom) }}</span>
+            <span class="date-arrow">→</span>
+            <span>{{ fmtDate(offer.validTo) }}</span>
+          </td>
+          <td class="td-target">
+            <span class="target-badge">{{ offer.targetAudience || 'all' }}</span>
+          </td>
+          <td class="td-usage">
+            <span>{{ offer.usedCount }}</span>
+            <span class="usage-sep">/</span>
+            <span>{{ offer.usageLimit || '∞' }}</span>
+          </td>
+          <td class="td-toggle">
+            <label class="toggle">
+              <input type="checkbox" [checked]="offer.isActive" (change)="toggleActive(offer)" />
+              <span class="toggle-slider"></span>
+            </label>
+          </td>
+          <td class="td-actions">
+            <button class="btn-icon" [title]="t('admin.offers.edit')" (click)="openEdit(offer)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button class="btn-icon btn-danger" [title]="t('admin.offers.delete')" (click)="promptDelete(offer._id)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="totalPages > 1">
+    <button class="btn-page" [disabled]="page <= 1" (click)="prevPage()">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="page-info">{{ 'admin.offers.pageInfo' | translate: { page: page, total: totalPages } }}</span>
+    <button class="btn-page" [disabled]="page >= totalPages" (click)="nextPage()">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <!-- Create / Edit Dialog -->
+  <div class="dialog-overlay" *ngIf="showDialog" (click)="closeDialog()">
+    <div class="dialog" (click)="$event.stopPropagation()">
+      <div class="dialog-header">
+        <h3>{{ editingOffer ? ('admin.offers.editOffer' | translate) : ('admin.offers.createOffer' | translate) }}</h3>
+        <button class="btn-close" (click)="closeDialog()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <div class="form-row">
+          <label>{{ 'admin.offers.fieldTitle' | translate }}</label>
+          <input [(ngModel)]="form.title" [placeholder]="t('admin.offers.placeholderTitle')" />
+        </div>
+        <div class="form-row">
+          <label>{{ 'admin.offers.fieldDescription' | translate }}</label>
+          <textarea [(ngModel)]="form.description" rows="3" [placeholder]="t('admin.offers.placeholderDescription')"></textarea>
+        </div>
+        <div class="form-row form-grid-2">
+          <div>
+            <label>{{ 'admin.offers.fieldCode' | translate }}</label>
+            <input [(ngModel)]="form.code" [placeholder]="t('admin.offers.placeholderCode')" />
+          </div>
+          <div>
+            <label>{{ 'admin.offers.fieldTargetAudience' | translate }}</label>
+            <select [(ngModel)]="form.targetAudience">
+              <option value="all">{{ 'admin.offers.audienceAll' | translate }}</option>
+              <option value="new">{{ 'admin.offers.audienceNew' | translate }}</option>
+              <option value="returning">{{ 'admin.offers.audienceReturning' | translate }}</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row form-grid-3">
+          <div>
+            <label>{{ 'admin.offers.fieldDiscountPercent' | translate }}</label>
+            <input type="number" [(ngModel)]="form.discountPercent" min="0" max="100" />
+          </div>
+          <div>
+            <label>{{ 'admin.offers.fieldDiscountAmount' | translate }}</label>
+            <input type="number" [(ngModel)]="form.discountAmount" min="0" />
+          </div>
+          <div>
+            <label>{{ 'admin.offers.fieldMaxDiscount' | translate }}</label>
+            <input type="number" [(ngModel)]="form.maxDiscount" min="0" />
+          </div>
+        </div>
+        <div class="form-row form-grid-2">
+          <div>
+            <label>{{ 'admin.offers.fieldMinFare' | translate }}</label>
+            <input type="number" [(ngModel)]="form.minFare" min="0" />
+          </div>
+          <div>
+            <label>{{ 'admin.offers.fieldUsageLimit' | translate }}</label>
+            <input type="number" [(ngModel)]="form.usageLimit" min="0" />
+          </div>
+        </div>
+        <div class="form-row form-grid-2">
+          <div>
+            <label>{{ 'admin.offers.fieldValidFrom' | translate }}</label>
+            <input type="date" [(ngModel)]="form.validFrom" />
+          </div>
+          <div>
+            <label>{{ 'admin.offers.fieldValidTo' | translate }}</label>
+            <input type="date" [(ngModel)]="form.validTo" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label>{{ 'admin.offers.fieldImageUrl' | translate }}</label>
+          <input [(ngModel)]="form.imageUrl" placeholder="https://..." />
+        </div>
+        <div class="form-row form-check">
+          <label class="check-label">
+            <input type="checkbox" [(ngModel)]="form.isActive" />
+            <span>{{ 'admin.offers.fieldActive' | translate }}</span>
+          </label>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn-secondary" (click)="closeDialog()">{{ 'admin.offers.cancel' | translate }}</button>
+        <button class="btn-primary" [disabled]="saving" (click)="save()">
+          {{ saving ? (t('admin.offers.saving')) : (editingOffer ? (t('admin.offers.update')) : (t('admin.offers.create'))) }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation -->
+  <div class="dialog-overlay" *ngIf="confirmDeleteId" (click)="cancelDelete()">
+    <div class="dialog dialog-confirm" (click)="$event.stopPropagation()">
+      <div class="confirm-icon">
+        <mat-icon>warning</mat-icon>
+      </div>
+      <h3>{{ 'admin.offers.deleteTitle' | translate }}</h3>
+      <p>{{ 'admin.offers.deleteMessage' | translate }}</p>
+      <div class="dialog-footer">
+        <button class="btn-secondary" (click)="cancelDelete()">{{ 'admin.offers.cancel' | translate }}</button>
+        <button class="btn-danger-solid" (click)="confirmDelete()">{{ 'admin.offers.deleteConfirm' | translate }}</button>
+      </div>
+    </div>
+  </div>
+</div>

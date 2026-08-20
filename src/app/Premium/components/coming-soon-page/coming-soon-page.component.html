@@ -1,0 +1,30 @@
+<div class="csp-page">
+  <div class="csp-card brand-fade-in">
+    <span class="csp-badge">
+      <mat-icon>construction</mat-icon>
+      {{ 'comingSoon.badge' | translate }}
+    </span>
+
+    <div class="csp-icon" [class.csp-icon--train]="service === 'train'">
+      <mat-icon>{{ service === 'cab' ? 'local_taxi' : 'train' }}</mat-icon>
+    </div>
+
+    <h1 class="csp-title">
+      {{ (service === 'cab' ? 'comingSoon.cabTitle' : 'comingSoon.trainTitle') | translate }}
+    </h1>
+
+    <p class="csp-subtitle">{{ 'comingSoon.subtitle' | translate }}</p>
+    <p class="csp-eta">{{ 'comingSoon.eta' | translate }}</p>
+
+    <div class="csp-actions">
+      <a class="btn-premium-outline" routerLink="/">
+        <mat-icon>home</mat-icon>
+        {{ 'comingSoon.backHome' | translate }}
+      </a>
+      <a class="btn-premium" routerLink="/">
+        <mat-icon>directions_bus</mat-icon>
+        {{ 'comingSoon.exploreBuses' | translate }}
+      </a>
+    </div>
+  </div>
+</div>

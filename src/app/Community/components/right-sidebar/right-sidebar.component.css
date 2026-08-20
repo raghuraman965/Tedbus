@@ -1,0 +1,241 @@
+.right-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.widget {
+  background: var(--community-white);
+  border-radius: var(--community-radius);
+  box-shadow: var(--community-shadow);
+  padding: 16px 18px;
+  border: 1px solid var(--community-mid-gray);
+}
+
+.widget-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--community-dark-gray);
+  margin: 0 0 12px;
+}
+
+.widget-title mat-icon {
+  color: var(--community-primary);
+  font-size: 19px;
+  width: 19px;
+  height: 19px;
+}
+
+.route-row, .festival-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  font-size: 0.82rem;
+  color: var(--community-dark-gray);
+  border-bottom: 1px dashed var(--community-mid-gray);
+}
+
+.route-row:last-child, .festival-row:last-child {
+  border-bottom: none;
+}
+
+.hashtag-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--community-mid-gray);
+}
+
+.hashtag-row:last-child {
+  border-bottom: none;
+}
+
+.hashtag-name {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--community-primary);
+  cursor: pointer;
+  font-family: var(--brand-font);
+}
+
+.hashtag-name:hover {
+  text-decoration: underline;
+}
+
+.hashtag-count {
+  font-size: 0.72rem;
+  color: var(--community-text-muted);
+}
+
+.view-btn {
+  background: var(--community-primary-light);
+  border: 1px solid var(--community-primary);
+  color: var(--community-primary-dark);
+  border-radius: 16px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-family: var(--brand-font);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.view-btn:hover {
+  background: var(--community-primary);
+  color: #fff;
+}
+
+.route-name, .festival-row span:first-child {
+  font-weight: 600;
+  color: var(--community-dark-gray);
+}
+
+.route-count, .festival-date {
+  font-size: 0.75rem;
+  color: var(--community-text-muted);
+}
+
+.destination-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.destination-item {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  height: 90px;
+  cursor: pointer;
+}
+
+.destination-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.destination-item:hover img {
+  transform: scale(1.1);
+}
+
+.destination-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.7), transparent 60%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 8px;
+}
+
+.destination-name {
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+.destination-count {
+  color: rgba(255,255,255,0.85);
+  font-size: 0.68rem;
+}
+
+.contributor-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+}
+
+.rank {
+  width: 20px;
+  font-weight: 700;
+  color: var(--community-text-muted);
+  font-size: 0.8rem;
+}
+
+.contributor-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.contributor-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.contributor-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--community-dark-gray);
+}
+
+.contributor-points {
+  font-size: 0.7rem;
+  color: var(--community-text-muted);
+}
+
+.mini-verified {
+  color: var(--community-primary);
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.discussion-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--community-mid-gray);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.discussion-row:last-child {
+  border-bottom: none;
+}
+
+.discussion-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--community-dark-gray);
+  transition: color 0.2s ease;
+}
+
+.discussion-row:hover .discussion-title {
+  color: var(--community-primary);
+}
+
+.discussion-meta {
+  font-size: 0.7rem;
+  color: var(--community-text-muted);
+}
+
+.tips-widget {
+  background: linear-gradient(135deg, var(--community-primary-light), var(--community-white));
+}
+
+.tip-text {
+  font-size: 0.8rem;
+  color: var(--community-primary-dark);
+  padding: 6px 0;
+  margin: 0;
+  border-bottom: 1px dashed rgba(216, 78, 85, 0.2);
+}
+
+.tip-text:last-child {
+  border-bottom: none;
+}

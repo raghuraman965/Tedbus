@@ -1,0 +1,111 @@
+<article class="post-card" (click)="onOpenPost()" [@cardEntrance]="lang">
+  <div class="post-header">
+    <div class="user-info">
+      <img class="avatar" [src]="post.user.avatar" [alt]="post.user.name" (error)="onImageError($event)" (click)="onAuthorClick($event)">
+      <div>
+        <div class="name-row">
+          <span class="username" (click)="onAuthorClick($event)">{{ post.user.name }}</span>
+          <mat-icon *ngIf="post.user.verified" class="verified-badge" [title]="'community.verifiedTraveller' | translate">verified</mat-icon>
+          <span class="badge" *ngIf="post.user.badge">{{ post.user.badge }}</span>
+        </div>
+        <div class="meta-row">
+          <mat-icon class="meta-icon">route</mat-icon>
+          <span>{{ post.route | cityName }}</span>
+          <span class="dot">&middot;</span>
+          <mat-icon class="meta-icon">place</mat-icon>
+          <span>{{ post.destination | cityName }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button
+        *ngIf="!isOwner && !post.user.isSuspended"
+        class="follow-btn"
+        [class.following]="post.user.isFollowing"
+        (click)="toggleFollowAuthor($event)">
+        <mat-icon *ngIf="post.user.isFollowing">check</mat-icon>
+        {{ post.user.isFollowing ? ('community.following' | translate) : ('community.follow' | translate) }}
+      </button>
+      <button mat-icon-button class="more-btn" [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()" [title]="'community.moreOptions' | translate">
+        <mat-icon>more_horiz</mat-icon>
+      </button>
+      <mat-menu #menu="matMenu">
+        <div class="menu-header" *ngIf="!isOwner">{{ 'community.reportPost' | translate }}</div>
+        <button mat-menu-item *ngFor="let reason of reportReasons" (click)="report(reason)">
+          {{ reason | translate }}
+        </button>
+        <mat-divider *ngIf="isOwner"></mat-divider>
+        <button mat-menu-item *ngIf="isOwner" (click)="deletePost($event)" class="danger-item">
+          <mat-icon>delete</mat-icon> {{ 'community.deletePost' | translate }}
+        </button>
+      </mat-menu>
+    </div>
+  </div>
+
+  <div class="action-message" *ngIf="actionMessage">
+    <mat-icon>{{ reportSubmitted ? 'check_circle' : 'info' }}</mat-icon>
+    {{ actionMessage }}
+  </div>
+
+  <div class="post-photo-wrap" *ngIf="post.images?.length">
+    <div class="skeleton-premium photo-skeleton" *ngIf="!imageLoaded"></div>
+    <img
+      class="post-photo"
+      [class.loaded]="imageLoaded"
+      [src]="activeImage"
+      [alt]="post.title"
+      (click)="nextImage($event)"
+      (load)="imageLoaded = true"
+      (error)="onPhotoError($event)">
+    <span class="category-chip">{{ post.category }}</span>
+    <span class="photo-dots" *ngIf="post.images.length > 1">
+      <span class="dot-indicator" *ngFor="let img of post.images; let i = index" [class.active]="i === activeImageIndex"></span>
+    </span>
+  </div>
+
+  <div class="post-body">
+    <h3 class="post-title">{{ post.title }}</h3>
+    <p class="post-story" [class.compact]="compact">{{ post.story }}</p>
+
+    <div class="travel-date-row">
+      <mat-icon class="meta-icon">event</mat-icon>
+      <span>{{ 'community.travelledOn' | translate }} {{ post.travelDate | date:'mediumDate' }}</span>
+    </div>
+
+    <div class="tips-block" *ngIf="post.tips?.length && !compact">
+      <div class="tips-title">
+        <mat-icon>tips_and_updates</mat-icon>
+        <span>{{ 'community.travelTips' | translate }}</span>
+      </div>
+      <ul class="tips-list">
+        <li *ngFor="let tip of post.tips.slice(0,2)">{{ tip }}</li>
+      </ul>
+    </div>
+
+    <div class="tags-row" *ngIf="post.tags?.length">
+      <span class="tag" *ngFor="let tag of post.tags" (click)="onHashtagClick($event, tag)">#{{ tag }}</span>
+    </div>
+  </div>
+
+  <div class="post-footer">
+    <button class="action-btn" [class.active]="post.liked" (click)="toggleLike($event)">
+      <mat-icon>{{ post.liked ? 'favorite' : 'favorite_border' }}</mat-icon>
+      <span>{{ post.likes }}</span>
+    </button>
+    <button class="action-btn" (click)="openPost.emit(post.id)">
+      <mat-icon>mode_comment</mat-icon>
+      <span>{{ post.commentsCount }}</span>
+    </button>
+    <app-share-menu
+      [title]="post.title"
+      [path]="'/community/post/' + post.id"
+      [count]="post.shares"
+      (shared)="onShared()">
+    </app-share-menu>
+    <button class="action-btn bookmark-btn" [class.active]="post.bookmarked" (click)="toggleBookmark($event)">
+      <mat-icon>{{ post.bookmarked ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+    </button>
+    <span class="time-posted">{{ post.timePosted | timeAgo }}</span>
+  </div>
+</article>

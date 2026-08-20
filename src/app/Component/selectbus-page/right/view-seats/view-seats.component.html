@@ -1,0 +1,85 @@
+<div class="seat-picker">
+
+    <div class="seat-legend-wrap">
+        <div class="seat-legend">
+            <span class="legend-item"><span class="legend-swatch available"></span>{{ 'classic.seats.available' | translate }}</span>
+            <span class="legend-item"><span class="legend-swatch selected"></span>{{ 'classic.seats.selected' | translate }}</span>
+            <span class="legend-item"><span class="legend-swatch booked"></span>{{ 'classic.seats.booked' | translate }}</span>
+        </div>
+    </div>
+
+    <div class="seat-picker-body">
+
+        <div class="seat-layout-panel">
+            <div class="driver-cabin">
+                <mat-icon>steering</mat-icon>
+                <span class="driver-label">{{ 'classic.seats.driver' | translate }}</span>
+            </div>
+            <div class="seat-grid">
+                <div class="seat-row" *ngFor="let row of getrowIndices()">
+                    <button
+                        class="seat"
+                        [ngClass]="seatStatusClass(getSeat(row, 0))"
+                        [disabled]="isseatbooked(getSeat(row, 0).number)"
+                        (click)="handleselectedseats(getSeat(row, 0).number)"
+                        [matTooltip]="'classic.seats.seat' | translate: { n: getSeat(row, 0).number }">
+                        <span class="seat-number">{{ getSeat(row, 0).number }}</span>
+                    </button>
+                    <button
+                        class="seat"
+                        [ngClass]="seatStatusClass(getSeat(row, 1))"
+                        [disabled]="isseatbooked(getSeat(row, 1).number)"
+                        (click)="handleselectedseats(getSeat(row, 1).number)"
+                        [matTooltip]="'classic.seats.seat' | translate: { n: getSeat(row, 1).number }">
+                        <span class="seat-number">{{ getSeat(row, 1).number }}</span>
+                    </button>
+                    <div class="aisle"></div>
+                    <button
+                        class="seat"
+                        [ngClass]="seatStatusClass(getSeat(row, 2))"
+                        [disabled]="isseatbooked(getSeat(row, 2).number)"
+                        (click)="handleselectedseats(getSeat(row, 2).number)"
+                        [matTooltip]="'classic.seats.seat' | translate: { n: getSeat(row, 2).number }">
+                        <span class="seat-number">{{ getSeat(row, 2).number }}</span>
+                    </button>
+                    <button
+                        class="seat"
+                        [ngClass]="seatStatusClass(getSeat(row, 3))"
+                        [disabled]="isseatbooked(getSeat(row, 3).number)"
+                        (click)="handleselectedseats(getSeat(row, 3).number)"
+                        [matTooltip]="'classic.seats.seat' | translate: { n: getSeat(row, 3).number }">
+                        <span class="seat-number">{{ getSeat(row, 3).number }}</span>
+                    </button>
+                </div>
+            </div>
+            <div class="bus-exit">
+                <mat-icon>exit_to_app</mat-icon>
+                <span>{{ 'classic.seats.exit' | translate }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="seat-proceed-bar" [class.has-seats]="selectedseats.length > 0">
+        <div class="bar-info">
+            <div class="bar-seats">
+                <span class="bar-label">{{ 'classic.seats.selectedSeats' | translate }}</span>
+                <span class="bar-value" *ngIf="selectedseats.length">{{ selectedseats.join(', ') }}</span>
+                <span class="bar-hint" *ngIf="!selectedseats.length">{{ 'classic.seats.selectAtLeastOne' | translate }}</span>
+            </div>
+            <div class="bar-fare">
+                <span class="bar-label">{{ 'classic.seats.fareTotal' | translate }}</span>
+                <span class="bar-value">₹{{ getFareTotal() }}</span>
+            </div>
+        </div>
+        <button class="proceed-btn" [disabled]="!selectedseats.length || proceeding" (click)="proceedToBook()">
+            <mat-icon>{{ proceeding ? 'sync' : 'arrow_forward' }}</mat-icon>
+            {{ proceeding ? ('classic.seats.checking' | translate) : ('booking.proceedToBook' | translate) }}
+        </button>
+    </div>
+
+    <app-premium-booking-drawer #bookingDrawer [selectedseat]="selectedseats" [seatprice]="seatprice" [routedetails]="routedetails"
+        [busid]="busid" [busarrivaltime]="busarrivaltime" [busdeparturetime]="busdeparturetime" [operatorname]="operatorname"
+        [date]="date" [searchResult]="searchResult" [segmentDistance]="segmentDistance" [routeId]="routeId" (seatsTaken)="handleSeatsTaken($event)">
+    </app-premium-booking-drawer>
+
+</div>

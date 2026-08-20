@@ -1,0 +1,116 @@
+<div class="prefs-page">
+  <div class="prefs-container">
+    <div class="prefs-header">
+      <div class="prefs-title-row">
+        <button class="back-btn" routerLink="/notifications" [title]="'common.back' | translate">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div>
+          <h1>{{ 'notification.preferences' | translate }}</h1>
+          <p class="prefs-subtitle">{{ 'notification.preferencesHint' | translate }}</p>
+        </div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="preferences; else loadingState">
+      <div class="prefs-card">
+        <h2 class="card-title"><mat-icon>language</mat-icon>{{ 'notification.preference.locale' | translate }}</h2>
+        <div class="locale-row">
+          <select class="locale-select" [ngModel]="preferences.locale" (ngModelChange)="setLocale($event)">
+            <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.nativeName }} ({{ lang.label }})</option>
+          </select>
+          <p class="card-hint">{{ 'notification.preference.localeHint' | translate }}</p>
+        </div>
+      </div>
+
+      <div class="prefs-card">
+        <h2 class="card-title"><mat-icon>notifications_active</mat-icon>{{ 'notification.channels' | translate }}</h2>
+        <div class="toggle-list">
+          <div class="toggle-row" *ngFor="let ch of channels">
+            <div class="toggle-info">
+              <span class="toggle-name">{{ 'notification.channel.' + ch | translate }}</span>
+              <span class="toggle-hint">{{ 'notification.channelHint.' + ch | translate }}</span>
+            </div>
+            <mat-slide-toggle
+              [checked]="preferences.channels[ch]"
+              (change)="toggleChannel(ch)"
+              [disabled]="ch === 'push' && !pushSupported"></mat-slide-toggle>
+          </div>
+        </div>
+
+        <div class="push-card" *ngIf="pushSupported">
+          <div class="push-row">
+            <div class="push-info">
+              <span class="toggle-name">{{ 'notification.pushStatus' | translate }}</span>
+              <span class="push-state" [class.on]="pushState === 'enabled'">
+                {{ pushStateLabel }}
+              </span>
+              <span class="push-detail" *ngIf="pushState !== 'enabled' && pushDetail">
+                {{ pushDetail }}
+              </span>
+            </div>
+            <button
+              class="push-btn"
+              [disabled]="pushBusy"
+              *ngIf="pushState !== 'enabled'"
+              (click)="enablePush()">
+              {{ 'notification.pushEnable' | translate }}
+            </button>
+            <button
+              class="push-btn off"
+              [disabled]="pushBusy"
+              *ngIf="pushState === 'enabled'"
+              (click)="disablePush()">
+              {{ 'notification.pushDisable' | translate }}
+            </button>
+          </div>
+          <button
+            class="push-btn ghost"
+            *ngIf="pushState === 'enabled'"
+            [disabled]="testBusy"
+            (click)="sendTest()">
+            {{ testBusy ? ('common.loading' | translate) : ('notification.pushTest' | translate) }}
+          </button>
+        </div>
+      </div>
+
+      <div class="prefs-card">
+        <h2 class="card-title"><mat-icon>category</mat-icon>{{ 'notification.categories' | translate }}</h2>
+        <p class="card-hint">{{ 'notification.categoriesHint' | translate }}</p>
+        <div class="cat-list">
+          <div class="cat-row" *ngFor="let cat of categories">
+            <div class="cat-row-main" (click)="toggleExpandCategory(cat)">
+              <span class="cat-icon" [class]="'cat-' + cat">
+                <mat-icon>{{ categoryIcon[cat] }}</mat-icon>
+              </span>
+              <span class="cat-label">{{ 'notification.category.' + cat | translate }}</span>
+              <mat-icon class="expand-icon" [class.expanded]="expandedCategory === cat">expand_more</mat-icon>
+            </div>
+            <div class="cat-channels" *ngIf="expandedCategory === cat">
+              <div class="cat-channel-row" *ngFor="let ch of channels">
+                <span class="ch-label">{{ 'notification.channel.' + ch | translate }}</span>
+                <mat-slide-toggle
+                  [checked]="isChannelEnabled(cat, ch)"
+                  (change)="toggleCategoryChannel(cat, ch)"
+                  [disabled]="ch === 'push' && !pushSupported"></mat-slide-toggle>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="save-bar">
+        <button class="save-btn" [disabled]="saving" (click)="save()">
+          {{ saving ? ('common.loading' | translate) : ('common.save' | translate) }}
+        </button>
+      </div>
+    </ng-container>
+
+    <ng-template #loadingState>
+      <div class="loading-card">
+        <div class="skeleton-premium" style="width: 100%; height: 120px;"></div>
+        <div class="skeleton-premium" style="width: 100%; height: 120px;"></div>
+      </div>
+    </ng-template>
+  </div>
+</div>

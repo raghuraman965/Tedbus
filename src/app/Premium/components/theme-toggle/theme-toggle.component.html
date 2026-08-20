@@ -1,0 +1,14 @@
+<button
+  class="theme-toggle"
+  [class.dark]="applied === 'dark'"
+  (click)="toggle($event)"
+  [attr.aria-label]="applied === 'dark' ? ('common.switchToLight' | translate) : ('common.switchToDark' | translate)"
+  [attr.aria-pressed]="applied === 'dark'"
+  [title]="'common.toggleDarkMode' | translate">
+  <span class="toggle-track">
+    <span class="toggle-thumb">
+      <mat-icon class="icon-sun">light_mode</mat-icon>
+      <mat-icon class="icon-moon">dark_mode</mat-icon>
+    </span>
+  </span>
+</button>

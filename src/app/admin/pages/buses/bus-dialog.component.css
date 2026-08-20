@@ -1,0 +1,64 @@
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 24px 0;
+}
+
+.dialog-title mat-icon {
+  color: #e11d48;
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.dialog-title h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.dialog-content {
+  padding: 16px 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 24px 20px;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #e11d48, #f43f5e) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+.save-btn:disabled {
+  opacity: 0.6;
+}
+
+.btn-spinner {
+  display: inline-block;
+}
+
+html[data-theme="dark"] :host .dialog-title h2 {
+  color: var(--adm-text, #e4e6eb);
+}
+
+html[data-theme="dark"] :host .dialog-content {
+  color: var(--adm-text, #e4e6eb);
+}

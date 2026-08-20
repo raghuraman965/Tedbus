@@ -1,0 +1,82 @@
+<div class="dv-page">
+  <div class="dv-wrap">
+    <div class="dv-head">
+      <mat-icon>badge</mat-icon>
+      <div>
+        <h1>{{ 'driver.title' | translate }}</h1>
+        <p>{{ 'driver.subtitle' | translate }}</p>
+      </div>
+    </div>
+
+    <div class="dv-card">
+      <div class="dv-card-title">{{ 'driver.scanQr' | translate }}</div>
+
+      <div class="dv-camera">
+        <video #video class="dv-video" [class.active]="scanning" muted playsinline></video>
+        <canvas #canvas class="dv-canvas" hidden></canvas>
+
+        <div *ngIf="!scanning && !cameraError" class="dv-camera-overlay">
+          <mat-icon>qr_code_scanner</mat-icon>
+          <span>{{ 'driver.scanningIdle' | translate }}</span>
+        </div>
+
+        <div *ngIf="scanning" class="dv-scan-frame">
+          <div class="dv-scan-corner dv-scan-corner--tl"></div>
+          <div class="dv-scan-corner dv-scan-corner--tr"></div>
+          <div class="dv-scan-corner dv-scan-corner--bl"></div>
+          <div class="dv-scan-corner dv-scan-corner--br"></div>
+        </div>
+
+        <div *ngIf="cameraError" class="dv-camera-overlay dv-camera-overlay--error">
+          <mat-icon>videocam_off</mat-icon>
+          <span>{{ cameraError }}</span>
+        </div>
+      </div>
+
+      <div class="dv-camera-actions">
+        <button *ngIf="!scanning" class="dv-btn dv-btn--primary" (click)="startScanning()">
+          <mat-icon>videocam</mat-icon> {{ 'driver.startScan' | translate }}
+        </button>
+        <button *ngIf="scanning" class="dv-btn" (click)="stopScanning()">
+          <mat-icon>stop_circle</mat-icon> {{ 'driver.stopScan' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <div class="dv-divider">{{ 'driver.or' | translate }}</div>
+
+    <div class="dv-card">
+      <div class="dv-card-title">{{ 'driver.manualEntry' | translate }}</div>
+      <div class="dv-manual">
+        <input class="dv-input" [placeholder]="'driver.enterPnr' | translate"
+          [(ngModel)]="manualPnr" (keyup.enter)="manualVerify()" />
+        <button class="dv-btn dv-btn--primary" (click)="manualVerify()" [disabled]="verifying || !manualPnr.trim()">
+          <mat-icon>{{ verifying ? 'hourglass_top' : 'fact_check' }}</mat-icon>
+          {{ 'driver.verify' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Result -->
+    <div *ngIf="resultType === 'allowed'" class="dv-result dv-result--allowed">
+      <div class="dv-result-icon"><mat-icon>check_circle</mat-icon></div>
+      <div class="dv-result-title">{{ 'driver.allowedToBoard' | translate }}</div>
+      <div class="dv-result-msg">{{ resultMessage }}</div>
+      <div class="dv-result-detail" *ngIf="result">
+        <div class="dv-detail-row"><span>{{ 'driver.pnr' | translate }}</span><strong>{{ pnrDisplay }}</strong></div>
+        <div class="dv-detail-row"><span>{{ 'driver.passenger' | translate }}</span><strong>{{ result.passengerName || '--' }}</strong></div>
+        <div class="dv-detail-row"><span>{{ 'driver.seats' | translate }}</span><strong>{{ seatsLabel() }}</strong></div>
+        <div class="dv-detail-row"><span>{{ 'driver.route' | translate }}</span><strong>{{ (result.journey || '--') | cityName }}</strong></div>
+        <div class="dv-detail-row" *ngIf="statusBadge"><span>{{ 'driver.status' | translate }}</span><strong>{{ statusBadge.key | translate }}</strong></div>
+      </div>
+      <button class="dv-btn" (click)="reset()">{{ 'driver.scanAnother' | translate }}</button>
+    </div>
+
+    <div *ngIf="resultType === 'rejected'" class="dv-result dv-result--rejected">
+      <div class="dv-result-icon"><mat-icon>cancel</mat-icon></div>
+      <div class="dv-result-title">{{ 'driver.rejected' | translate }}</div>
+      <div class="dv-result-msg">{{ resultMessage }}</div>
+      <button class="dv-btn dv-btn--primary" (click)="reset()">{{ 'driver.tryAgain' | translate }}</button>
+    </div>
+  </div>
+</div>

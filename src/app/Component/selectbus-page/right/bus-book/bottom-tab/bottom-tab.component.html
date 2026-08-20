@@ -1,0 +1,220 @@
+<div class="tabs-wrap">
+    <div class="tabs-bar">
+        <button class="tab" [class.active]="tabstate[0]" (click)="handletabstate(0)">
+            <mat-icon>apps</mat-icon>
+            <span>{{ 'classic.tabs.amenities' | translate }}</span>
+        </button>
+        <button class="tab" [class.active]="tabstate[1]" (click)="handletabstate(1)">
+            <mat-icon>place</mat-icon>
+            <span>{{ 'classic.tabs.boardingDropping' | translate }}</span>
+        </button>
+        <button class="tab" [class.active]="tabstate[2]" (click)="handletabstate(2)">
+            <mat-icon>star</mat-icon>
+            <span>{{ 'classic.tabs.reviews' | translate }}</span>
+        </button>
+        <button class="tab" [class.active]="tabstate[3]" (click)="handletabstate(3)">
+            <mat-icon>policy</mat-icon>
+            <span>{{ 'classic.tabs.bookingPolicies' | translate }}</span>
+        </button>
+        <button class="tab view-seats-tab" [class.active]="tabstate[4]" (click)="handletabstate(4)">
+            <mat-icon>event_seat</mat-icon>
+            <span>{{ 'search.viewSeats' | translate }}</span>
+        </button>
+    </div>
+
+    <!-- ============ AMENITIES ============ -->
+    <div class="tab-content" *ngIf="tabstate[0]">
+        <div class="content-header">
+            <div class="header-icon"><mat-icon>apps</mat-icon></div>
+            <div>
+                <h4>{{ 'classic.tabs.amenities' | translate }}</h4>
+                <p>{{ 'classic.amenitiesIntro1' | translate }} {{ operatorname || ('classic.bus' | translate | lowercase) }} {{ 'classic.amenitiesIntro2' | translate }}</p>
+            </div>
+        </div>
+        <div class="amenity-grid">
+            <div class="amenity-card" *ngFor="let amenity of amenities">
+                <div class="amenity-icon"><mat-icon>{{ amenity.icon }}</mat-icon></div>
+                <div class="amenity-text">
+                    <span class="amenity-name">{{ amenity.name | translate }}</span>
+                    <span class="amenity-subtitle">{{ amenity.subtitle | translate }}</span>
+                </div>
+                <span class="included-chip" *ngIf="amenity.included">
+                    <mat-icon>check</mat-icon>
+                    {{ 'classic.included' | translate }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ BOARDING & DROPPING ============ -->
+    <div class="tab-content" *ngIf="tabstate[1]">
+        <div class="content-header">
+            <div class="header-icon"><mat-icon>place</mat-icon></div>
+            <div>
+                <h4>{{ 'booking.boardingDropping' | translate }}</h4>
+                <p>{{ 'classic.boardingSub' | translate }}</p>
+            </div>
+        </div>
+        <div class="point-grid">
+            <div class="point-group">
+                <div class="point-group-title boarding">
+                    <mat-icon>flight_takeoff</mat-icon>
+                    {{ 'classic.boardingPoints' | translate }}
+                </div>
+                <div class="point-card" *ngFor="let point of boardingPoints">
+                    <div class="point-time">{{ point.time }}</div>
+                    <div class="point-details">
+                        <div class="point-name-row">
+                            <span class="point-name">{{ point.name | cityName }}</span>
+                            <button class="map-btn" matTooltip="{{ 'savedRoutes.viewOnMap' | translate }}" matTooltipPosition="above">
+                                <mat-icon>map</mat-icon>
+                            </button>
+                        </div>
+                        <div class="point-meta">
+                            <mat-icon>location_on</mat-icon>
+                            <span>{{ point.address }}</span>
+                        </div>
+                        <div class="point-meta">
+                            <mat-icon>tour</mat-icon>
+                            <span class="point-landmark">{{ 'classic.landmark' | translate: { landmark: point.landmark } }}</span>
+                        </div>
+                        <div class="point-contact"><mat-icon>call</mat-icon>{{ point.contact }}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="point-group">
+                <div class="point-group-title dropping">
+                    <mat-icon>flight_land</mat-icon>
+                    {{ 'classic.droppingPoints' | translate }}
+                </div>
+                <div class="point-card" *ngFor="let point of droppingPoints">
+                    <div class="point-time">{{ point.time }}</div>
+                    <div class="point-details">
+                        <div class="point-name-row">
+                            <span class="point-name">{{ point.name | cityName }}</span>
+                            <button class="map-btn" matTooltip="{{ 'savedRoutes.viewOnMap' | translate }}" matTooltipPosition="above">
+                                <mat-icon>map</mat-icon>
+                            </button>
+                        </div>
+                        <div class="point-meta">
+                            <mat-icon>location_on</mat-icon>
+                            <span>{{ point.address }}</span>
+                        </div>
+                        <div class="point-meta">
+                            <mat-icon>tour</mat-icon>
+                            <span class="point-landmark">{{ 'classic.landmark' | translate: { landmark: point.landmark } }}</span>
+                        </div>
+                        <div class="point-contact"><mat-icon>call</mat-icon>{{ point.contact }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ REVIEWS ============ -->
+    <div class="tab-content" *ngIf="tabstate[2]">
+        <div class="content-header">
+            <div class="header-icon"><mat-icon>star</mat-icon></div>
+            <div>
+                <h4>{{ 'classic.tabs.reviews' | translate }}</h4>
+                <p>{{ 'classic.reviewsSubtitle' | translate }}</p>
+            </div>
+        </div>
+
+        <div class="reviews-overview">
+            <div class="rating-overall">
+                <div class="rating-big">{{ overallRating }}</div>
+                <div class="rating-stars">
+                    <mat-icon *ngFor="let s of [1,2,3,4,5]">{{ s <= 4 ? 'star' : 'star_half' }}</mat-icon>
+                </div>
+                <div class="rating-total">{{ 'classic.reviewsCount' | translate: { count: totalReviews } }}</div>
+                <div class="verified-badge">
+                    <mat-icon>verified_user</mat-icon>
+                    {{ 'classic.verifiedBookings' | translate: { count: verifiedReviews } }}
+                </div>
+            </div>
+            <div class="rating-breakdown">
+                <div class="breakdown-row" *ngFor="let b of ratingBreakdown">
+                    <span class="breakdown-stars">{{ b.stars }} <mat-icon>star</mat-icon></span>
+                    <div class="breakdown-track"><div class="breakdown-fill" [style.width.%]="b.percent"></div></div>
+                    <span class="breakdown-percent">{{ b.percent }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="aspect-rating-row">
+            <div class="aspect-item" *ngFor="let aspect of aspectRatings">
+                <mat-icon>{{ aspect.icon }}</mat-icon>
+                <span class="aspect-label">{{ aspect.label | translate }}</span>
+                <span class="aspect-value">{{ aspect.value }}</span>
+            </div>
+        </div>
+
+        <div class="feedback-strip">
+            <mat-icon>thumb_up</mat-icon>
+            <div class="feedback-text">
+                <span class="feedback-title">{{ 'classic.recommendText' | translate: { percent: recommendPercent } }}</span>
+                <span class="feedback-sub">{{ 'classic.recommendSub' | translate }}</span>
+            </div>
+        </div>
+
+        <div class="review-list">
+            <div class="review-card" *ngFor="let review of reviews">
+                <div class="review-avatar">{{ review.initials }}</div>
+                <div class="review-body">
+                    <div class="review-top">
+                        <div class="review-author">
+                            <span class="review-name">{{ review.name }}</span>
+                            <span class="verified-badge small" *ngIf="review.verified">
+                                <mat-icon>check_circle</mat-icon>
+                                {{ 'classic.verified' | translate }}
+                            </span>
+                        </div>
+                        <div class="review-meta">
+                            <span class="review-type">{{ review.travellerType | translate }}</span>
+                            <span class="review-date">{{ review.date | translate }}</span>
+                        </div>
+                    </div>
+                    <div class="review-title">
+                        <span class="review-title-stars">
+                            <mat-icon *ngFor="let s of [1,2,3,4,5]" [class.filled]="s <= review.rating">star</mat-icon>
+                        </span>
+                        <span class="review-title-text">{{ review.title | translate }}</span>
+                    </div>
+                    <p class="review-comment">{{ review.comment | translate }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ BOOKING POLICIES ============ -->
+    <div class="tab-content" *ngIf="tabstate[3]">
+        <div class="content-header">
+            <div class="header-icon"><mat-icon>policy</mat-icon></div>
+            <div>
+                <h4>{{ 'classic.tabs.bookingPolicies' | translate }}</h4>
+                <p>{{ 'classic.policiesIntro' | translate }}</p>
+            </div>
+        </div>
+        <div class="policy-list">
+            <div class="policy-card" *ngFor="let policy of policies">
+                <div class="policy-icon"><mat-icon>{{ policy.icon }}</mat-icon></div>
+                <div class="policy-body">
+                    <h5>{{ policy.title | translate }}</h5>
+                    <p class="policy-desc">{{ policy.description | translate }}</p>
+                    <ul class="policy-points">
+                        <li *ngFor="let point of policy.points"><mat-icon>chevron_right</mat-icon>{{ point | translate }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ VIEW SEATS ============ -->
+    <div class="tab-content" *ngIf="tabstate[4]">
+        <app-view-seats [filledseats]="filledseats" [seatprice]="seatprice" [routedetails]="routedetials" [busid]="busid"
+            [busarrivaltime]="busarrivaltime" [busdeparturetime]="busdeparturetime" [operatorname]="operatorname" [date]="date"
+            [searchResult]="searchResult" [segmentDistance]="segmentDistance" [routeId]="routeId"
+            (seatsTaken)="seatsTaken.emit($event)"></app-view-seats>
+    </div>
+</div>

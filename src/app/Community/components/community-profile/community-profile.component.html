@@ -1,0 +1,150 @@
+<div class="profile-page" *ngIf="profile">
+  <div class="cover-wrap">
+    <img *ngIf="profile.coverImage" class="cover-img" [src]="getImageUrl(profile.coverImage)" [attr.alt]="'community.cover' | translate" (error)="onImageError($event)">
+    <div class="cover-gradient"></div>
+    <label class="cover-edit-btn" *ngIf="editing" [title]="'community.changeCoverPhoto' | translate">
+      <mat-icon>photo_camera</mat-icon>
+      <input type="file" accept="image/*" hidden (change)="onCoverSelected($event)">
+    </label>
+  </div>
+
+  <div class="profile-header">
+    <label class="avatar-wrap" [class.editing]="editing">
+      <img class="profile-avatar" [src]="avatar" [alt]="displayName" (error)="onImageError($event)">
+      <span class="avatar-edit-btn" *ngIf="editing">
+        <mat-icon>photo_camera</mat-icon>
+        <input type="file" accept="image/*" hidden (change)="onAvatarSelected($event)">
+      </span>
+    </label>
+    <div class="profile-info">
+      <div class="name-row">
+        <h1>{{ displayName }}</h1>
+        <mat-icon *ngIf="isVerified" class="verified-badge" [title]="'community.verifiedTraveller' | translate">verified</mat-icon>
+        <span class="badge" *ngIf="profile.badge">{{ profile.badge }}</span>
+      </div>
+      <span class="rank-chip">{{ rank }}</span>
+
+      <div class="profile-meta" *ngIf="profile.location || joinedDate">
+        <span class="meta-line" *ngIf="profile.location">
+          <mat-icon>place</mat-icon> {{ profile.location }}
+        </span>
+        <span class="meta-line" *ngIf="joinedDate">
+          <mat-icon>calendar_month</mat-icon> {{ 'community.joined' | translate }} {{ joinedDate }}
+        </span>
+      </div>
+
+      <p class="profile-bio" *ngIf="profile.bio">{{ profile.bio }}</p>
+
+      <div class="follow-stats" *ngIf="profile.followers !== undefined || profile.following !== undefined">
+        <button class="follow-stat" (click)="openFollowList('followers')">
+          <strong>{{ profile.followers ?? 0 }}</strong> {{ 'community.followersCount' | translate }}
+        </button>
+        <button class="follow-stat" (click)="openFollowList('following')">
+          <strong>{{ profile.following ?? 0 }}</strong> {{ 'community.followingCount' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <div class="profile-actions">
+      <button class="primary-btn" *ngIf="isOwnProfile && !editing" (click)="startEdit()">
+        <mat-icon>edit</mat-icon> {{ 'community.editProfile' | translate }}
+      </button>
+      <button class="follow-btn" [class.following]="profile.isFollowing" *ngIf="!isOwnProfile" (click)="toggleFollow()">
+        <mat-icon *ngIf="profile.isFollowing">check</mat-icon>
+        {{ profile.isFollowing ? ('community.following' | translate) : ('community.follow' | translate) }}
+      </button>
+    </div>
+  </div>
+
+  <div class="edit-banner" *ngIf="editMessage">
+    <mat-icon>check_circle</mat-icon> {{ editMessage }}
+  </div>
+  <div class="error-banner" *ngIf="editError">
+    <mat-icon>error_outline</mat-icon> {{ editError }}
+  </div>
+
+  <div class="edit-card" *ngIf="editing">
+    <h3>{{ 'community.editProfile' | translate }}</h3>
+    <div class="edit-field">
+      <label>{{ 'community.name' | translate }}</label>
+      <input type="text" [(ngModel)]="editName">
+    </div>
+    <div class="edit-field">
+      <label>{{ 'community.location' | translate }}</label>
+      <input type="text" [(ngModel)]="editLocation" [cityInput]="editLocation" [placeholder]="'community.cityStatePlaceholder' | translate">
+    </div>
+    <div class="edit-field">
+      <label>{{ 'community.bio' | translate }}</label>
+      <textarea rows="3" [(ngModel)]="editBio" [placeholder]="'community.bioPlaceholder' | translate"></textarea>
+    </div>
+    <span class="uploading-hint" *ngIf="uploadingPhoto">{{ 'community.uploadingPhoto' | translate }}</span>
+    <div class="edit-actions">
+      <button class="cancel-btn" (click)="cancelEdit()">{{ 'common.cancel' | translate }}</button>
+      <button class="primary-btn" [disabled]="uploadingPhoto" (click)="saveProfile()">{{ 'community.saveChanges' | translate }}</button>
+    </div>
+  </div>
+
+  <div class="tabs-row">
+    <button class="tab-btn" [class.active]="activeTab === 'posts'" (click)="switchTab('posts')">
+      <mat-icon>auto_stories</mat-icon> {{ 'community.stories' | translate }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'liked'" (click)="switchTab('liked')">
+      <mat-icon>favorite</mat-icon> {{ 'community.liked' | translate }}
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'saved'" (click)="switchTab('saved')">
+      <mat-icon>bookmark</mat-icon> {{ 'community.saved' | translate }}
+    </button>
+  </div>
+
+  <div class="posts-section">
+    <div class="post-skeleton" *ngIf="loading">
+      <div class="skeleton-premium" style="width: 100%; height: 200px;"></div>
+    </div>
+
+    <div class="error-banner" *ngIf="!loading && errorMessage">
+      <mat-icon>error_outline</mat-icon>
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="!loading && !errorMessage && recentPosts.length">
+      <app-post-card
+        *ngFor="let post of recentPosts"
+        [post]="post"
+        [compact]="true"
+        (openPost)="openPost($event)"
+        (deleted)="onPostDeleted($event)">
+      </app-post-card>
+      <button class="load-more-btn" *ngIf="hasMore && !loadingMore" (click)="loadMore()">{{ 'community.loadMore' | translate }}</button>
+    </div>
+
+    <p class="no-posts" *ngIf="!loading && !errorMessage && !recentPosts.length">
+      <ng-container *ngIf="activeTab === 'posts'">{{ 'community.noPostsYet' | translate }}</ng-container>
+      <ng-container *ngIf="activeTab === 'liked'">{{ 'community.noLikedStories' | translate }}</ng-container>
+      <ng-container *ngIf="activeTab === 'saved'">{{ 'community.noSavedStories' | translate }}</ng-container>
+    </p>
+  </div>
+
+  <!-- Follow list overlay -->
+  <div class="follow-overlay" *ngIf="followListMode" (click)="closeFollowList()">
+    <div class="follow-panel" (click)="$event.stopPropagation()">
+      <div class="follow-panel-header">
+        <h3>{{ followListMode === 'followers' ? ('community.followers' | translate) : ('community.following' | translate) }}</h3>
+        <button mat-icon-button (click)="closeFollowList()"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="follow-list" *ngIf="!loadingFollowList; else listLoading">
+        <button class="follow-user" *ngFor="let u of followListUsers" (click)="viewFollowUser(u.id)">
+          <img class="follow-avatar" [src]="u.avatar" alt="" (error)="onImageError($event)">
+          <span class="follow-name">
+            {{ u.name }}
+            <mat-icon *ngIf="u.verified" class="verified-mini">verified</mat-icon>
+          </span>
+          <span class="follow-meta" *ngIf="u.postsCount !== undefined">{{ u.postsCount }} {{ 'community.posts' | translate }}</span>
+        </button>
+        <p class="no-follows" *ngIf="!followListUsers.length">{{ followListMode === 'followers' ? ('community.noFollowers' | translate) : ('community.noFollowing' | translate) }}</p>
+      </div>
+      <ng-template #listLoading>
+        <div class="follow-loading">{{ 'common.loading' | translate }}</div>
+      </ng-template>
+    </div>
+  </div>
+</div>

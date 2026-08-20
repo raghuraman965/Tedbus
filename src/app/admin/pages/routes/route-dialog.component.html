@@ -1,0 +1,72 @@
+<div class="dialog-title">
+  <mat-icon>route</mat-icon>
+  <h2>{{ isEdit ? ('admin.routes.editRoute' | translate) : ('admin.routes.addRoute' | translate) }}</h2>
+</div>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="form" class="dialog-form">
+    <div class="form-grid">
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'admin.routes.fieldRouteName' | translate }}</mat-label>
+        <input matInput formControlName="routeName" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'admin.routes.fieldDuration' | translate }}</mat-label>
+        <input matInput formControlName="duration" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'admin.routes.fieldSourceLocation' | translate }}</mat-label>
+        <input matInput formControlName="sourceName" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'admin.routes.fieldDestinationLocation' | translate }}</mat-label>
+        <input matInput formControlName="destinationName" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'admin.routes.fieldDistance' | translate }}</mat-label>
+        <input matInput type="number" formControlName="totalDistanceKm" />
+        <span matSuffix>km</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'admin.routes.fieldBaseFare' | translate }}</mat-label>
+        <input matInput type="number" formControlName="baseFare" />
+        <span matSuffix>INR</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'admin.routes.fieldPricePerKm' | translate }}</mat-label>
+        <input matInput type="number" formControlName="pricePerKm" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'admin.routes.fieldTax' | translate }}</mat-label>
+        <input matInput type="number" formControlName="taxPercent" />
+        <span matSuffix>%</span>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>{{ 'admin.routes.fieldServiceFee' | translate }}</mat-label>
+        <input matInput type="number" formControlName="serviceFee" />
+      </mat-form-field>
+
+      <div class="toggle-field">
+        <mat-slide-toggle formControlName="isActive" color="primary">
+          {{ 'admin.routes.fieldActive' | translate }}
+        </mat-slide-toggle>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions class="dialog-actions">
+  <button mat-button (click)="close()">{{ 'admin.common.cancel' | translate }}</button>
+  <button class="adm-btn adm-btn-save" [disabled]="form.invalid || saving" (click)="submit()">
+    <mat-spinner *ngIf="saving" diameter="18" class="btn-spinner"></mat-spinner>
+    {{ isEdit ? ('admin.common.update' | translate) : ('admin.common.create' | translate) }}
+  </button>
+</mat-dialog-actions>

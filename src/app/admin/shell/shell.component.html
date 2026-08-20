@@ -1,0 +1,73 @@
+<div class="admin-shell" [class.dark]="isDark" [class.sidebar-collapsed]="sidebarCollapsed" [class.sidebar-open]="sidebarOpen">
+
+  <!-- Mobile Backdrop -->
+  <div class="adm-backdrop" *ngIf="sidebarOpen" (click)="closeMobile()"></div>
+
+  <!-- Sidebar -->
+  <aside class="adm-sidebar">
+    <div class="sidebar-header">
+      <div class="brand-badge">TB</div>
+      <span class="brand-name" *ngIf="!sidebarCollapsed">{{ 'admin.login.title' | translate }}</span>
+      <button class="collapse-btn" (click)="toggleSidebar()" [attr.title]="(sidebarCollapsed ? 'admin.common.enable' : 'admin.common.disable') | translate">
+        <mat-icon>{{ sidebarCollapsed ? 'chevron_right' : 'chevron_left' }}</mat-icon>
+      </button>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a *ngFor="let item of navItems"
+         class="nav-item"
+         [routerLink]="item.route"
+         routerLinkActive="active"
+         (click)="closeMobile()">
+        <mat-icon class="nav-icon">{{ item.icon }}</mat-icon>
+        <span class="nav-label" *ngIf="!sidebarCollapsed">{{ item.labelKey | translate }}</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a class="nav-item footer-link" routerLink="/" (click)="closeMobile()">
+        <mat-icon class="nav-icon">arrow_back</mat-icon>
+        <span class="nav-label" *ngIf="!sidebarCollapsed">{{ 'admin.nav.backToSite' | translate }}</span>
+      </a>
+      <button class="nav-item footer-link logout-btn" (click)="logout()">
+        <mat-icon class="nav-icon">logout</mat-icon>
+        <span class="nav-label" *ngIf="!sidebarCollapsed">{{ 'admin.nav.logout' | translate }}</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Area -->
+  <div class="adm-main">
+    <!-- Topbar -->
+    <header class="adm-topbar">
+      <div class="topbar-left">
+        <button class="hamburger-btn" (click)="toggleMobile()">
+          <mat-icon>menu</mat-icon>
+        </button>
+        <h1 class="page-title">{{ pageTitle }}</h1>
+      </div>
+
+      <div class="topbar-right">
+        <app-admin-language-selector></app-admin-language-selector>
+
+        <button class="theme-toggle" (click)="toggleTheme()">
+          <mat-icon>{{ isDark ? 'light_mode' : 'dark_mode' }}</mat-icon>
+        </button>
+
+        <div class="admin-chip">
+          <mat-icon class="chip-avatar">person</mat-icon>
+          <span class="chip-name">{{ profileName }}</span>
+        </div>
+
+        <button class="logout-icon-btn" (click)="logout()" [attr.title]="'admin.nav.logout' | translate">
+          <mat-icon>logout</mat-icon>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content -->
+    <main class="adm-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

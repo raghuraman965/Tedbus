@@ -1,0 +1,158 @@
+<app-community-hero (search)="onSearch($event)"></app-community-hero>
+
+<div class="community-layout">
+  <app-left-sidebar
+    [activeCategory]="activeCategory"
+    (categorySelected)="onCategorySelected($event)">
+  </app-left-sidebar>
+
+  <main class="feed-column">
+    <div class="feed-toolbar">
+      <span class="toolbar-title">{{ 'community.communityStories' | translate }}</span>
+      <app-notification-bell></app-notification-bell>
+    </div>
+
+    <div class="search-bar-wrap">
+      <div class="search-bar">
+        <mat-icon>search</mat-icon>
+        <input
+          type="text"
+          [placeholder]="'community.searchPlaceholder' | translate"
+  [(ngModel)]="searchTerm"
+  [cityInput]="searchTerm"
+  (ngModelChange)="onSearchInput($event)"
+          (keyup.enter)="onSearch(searchTerm)"
+          (blur)="closeSearchResults()"
+          (focus)="searchTerm.length >= 2 ? (showSearchResults = true) : null">
+        <mat-icon *ngIf="searching" class="search-spinner">hourglass_top</mat-icon>
+      </div>
+
+      <div class="search-dropdown" *ngIf="showSearchResults">
+        <ng-container *ngIf="searchResults.users.length">
+          <div class="search-group">
+            <span class="search-group-label">{{ 'community.travellers' | translate }}</span>
+            <button class="search-item" *ngFor="let u of searchResults.users" (mousedown)="selectUser(u.id)">
+              <img class="search-avatar" [src]="u.avatar" alt="">
+              <span>{{ u.name }}</span>
+              <mat-icon *ngIf="u.verified" class="verified">verified</mat-icon>
+            </button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="searchResults.posts.length">
+          <div class="search-group">
+            <span class="search-group-label">{{ 'community.stories' | translate }}</span>
+            <button class="search-item" *ngFor="let p of searchResults.posts" (mousedown)="selectPost(p.id)">
+              <mat-icon class="search-type-icon">auto_stories</mat-icon>
+              <span class="search-item-title">{{ p.title }}</span>
+            </button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="searchResults.hashtags.length">
+          <div class="search-group">
+            <span class="search-group-label">{{ 'community.hashtags' | translate }}</span>
+            <button class="search-item" *ngFor="let h of searchResults.hashtags" (mousedown)="selectHashtag(h.name)">
+              <mat-icon class="search-type-icon">tag</mat-icon>
+              <span>#{{ h.name }}</span>
+              <span class="search-meta">{{ h.count }} {{ 'community.posts' | translate }}</span>
+            </button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="searchResults.destinations.length">
+          <div class="search-group">
+            <span class="search-group-label">{{ 'community.destinations' | translate }}</span>
+            <button class="search-item" *ngFor="let d of searchResults.destinations" (mousedown)="selectDestination(d.name)">
+              <mat-icon class="search-type-icon">place</mat-icon>
+              <span>{{ d.name | cityName }}</span>
+              <span class="search-meta">{{ d.count }} {{ 'community.posts' | translate }}</span>
+            </button>
+          </div>
+        </ng-container>
+
+        <button class="search-all" (mousedown)="onSearch(searchTerm)">
+          {{ 'community.searchAll' | translate }} "{{ searchTerm }}"
+        </button>
+      </div>
+    </div>
+
+    <div class="filter-bar">
+      <button
+        class="filter-chip"
+        *ngFor="let s of sortOptions"
+        [class.active]="activeSort === s.key"
+        (click)="setSort(s.key)">
+        {{ s.label | translate }}
+      </button>
+    </div>
+
+    <div class="route-destination-filters" *ngIf="filterOptions.routes.length || filterOptions.destinations.length">
+      <select class="filter-select" [(ngModel)]="activeRoute" (ngModelChange)="onRouteFilterChange($event)">
+        <option value="">{{ 'community.allRoutes' | translate }}</option>
+        <option *ngFor="let route of filterOptions.routes" [value]="route">{{ route | cityName }}</option>
+      </select>
+      <select class="filter-select" [(ngModel)]="activeDestination" (ngModelChange)="onDestinationFilterChange($event)">
+        <option value="">{{ 'community.allDestinations' | translate }}</option>
+        <option *ngFor="let dest of filterOptions.destinations" [value]="dest">{{ dest | cityName }}</option>
+      </select>
+    </div>
+
+    <div class="active-filters" *ngIf="activeCategory || activeRoute || activeDestination || activeHashtag || searchTerm">
+      <span class="filter-tag" *ngIf="activeCategory">
+        {{ activeCategory }}
+        <mat-icon (click)="onCategorySelected('')">close</mat-icon>
+      </span>
+      <span class="filter-tag" *ngIf="activeRoute">
+        {{ activeRoute | cityName }}
+        <mat-icon (click)="onRouteFilterChange('')">close</mat-icon>
+      </span>
+      <span class="filter-tag" *ngIf="activeDestination">
+        {{ activeDestination | cityName }}
+        <mat-icon (click)="onDestinationFilterChange('')">close</mat-icon>
+      </span>
+      <span class="filter-tag" *ngIf="activeHashtag">
+        #{{ activeHashtag }}
+        <mat-icon (click)="activeHashtag = ''; resetAndLoad()">close</mat-icon>
+      </span>
+      <span class="filter-tag" *ngIf="searchTerm">
+        "{{ searchTerm }}"
+        <mat-icon (click)="onSearch('')">close</mat-icon>
+      </span>
+      <button class="clear-all-btn" (click)="clearFilters()">{{ 'community.clearAll' | translate }}</button>
+    </div>
+
+    <ng-container *ngIf="loading">
+      <div class="post-skeleton" *ngFor="let i of [1,2,3]">
+        <div class="skeleton-premium" style="width: 40%; height: 18px; margin-bottom: 10px;"></div>
+        <div class="skeleton-premium" style="width: 100%; height: 220px;"></div>
+      </div>
+    </ng-container>
+
+    <div class="error-banner" *ngIf="!loading && errorMessage">
+      <app-error-state [errorMessage]="errorMessage" (retry)="loadPage()"></app-error-state>
+    </div>
+
+    <div *ngIf="!loading && !errorMessage && posts.length">
+      <app-post-card *ngFor="let post of posts" [post]="post" (openPost)="openPost($event)" (deleted)="onPostDeleted($event)"></app-post-card>
+    </div>
+
+    <div class="load-more-row" *ngIf="!loading && !errorMessage && posts.length">
+      <div class="skeleton-premium" style="width: 100%; height: 100px;" *ngIf="loadingMore"></div>
+      <button class="load-more-btn" *ngIf="!loadingMore && hasMore" (click)="loadMore()">
+        {{ 'community.loadMoreStories' | translate }}
+      </button>
+      <p class="end-of-feed" *ngIf="!hasMore">{{ 'community.endOfFeed' | translate }}</p>
+    </div>
+
+    <div class="empty-state" *ngIf="!loading && !errorMessage && !posts.length">
+      <app-empty-state icon="explore" titleKey="states.empty.noCommunityPosts" subtitleKey="states.empty.noCommunityPostsSub"></app-empty-state>
+    </div>
+  </main>
+
+  <app-right-sidebar class="sidebar-column"></app-right-sidebar>
+</div>
+
+<button class="fab" (click)="goToCreatePost()" [title]="'community.createPost' | translate">
+  <mat-icon>edit</mat-icon>
+</button>

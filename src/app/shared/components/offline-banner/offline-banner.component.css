@@ -1,0 +1,37 @@
+.offline-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 16px;
+  background: var(--brand-error);
+  color: var(--brand-white);
+  font-family: var(--brand-font);
+  font-size: 0.88rem;
+  font-weight: 600;
+  transform: translateY(-100%);
+  transition: transform 0.35s ease;
+}
+
+.offline-banner--visible {
+  transform: translateY(0);
+}
+
+.offline-banner--back-online {
+  transform: translateY(0);
+  background: var(--brand-success);
+}
+
+.offline-banner__content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.offline-banner__icon {
+  font-size: 20px;
+}

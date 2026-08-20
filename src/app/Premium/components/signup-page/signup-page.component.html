@@ -1,0 +1,132 @@
+<div class="signup-wrap">
+  <div class="signup-card brand-fade-in">
+
+    <div class="success-view" *ngIf="submitted">
+      <div class="success-check">
+        <mat-icon>check</mat-icon>
+      </div>
+      <h2>{{ 'auth.accountCreated' | translate }}</h2>
+      <p>{{ 'auth.signupSuccess' | translate }}</p>
+    </div>
+
+    <ng-container *ngIf="!submitted">
+      <h1>{{ 'auth.createAccount' | translate }}</h1>
+      <p class="subtitle">{{ 'auth.signupSubtitle' | translate }}</p>
+
+      <div class="signup-tabs">
+        <button type="button" class="tab-btn" [class.active]="signupTab === 'email'" (click)="switchTab('email')">
+          <mat-icon>mail</mat-icon> {{ 'auth.signupWithEmail' | translate }}
+        </button>
+        <button type="button" class="tab-btn" [class.active]="signupTab === 'phone'" (click)="switchTab('phone')">
+          <mat-icon>smartphone</mat-icon> {{ 'auth.signupWithPhone' | translate }}
+        </button>
+      </div>
+
+      <div class="error-banner" *ngIf="errorMessage">
+        <mat-icon>error_outline</mat-icon>
+        {{ errorMessage }}
+      </div>
+
+      <ng-container *ngIf="signupTab === 'email'">
+        <div class="field-group">
+          <label>{{ 'auth.fullName' | translate }}</label>
+          <input type="text" class="input-premium" [class.invalid]="fieldErrors['fullName']" [placeholder]="'auth.fullNamePlaceholder' | translate" [(ngModel)]="fullName">
+          <span class="field-error" *ngIf="fieldErrors['fullName']">{{ fieldErrors['fullName'] }}</span>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label>{{ 'auth.email' | translate }}</label>
+            <input type="email" class="input-premium" [class.invalid]="fieldErrors['email']" [placeholder]="'auth.emailPlaceholder' | translate" [(ngModel)]="email">
+            <span class="field-error" *ngIf="fieldErrors['email']">{{ fieldErrors['email'] }}</span>
+          </div>
+          <div class="field-group">
+            <label>{{ 'auth.phone' | translate }}</label>
+            <input type="tel" class="input-premium" [class.invalid]="fieldErrors['phone']" [placeholder]="'auth.phonePlaceholder' | translate" maxlength="10" [(ngModel)]="phone">
+            <span class="field-error" *ngIf="fieldErrors['phone']">{{ fieldErrors['phone'] }}</span>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>{{ 'auth.password' | translate }}</label>
+          <div class="password-field">
+            <input [type]="showPassword ? 'text' : 'password'" class="input-premium" [class.invalid]="fieldErrors['password']" [placeholder]="'auth.createPassword' | translate" [(ngModel)]="password">
+            <button type="button" class="visibility-toggle" (click)="togglePassword()">
+              <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </div>
+          <div class="strength-bar" *ngIf="password">
+            <span [class]="'strength-fill ' + passwordStrength"></span>
+          </div>
+          <span class="field-error" *ngIf="fieldErrors['password']">{{ fieldErrors['password'] }}</span>
+        </div>
+
+        <div class="field-group">
+          <label>{{ 'auth.confirmPassword' | translate }}</label>
+          <div class="password-field">
+            <input [type]="showConfirmPassword ? 'text' : 'password'" class="input-premium" [class.invalid]="fieldErrors['confirmPassword']" [placeholder]="'auth.reenterPassword' | translate" [(ngModel)]="confirmPassword">
+            <button type="button" class="visibility-toggle" (click)="toggleConfirmPassword()">
+              <mat-icon>{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+            </button>
+          </div>
+          <span class="field-error" *ngIf="fieldErrors['confirmPassword']">{{ fieldErrors['confirmPassword'] }}</span>
+        </div>
+
+        <label class="terms-row">
+          <input type="checkbox" [(ngModel)]="acceptedTerms">
+          <span>{{ 'auth.termsAgree' | translate }} <a href="javascript:void(0)">{{ 'auth.termsConditions' | translate }}</a> {{ 'auth.and' | translate }} <a href="javascript:void(0)">{{ 'auth.privacyPolicy' | translate }}</a></span>
+        </label>
+        <span class="field-error" *ngIf="fieldErrors['terms']">{{ fieldErrors['terms'] }}</span>
+
+        <button class="btn-premium full-width" [disabled]="isSubmitting" (click)="submit()">
+          <span class="spinner" *ngIf="isSubmitting"></span>
+          <mat-icon *ngIf="!isSubmitting">person_add</mat-icon>
+          {{ isSubmitting ? ('auth.creatingAccount' | translate) : ('auth.createAccount' | translate) }}
+        </button>
+      </ng-container>
+
+      <ng-container *ngIf="signupTab === 'phone'">
+        <div class="field-group">
+          <label>{{ 'auth.fullName' | translate }} <span class="optional-label">{{ 'auth.optional' | translate }}</span></label>
+          <input type="text" class="input-premium" [class.invalid]="fieldErrors['fullName']" [placeholder]="'auth.fullNamePlaceholder' | translate" [(ngModel)]="fullName" [disabled]="otpSent">
+          <span class="field-error" *ngIf="fieldErrors['fullName']">{{ fieldErrors['fullName'] }}</span>
+        </div>
+
+        <div class="field-group">
+          <label>{{ 'auth.phone' | translate }}</label>
+          <input type="tel" class="input-premium" [class.invalid]="fieldErrors['phone']" [placeholder]="'auth.phonePlaceholder' | translate" maxlength="10" [(ngModel)]="phone" [disabled]="otpSent">
+          <span class="field-error" *ngIf="fieldErrors['phone']">{{ fieldErrors['phone'] }}</span>
+        </div>
+
+        <div class="field-group" *ngIf="otpSent">
+          <label>{{ 'auth.enterOtp' | translate }}</label>
+          <input type="text" class="input-premium" [class.invalid]="fieldErrors['otp']" [placeholder]="'auth.otpPlaceholder' | translate" maxlength="4" [(ngModel)]="signupOtp" (keyup.enter)="verifyPhoneSignup()">
+          <span class="field-error" *ngIf="fieldErrors['otp']">{{ fieldErrors['otp'] }}</span>
+          <p class="dev-hint" *ngIf="devOtpHint">{{ devOtpHint }}</p>
+        </div>
+
+        <label class="terms-row">
+          <input type="checkbox" [(ngModel)]="acceptedTerms">
+          <span>{{ 'auth.termsAgree' | translate }} <a href="javascript:void(0)">{{ 'auth.termsConditions' | translate }}</a> {{ 'auth.and' | translate }} <a href="javascript:void(0)">{{ 'auth.privacyPolicy' | translate }}</a></span>
+        </label>
+        <span class="field-error" *ngIf="fieldErrors['terms']">{{ fieldErrors['terms'] }}</span>
+
+        <button class="btn-premium full-width" *ngIf="!otpSent" [disabled]="isSubmitting" (click)="sendPhoneOtp()">
+          <span class="spinner" *ngIf="isSubmitting"></span>
+          <mat-icon *ngIf="!isSubmitting">smartphone</mat-icon>
+          {{ isSubmitting ? ('auth.sending' | translate) : ('auth.sendOtp' | translate) }}
+        </button>
+
+        <button class="btn-premium full-width" *ngIf="otpSent" [disabled]="isSubmitting" (click)="verifyPhoneSignup()">
+          <span class="spinner" *ngIf="isSubmitting"></span>
+          <mat-icon *ngIf="!isSubmitting">verified_user</mat-icon>
+          {{ isSubmitting ? ('auth.verifying' | translate) : ('auth.verifyCreateAccount' | translate) }}
+        </button>
+      </ng-container>
+
+      <p class="login-hint">
+        {{ 'auth.haveAccount' | translate }} <button class="link-btn" (click)="goToLogin()">{{ 'common.login' | translate }}</button>
+      </p>
+    </ng-container>
+  </div>
+</div>

@@ -1,0 +1,70 @@
+<div class="notif-center" *ngIf="isLoggedIn">
+  <button class="bell-btn" (click)="toggle()" [attr.aria-label]="'notification.title' | translate">
+    <mat-icon>{{ unreadCount > 0 ? 'notifications' : 'notifications_none' }}</mat-icon>
+    <span class="bell-badge" *ngIf="unreadCount > 0">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
+  </button>
+
+  <div class="bell-backdrop" *ngIf="open" (click)="close()"></div>
+
+  <div class="bell-panel" *ngIf="open" (click)="$event.stopPropagation()">
+    <div class="bell-header">
+      <div class="bell-title-wrap">
+        <h3>{{ 'notification.title' | translate }}</h3>
+        <span class="unread-label" *ngIf="unreadCount > 0">{{ unreadCount }} {{ 'notification.unread' | translate }}</span>
+      </div>
+      <div class="bell-actions">
+        <button class="header-action" *ngIf="unreadCount > 0" (click)="markAllRead()" [title]="'notification.markAllRead' | translate">
+          <mat-icon>done_all</mat-icon>
+        </button>
+        <button class="header-action" (click)="openPreferences()" [title]="'notification.preferences' | translate">
+          <mat-icon>settings</mat-icon>
+        </button>
+        <button class="header-action" (click)="close()" [title]="'common.close' | translate">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <div class="bell-list">
+      <ng-container *ngIf="notifications.length; else emptyState">
+        <div
+          class="notif-item"
+          *ngFor="let n of notifications"
+          [class.unread]="!n.read"
+          [class.priority-high]="n.priority === 'high'"
+          [class.priority-critical]="n.priority === 'critical'"
+          role="button"
+          tabindex="0"
+          (click)="onNotificationClick(n)"
+          (keydown.enter)="onNotificationClick(n)">
+          <span class="notif-icon" [class]="'cat-' + n.category">
+            <mat-icon>{{ categoryIcon[n.category] || 'notifications' }}</mat-icon>
+          </span>
+          <div class="notif-body">
+            <span class="notif-title">{{ n.title }}</span>
+            <span class="notif-message">{{ n.message }}</span>
+            <span class="notif-time">{{ relativeTime(n.createdAt) }} · {{ 'notification.category.' + n.category | translate }}</span>
+          </div>
+          <span class="unread-dot" *ngIf="!n.read"></span>
+          <button class="notif-delete" (click)="deleteNotification($event, n)" [title]="'notification.delete' | translate">
+            <mat-icon>delete_outline</mat-icon>
+          </button>
+        </div>
+      </ng-container>
+
+      <ng-template #emptyState>
+        <div class="notif-empty">
+          <mat-icon>notifications_none</mat-icon>
+          <p>{{ 'notification.noNotifications' | translate }}</p>
+        </div>
+      </ng-template>
+    </div>
+
+    <div class="bell-footer">
+      <button class="view-all-btn" (click)="openHistory()">
+        {{ 'notification.viewAll' | translate }}
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>

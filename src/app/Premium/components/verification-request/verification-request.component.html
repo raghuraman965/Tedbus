@@ -1,0 +1,165 @@
+<div class="verification-wrapper">
+  <div class="verification-card">
+
+    <!-- ═══════ FORM STATE ═══════ -->
+    <div class="card-body" *ngIf="mode === 'form'">
+      <div class="card-header">
+        <div class="brand-icon">
+          <span class="verified-badge-icon">✓</span>
+        </div>
+        <h1>{{ 'verificationRequest.title' | translate }}</h1>
+        <p class="subtitle">{{ 'verificationRequest.subtitle' | translate }}</p>
+      </div>
+
+      <div class="error-banner" *ngIf="errorMessage">
+        <span class="error-icon">!</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="success-banner" *ngIf="successMessage">
+        <span class="success-icon">✓</span>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'verificationRequest.fullName' | translate }} <span class="required">*</span></label>
+        <input
+          type="text"
+          class="form-input"
+          [placeholder]="'verificationRequest.fullNamePlaceholder' | translate"
+          [(ngModel)]="fullName"
+          [disabled]="isSubmitting"
+          autocomplete="name">
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'verificationRequest.phone' | translate }} <span class="required">*</span></label>
+        <input
+          type="tel"
+          class="form-input"
+          [placeholder]="'verificationRequest.phonePlaceholder' | translate"
+          [(ngModel)]="phone"
+          [disabled]="isSubmitting"
+          autocomplete="tel">
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'verificationRequest.dateOfBirth' | translate }} <span class="required">*</span></label>
+        <input
+          type="date"
+          class="form-input"
+          [(ngModel)]="dateOfBirth"
+          [disabled]="isSubmitting">
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'verificationRequest.gender' | translate }}</label>
+        <select
+          class="form-input"
+          [(ngModel)]="gender"
+          [disabled]="isSubmitting">
+          <option value="">{{ 'verificationRequest.selectGender' | translate }}</option>
+          <option value="male">{{ 'verificationRequest.male' | translate }}</option>
+          <option value="female">{{ 'verificationRequest.female' | translate }}</option>
+          <option value="other">{{ 'verificationRequest.other' | translate }}</option>
+          <option value="prefer_not_to_say">{{ 'verificationRequest.preferNotToSay' | translate }}</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'verificationRequest.address' | translate }}</label>
+        <textarea
+          class="form-input textarea"
+          [placeholder]="'verificationRequest.addressPlaceholder' | translate"
+          [(ngModel)]="address"
+          [disabled]="isSubmitting"
+          rows="3"></textarea>
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'verificationRequest.idProofType' | translate }}</label>
+        <select
+          class="form-input"
+          [(ngModel)]="idProofType"
+          [disabled]="isSubmitting">
+          <option value="aadhaar">{{ 'verificationRequest.aadhaarCard' | translate }}</option>
+          <option value="pan">{{ 'verificationRequest.panCard' | translate }}</option>
+          <option value="passport">{{ 'verificationRequest.passport' | translate }}</option>
+          <option value="voter_id">{{ 'verificationRequest.voterId' | translate }}</option>
+          <option value="driving_license">{{ 'verificationRequest.drivingLicense' | translate }}</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'verificationRequest.idProofNumber' | translate }}</label>
+        <input
+          type="text"
+          class="form-input"
+          [placeholder]="'verificationRequest.idProofPlaceholder' | translate"
+          [(ngModel)]="idProofNumber"
+          [disabled]="isSubmitting">
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'verificationRequest.whyVerification' | translate }}</label>
+        <textarea
+          class="form-input textarea"
+          [placeholder]="'verificationRequest.whyVerificationPlaceholder' | translate"
+          [(ngModel)]="reason"
+          [disabled]="isSubmitting"
+          rows="3"></textarea>
+      </div>
+
+      <button
+        class="btn-primary full-width"
+        [disabled]="isSubmitting"
+        (click)="submitRequest()">
+        <span class="spinner" *ngIf="isSubmitting"></span>
+        {{ isSubmitting ? ('verificationRequest.submitting' | translate) : ('verificationRequest.submitButton' | translate) }}
+      </button>
+    </div>
+
+    <!-- ═══════ STATUS STATE ═══════ -->
+    <div class="card-body" *ngIf="mode === 'status' && requestStatus">
+
+      <!-- Pending -->
+      <div class="status-view" *ngIf="requestStatus.status === 'pending'">
+        <div class="status-icon pending">
+          <mat-icon>hourglass_top</mat-icon>
+        </div>
+        <h2>{{ 'verificationRequest.underReview' | translate }}</h2>
+        <p class="subtitle">{{ 'verificationRequest.underReviewDesc' | translate }}</p>
+        <p class="status-date" *ngIf="requestStatus.createdAt">{{ 'verificationRequest.submittedOn' | translate }} {{ requestStatus.createdAt | date:'mediumDate' }}</p>
+      </div>
+
+      <!-- Approved -->
+      <div class="status-view" *ngIf="requestStatus.status === 'approved'">
+        <div class="status-icon approved">
+          <mat-icon>verified</mat-icon>
+        </div>
+        <h2>{{ 'verificationRequest.verified' | translate }}</h2>
+        <p class="subtitle">{{ 'verificationRequest.verifiedDesc' | translate }}</p>
+      </div>
+
+      <!-- Rejected -->
+      <div class="status-view" *ngIf="requestStatus.status === 'rejected'">
+        <div class="status-icon rejected">
+          <mat-icon>close</mat-icon>
+        </div>
+        <h2>{{ 'verificationRequest.rejected' | translate }}</h2>
+        <p class="subtitle">{{ 'verificationRequest.rejectedDesc' | translate }}</p>
+        <div class="rejection-note" *ngIf="requestStatus.rejectionNote">
+          <strong>{{ 'verificationRequest.reason' | translate }}</strong> {{ requestStatus.rejectionNote }}
+        </div>
+        <button
+          class="btn-primary full-width"
+          style="margin-top: 24px;"
+          (click)="submitNewRequest()">
+          {{ 'verificationRequest.submitNewRequest' | translate }}
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>

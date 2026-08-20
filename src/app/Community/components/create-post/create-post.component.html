@@ -1,0 +1,135 @@
+<div class="create-post-wrap">
+  <div class="create-post-card">
+    <div class="form-header">
+      <h1>{{ 'community.shareYourJourney' | translate }}</h1>
+      <p>{{ 'community.shareYourJourneySubtitle' | translate }}</p>
+    </div>
+
+    <div class="success-banner" *ngIf="submitted">
+      <mat-icon>check_circle</mat-icon>
+      {{ 'community.postSuccess' | translate }}
+    </div>
+
+    <div class="error-banner" *ngIf="errorMessage">
+      <mat-icon>error_outline</mat-icon>
+      {{ errorMessage }}
+    </div>
+
+    <div class="verify-banner" *ngIf="!isVerified">
+      <mat-icon>verified_user</mat-icon>
+      <div>
+        <strong>{{ 'community.verificationRequired' | translate }}</strong>
+        <p>{{ 'community.verificationRequiredText' | translate }}</p>
+      </div>
+    </div>
+
+    <form *ngIf="!submitted" (ngSubmit)="submitPost()">
+
+      <div class="field-group">
+        <label>{{ 'community.title' | translate }}</label>
+        <input type="text" [(ngModel)]="title" name="title" [placeholder]="'community.titlePlaceholder' | translate" required>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>{{ 'community.route' | translate }}</label>
+          <div class="input-icon">
+            <mat-icon>route</mat-icon>
+            <input type="text" [(ngModel)]="route" [cityInput]="route" name="route" [placeholder]="'community.routePlaceholder' | translate" required>
+          </div>
+        </div>
+        <div class="field-group">
+          <label>{{ 'community.destination' | translate }}</label>
+          <div class="input-icon">
+            <mat-icon>place</mat-icon>
+            <input type="text" [(ngModel)]="destination" [cityInput]="destination" name="destination" [placeholder]="'community.destinationPlaceholder' | translate" required>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label>{{ 'community.travelDate' | translate }}</label>
+          <mat-form-field appearance="outline" class="date-field">
+            <input matInput [matDatepicker]="picker" [(ngModel)]="travelDate" name="travelDate" [placeholder]="'community.chooseDate' | translate">
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </div>
+        <div class="field-group">
+          <label>{{ 'community.category' | translate }}</label>
+          <select class="category-select" [(ngModel)]="selectedCategory" name="category">
+            <option *ngFor="let cat of categories" [value]="cat.key">{{ cat.i18nKey | translate }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'community.story' | translate }}</label>
+        <textarea rows="6" [(ngModel)]="story" name="story" [placeholder]="'community.storyPlaceholder' | translate" required></textarea>
+        <button type="button" class="emoji-toggle" (click)="showEmojiPicker = !showEmojiPicker">
+          <mat-icon>sentiment_satisfied</mat-icon> {{ 'community.addEmoji' | translate }}
+        </button>
+        <div class="emoji-picker" *ngIf="showEmojiPicker">
+          <button type="button" class="emoji-btn" *ngFor="let e of emojis" (click)="addEmoji(e)">{{ e }}</button>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'community.travelTips' | translate }}</label>
+        <div class="chip-input-row">
+          <input type="text" [(ngModel)]="tipInput" name="tipInput" [placeholder]="'community.addTipPlaceholder' | translate" (keyup.enter)="addTip()">
+          <button type="button" class="add-chip-btn" (click)="addTip()">{{ 'community.add' | translate }}</button>
+        </div>
+        <div class="chip-list" *ngIf="tips.length">
+          <span class="chip" *ngFor="let tip of tips; let i = index">
+            {{ tip }}
+            <mat-icon (click)="removeTip(i)">close</mat-icon>
+          </span>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'community.tags' | translate }}</label>
+        <div class="chip-input-row">
+          <input type="text" [(ngModel)]="tagInput" name="tagInput" [placeholder]="'community.addTagPlaceholder' | translate" (keyup.enter)="addTag()">
+          <button type="button" class="add-chip-btn" (click)="addTag()">{{ 'community.add' | translate }}</button>
+        </div>
+        <div class="chip-list" *ngIf="tags.length">
+          <span class="chip tag-chip" *ngFor="let tag of tags; let i = index">
+            #{{ tag }}
+            <mat-icon (click)="removeTag(i)">close</mat-icon>
+          </span>
+        </div>
+        <span class="field-hint">{{ 'community.hashtagHint' | translate }}</span>
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'community.uploadPhotos' | translate }} <span class="count-hint">({{ imagePreviews.length }}/{{ maxImages }})</span></label>
+        <label class="upload-box" [class.disabled]="imageSlotsRemaining <= 0">
+          <mat-icon>{{ uploadingImage ? 'cloud_upload' : 'add_photo_alternate' }}</mat-icon>
+          <span>{{ uploadingImage ? ('community.uploading' | translate) : (imageSlotsRemaining > 0 ? ('community.uploadClickHint' | translate) : ('community.photoLimitReached' | translate)) }}</span>
+          <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden
+            [disabled]="imageSlotsRemaining <= 0" (change)="onFilesSelected($event)">
+        </label>
+        <span class="field-hint error-hint" *ngIf="uploadError">{{ uploadError }}</span>
+        <div class="image-preview-row" *ngIf="imagePreviews.length">
+          <div class="preview-thumb" *ngFor="let img of imagePreviews; let i = index">
+            <img [src]="getImageUrl(img)" [attr.alt]="'community.preview' | translate">
+            <button type="button" class="remove-thumb" (click)="removeImage(i)">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="cancel-btn" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
+        <button type="submit" class="submit-btn" [disabled]="!isFormValid || submitting || uploadingImage || !isVerified">
+          <mat-icon *ngIf="!submitting">send</mat-icon>
+          {{ submitting ? ('community.posting' | translate) : ('community.post' | translate) }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

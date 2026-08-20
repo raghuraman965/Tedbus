@@ -1,0 +1,124 @@
+<div class="vt-page">
+  <div *ngIf="loading" class="vt-state">
+    <div class="vt-spinner"></div>
+    <span>{{ 'booking.loading' | translate }}</span>
+  </div>
+
+  <div *ngIf="!loading && error" class="vt-state vt-state--error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error }}</span>
+    <button class="vt-btn vt-btn--primary" (click)="goToTrips()">{{ 'booking.backHome' | translate }}</button>
+  </div>
+
+  <div *ngIf="!loading && !error && booking" class="vt-wrap">
+
+    <div class="vt-toolbar">
+      <button class="vt-btn vt-btn--ghost" (click)="backToConfirmation()">
+        <mat-icon>arrow_back</mat-icon> {{ 'ticket.back' | translate }}
+      </button>
+      <div class="vt-toolbar-actions">
+        <button class="vt-btn" (click)="sendEmail()" [disabled]="emailing">
+          <mat-icon>{{ emailing ? 'hourglass_top' : (emailSent ? 'check_circle' : 'mail') }}</mat-icon>
+          {{ emailSent ? ('ticket.emailSent' | translate) : ('ticket.emailTicket' | translate) }}
+        </button>
+        <button class="vt-btn" (click)="downloadPdf()" [disabled]="downloading">
+          <mat-icon>{{ downloading ? 'hourglass_top' : 'download' }}</mat-icon>
+          {{ 'ticket.download' | translate }}
+        </button>
+        <button class="vt-btn vt-btn--primary" (click)="printTicket()">
+          <mat-icon>print</mat-icon> {{ 'ticket.print' | translate }}
+        </button>
+      </div>
+    </div>
+
+    <div class="vt-ticket" [class.vt-ticket--cancelled]="booking?.status === 'cancelled'">
+      <!-- Header band -->
+      <div class="vt-header">
+        <div class="vt-brand">
+          <div class="vt-brand-logo">TED</div>
+          <div class="vt-brand-name">TEDBUS</div>
+        </div>
+        <div class="vt-header-right">
+          <span class="vt-badge" [class]="statusBadge.cls">{{ statusBadge.key | translate }}</span>
+          <div class="vt-pnr">{{ 'ticket.pnr' | translate }}: <strong>{{ pnrDisplay }}</strong></div>
+        </div>
+      </div>
+
+      <div class="vt-body">
+        <!-- Journey -->
+        <div class="vt-journey">
+          <div class="vt-point">
+            <div class="vt-city">{{ (booking?.departureDetails?.city || '--') | cityName }}</div>
+            <div class="vt-time">{{ formatTime(booking?.departureDetails?.time) }}</div>
+            <div class="vt-sub">{{ formatDate(booking?.departureDetails?.date || booking?.bookingDate) }}</div>
+            <div class="vt-sub">{{ booking?.departureDetails?.location || ('ticket.boardingPoint' | translate) }}</div>
+          </div>
+          <div class="vt-route">
+            <div class="vt-dot"></div>
+            <div class="vt-line"></div>
+            <mat-icon class="vt-bus">directions_bus</mat-icon>
+            <div class="vt-line"></div>
+            <div class="vt-dot"></div>
+          </div>
+          <div class="vt-point vt-point--right">
+            <div class="vt-city">{{ (booking?.arrivalDetails?.city || '--') | cityName }}</div>
+            <div class="vt-time">{{ formatTime(booking?.arrivalDetails?.time) }}</div>
+            <div class="vt-sub">{{ formatDate(booking?.arrivalDetails?.date || booking?.bookingDate) }}</div>
+            <div class="vt-sub">{{ booking?.arrivalDetails?.location || ('ticket.droppingPoint' | translate) }}</div>
+          </div>
+        </div>
+
+        <!-- Info grid -->
+        <div class="vt-info">
+          <div class="vt-info-row">
+            <span class="vt-info-label">{{ 'ticket.operator' | translate }}</span>
+            <span class="vt-info-value">{{ booking?.busDetails?.operatorName || '--' }}</span>
+          </div>
+          <div class="vt-info-row">
+            <span class="vt-info-label">{{ 'ticket.busType' | translate }}</span>
+            <span class="vt-info-value">{{ booking?.busDetails?.busType || 'AC Seater' }}</span>
+          </div>
+          <div class="vt-info-row">
+            <span class="vt-info-label">{{ 'ticket.passengers' | translate }}</span>
+            <span class="vt-info-value">
+              <ng-container *ngFor="let p of booking?.passengerDetails; let isLast = last">
+                {{ p.name }} ({{ p.age }}/{{ p.gender }})<span *ngIf="!isLast">, </span>
+              </ng-container>
+            </span>
+          </div>
+          <div class="vt-info-row">
+            <span class="vt-info-label">{{ 'ticket.seats' | translate }}</span>
+            <span class="vt-info-value">{{ seatsLabel() }}</span>
+          </div>
+          <div class="vt-info-row">
+            <span class="vt-info-label">{{ 'ticket.fare' | translate }}</span>
+            <span class="vt-info-value">{{ formatMoney(booking?.fare) }}</span>
+          </div>
+          <div class="vt-info-row" *ngIf="booking?.paymentMethod">
+            <span class="vt-info-label">{{ 'ticket.paymentMethod' | translate }}</span>
+            <span class="vt-info-value">{{ booking.paymentMethod }}</span>
+          </div>
+        </div>
+
+        <!-- QR + barcode -->
+        <div class="vt-code-area">
+          <div class="vt-qr-box">
+            <img *ngIf="qrDataUrl" class="vt-qr" [src]="qrDataUrl" [attr.alt]="'ticket.qrAlt' | translate" />
+            <div *ngIf="!qrDataUrl" class="vt-qr vt-qr--empty"></div>
+            <div class="vt-qr-caption">{{ 'ticket.qrHint' | translate }}</div>
+          </div>
+          <div class="vt-barcode-box">
+            <canvas class="vt-barcode" #barcodeCanvas></canvas>
+            <div class="vt-barcode-caption">{{ pnrDisplay }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="vt-footer">
+        <div class="vt-terms">{{ 'ticket.terms' | translate }}</div>
+        <div class="vt-stamp" *ngIf="booking?.status === 'cancelled'">{{ 'ticket.cancelledStamp' | translate }}</div>
+      </div>
+    </div>
+  </div>
+</div>

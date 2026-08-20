@@ -1,0 +1,11 @@
+<div class="error-state">
+  <span class="material-icons error-state__icon">error_outline</span>
+  <p class="error-state__message">{{ errorMessage || ('common.error' | translate) }}</p>
+  <button
+    class="btn-premium"
+    *ngIf="showRetry"
+    (click)="onRetry()"
+  >
+    {{ 'common.retry' | translate }}
+  </button>
+</div>

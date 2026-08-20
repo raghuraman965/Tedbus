@@ -1,0 +1,424 @@
+:host {
+  display: block;
+}
+
+.reports-page {
+  padding: 0;
+}
+
+/* ── Page header ─────────────────────────────────────── */
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--adm-text, #1a1a2e);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--adm-text-secondary, #6b7280);
+}
+
+/* ── Report grid ─────────────────────────────────────── */
+
+.report-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+.panel {
+  background: var(--adm-card, #fff);
+  border: 1px solid var(--adm-border, #e5e7eb);
+  border-radius: 16px;
+  padding: 22px;
+}
+
+.panel.wide {
+  grid-column: 1 / -1;
+}
+
+.panel-title {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--adm-text, #1a1a2e);
+}
+
+/* ── Bar chart (vertical) ────────────────────────────── */
+
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 220px;
+}
+
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.bar-track {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+.bar-fill {
+  width: 100%;
+  min-height: 4px;
+  background: linear-gradient(180deg, #d84e55, #b93940);
+  border-radius: 6px 6px 0 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  transition: height 0.4s ease;
+}
+
+.bar-val {
+  padding-top: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.bar-label {
+  font-size: 10px;
+  color: var(--adm-text-secondary, #6b7280);
+  margin-top: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: center;
+}
+
+/* ── Status list ─────────────────────────────────────── */
+
+.status-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.05);
+}
+
+.status-name {
+  flex: 1;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--adm-text, #1a1a2e);
+}
+
+.status-count {
+  font-weight: 800;
+  color: var(--adm-text, #1a1a2e);
+}
+
+/* ── Revenue horizontal bars ─────────────────────────── */
+
+.rev-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rev-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.rev-city {
+  font-weight: 700;
+  color: var(--adm-text, #1a1a2e);
+}
+
+.rev-amt {
+  color: var(--adm-text-secondary, #6b7280);
+  font-weight: 600;
+}
+
+.rev-track {
+  height: 10px;
+  background: var(--adm-hover, #f5f6f8);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.rev-fill {
+  height: 100%;
+  min-width: 6px;
+  background: linear-gradient(90deg, #d84e55, #b93940);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+.rev-total {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--adm-border, #e5e7eb);
+  font-weight: 800;
+  font-size: 14px;
+  text-align: right;
+  color: var(--adm-text, #1a1a2e);
+}
+
+/* ── Ranked routes table ─────────────────────────────── */
+
+.routes-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.routes-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 700;
+  color: var(--adm-text-secondary, #6b7280);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  border-bottom: 1px solid var(--adm-border, #e5e7eb);
+  background: var(--adm-hover, #f9fafb);
+}
+
+.routes-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--adm-border, #f0f0f0);
+  color: var(--adm-text, #1a1a2e);
+}
+
+.routes-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.routes-table tbody tr:hover {
+  background: var(--adm-hover, #f9fafb);
+}
+
+.route-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: rgba(216, 78, 85, 0.1);
+  color: #d84e55;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 800;
+  margin-right: 8px;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* ── Occupancy progress bars ─────────────────────────── */
+
+.occ-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.occ-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.occ-name {
+  font-weight: 700;
+  color: var(--adm-text, #1a1a2e);
+}
+
+.occ-count {
+  color: var(--adm-text-secondary, #6b7280);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.occ-track {
+  height: 10px;
+  background: var(--adm-hover, #f5f6f8);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.occ-fill {
+  height: 100%;
+  min-width: 6px;
+  background: linear-gradient(90deg, #d84e55, #b93940);
+  border-radius: 999px;
+  transition: width 0.4s ease;
+}
+
+/* ── Empty state ─────────────────────────────────────── */
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: var(--adm-text-secondary, #9ca3af);
+  gap: 8px;
+}
+
+.empty-state mat-icon {
+  font-size: 36px;
+  width: 36px;
+  height: 36px;
+  opacity: 0.5;
+}
+
+.empty-state span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ── Loading / Error states ──────────────────────────── */
+
+.loading-state {
+  display: flex;
+  justify-content: center;
+  padding: 80px;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--adm-border, #e5e7eb);
+  border-top-color: #d84e55;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--adm-text-secondary, #9ca3af);
+  gap: 8px;
+  text-align: center;
+}
+
+.error-state mat-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+  color: #ef4444;
+  opacity: 0.7;
+}
+
+.error-state p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  background: var(--adm-hover, #f5f6f8);
+  color: var(--adm-text, #1a1a2e);
+  border: 1px solid var(--adm-border, #e5e7eb);
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: var(--adm-border, #e5e7eb);
+}
+
+/* ── Dark mode ───────────────────────────────────────── */
+
+html[data-theme="dark"] :host .panel {
+  background: var(--adm-card);
+  border-color: var(--adm-border);
+}
+
+html[data-theme="dark"] :host .bar-val {
+  color: #fff;
+  opacity: 0.9;
+}
+
+html[data-theme="dark"] :host .routes-table th {
+  background: var(--adm-hover);
+}
+
+html[data-theme="dark"] :host .status-dot {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
+
+/* ── Responsive ──────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .report-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bar-chart {
+    height: 160px;
+    gap: 6px;
+  }
+
+  .bar-label {
+    font-size: 9px;
+  }
+
+  .panel {
+    padding: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .bar-chart {
+    height: 120px;
+    gap: 4px;
+  }
+
+  .bar-val {
+    font-size: 9px;
+  }
+}

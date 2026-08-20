@@ -1,0 +1,12 @@
+<div class="app-shell" [@languageTransition]="langTransitionState">
+  <app-offline-banner></app-offline-banner>
+  <ng-container *ngIf="!isAdminRoute">
+    <app-premium-navbar></app-premium-navbar>
+  </ng-container>
+  <div class="route-outlet-wrapper">
+    <router-outlet></router-outlet>
+  </div>
+  <ng-container *ngIf="!isAdminRoute">
+    <app-premium-footer></app-premium-footer>
+  </ng-container>
+</div>

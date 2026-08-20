@@ -1,0 +1,12 @@
+<div class="empty-state">
+  <span class="material-icons empty-state__icon">{{ icon }}</span>
+  <h3 class="empty-state__title" *ngIf="titleKey">{{ titleKey | translate }}</h3>
+  <p class="empty-state__subtitle" *ngIf="subtitleKey">{{ subtitleKey | translate }}</p>
+  <button
+    class="btn-premium"
+    *ngIf="actionLabelKey"
+    (click)="onAction()"
+  >
+    {{ actionLabelKey | translate }}
+  </button>
+</div>

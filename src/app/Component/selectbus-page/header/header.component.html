@@ -1,0 +1,13 @@
+<div class="Header">
+    <div class="HeaderOne">
+        <p>
+            {{ 'search.breadcrumbHome' | translate }} &gt; {{ 'search.breadcrumbBusTickets' | translate }} &gt; {{this.departure | cityName}} {{ 'classic.bus' | translate }} &gt; {{this.departure | cityName}} {{ 'search.to' | translate }} {{this.arrival | cityName}}
+        </p>
+        <p>{{ 'classic.fareStartsFrom' | translate }}</p>
+    </div>
+    <div class="HeaderTwo">
+        <h3>
+            {{ 'classic.departureToOn' | translate:{ arrival: this.arrival | cityName, date: this.date } }}
+        </h3>
+    </div>
+</div>

@@ -1,0 +1,79 @@
+<div class="history-page">
+  <div class="history-container">
+    <div class="history-header">
+      <div class="history-title-row">
+        <button class="back-btn" (click)="goBack()" [title]="'common.back' | translate">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div>
+          <h1>{{ 'notification.history' | translate }}</h1>
+          <p class="history-subtitle" *ngIf="total > 0">{{ total }} {{ 'notification.total' | translate }}<span *ngIf="unreadCount > 0"> · {{ unreadCount }} {{ 'notification.unread' | translate }}</span></p>
+        </div>
+      </div>
+      <button class="mark-all-btn" *ngIf="unreadCount > 0" (click)="markAllRead()">
+        <mat-icon>done_all</mat-icon>
+        <span>{{ 'notification.markAllRead' | translate }}</span>
+      </button>
+    </div>
+
+    <div class="filter-bar">
+      <button
+        class="filter-chip"
+        [class.active]="activeCategory === 'all'"
+        (click)="selectCategory('all')">
+        {{ 'notification.filterAll' | translate }}
+      </button>
+      <button
+        class="filter-chip"
+        *ngFor="let cat of categories"
+        [class.active]="activeCategory === cat"
+        (click)="selectCategory(cat)">
+        <mat-icon>{{ categoryIcon[cat] }}</mat-icon>
+        {{ 'notification.category.' + cat | translate }}
+      </button>
+    </div>
+
+    <div class="history-list">
+      <ng-container *ngIf="notifications.length; else emptyState">
+        <div
+          class="history-item"
+          *ngFor="let n of notifications"
+          [class.unread]="!n.read"
+          (click)="openNotification(n)">
+          <span class="item-icon" [class]="'cat-' + n.category">
+            <mat-icon>{{ categoryIcon[n.category] || 'notifications' }}</mat-icon>
+          </span>
+          <div class="item-body">
+            <div class="item-title-row">
+              <span class="item-title">{{ n.title }}</span>
+              <span class="item-time">{{ relativeTime(n.createdAt) }}</span>
+            </div>
+            <p class="item-message">{{ n.message }}</p>
+            <span class="item-category">{{ 'notification.category.' + n.category | translate }}</span>
+          </div>
+          <div class="item-actions">
+            <button class="item-action" *ngIf="!n.read" (click)="markRead(n); $event.stopPropagation()" [title]="'notification.markRead' | translate">
+              <mat-icon>done</mat-icon>
+            </button>
+            <button class="item-action danger" (click)="deleteNotification(n); $event.stopPropagation()" [title]="'notification.delete' | translate">
+              <mat-icon>delete_outline</mat-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="load-more-row" *ngIf="hasMore">
+          <button class="load-more-btn" *ngIf="!loading" (click)="loadMore()">
+            {{ 'notification.loadMore' | translate }}
+          </button>
+          <div class="loading-row" *ngIf="loading">
+            <div class="skeleton-premium" style="width: 100%; height: 76px;"></div>
+          </div>
+        </div>
+      </ng-container>
+
+      <ng-template #emptyState>
+        <app-empty-state icon="notifications_none" titleKey="states.empty.noNotifications" subtitleKey="states.empty.noNotificationsSub"></app-empty-state>
+      </ng-template>
+    </div>
+  </div>
+</div>

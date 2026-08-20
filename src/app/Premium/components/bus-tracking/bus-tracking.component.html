@@ -1,0 +1,124 @@
+<div class="bt-page">
+  <div class="bt-container" *ngIf="!loading && tracking">
+
+    <!-- Header -->
+    <div class="bt-header">
+      <div class="bt-header-info">
+        <h2 class="bt-route-name">{{ tracking.routeName }}</h2>
+        <p class="bt-operator">{{ tracking.operatorName }} · {{ tracking.busType }}</p>
+      </div>
+      <div class="bt-status-badge" [ngClass]="delayClass">
+        <mat-icon>{{ statusIcon }}</mat-icon>
+        <span>{{ statusText | translate }}</span>
+      </div>
+    </div>
+
+    <!-- Journey Progress Bar -->
+    <div class="bt-progress-section">
+      <div class="bt-progress-label">
+        <span>{{ 'tracking.progress' | translate }}: {{ tracking.journey.progress }}%</span>
+      </div>
+      <div class="bt-progress-bar">
+        <div class="bt-progress-fill" [style.width.%]="tracking.journey.progress"></div>
+      </div>
+      <div class="bt-progress-cities">
+        <span>{{ tracking.departureLocation }}</span>
+        <span>{{ tracking.arrivalLocation }}</span>
+      </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="bt-stats">
+      <div class="bt-stat-card">
+        <mat-icon>speed</mat-icon>
+        <div class="bt-stat-info">
+          <span class="bt-stat-value">{{ tracking.currentLocation.speed }} km/h</span>
+          <span class="bt-stat-label">{{ 'tracking.speed' | translate }}</span>
+        </div>
+      </div>
+      <div class="bt-stat-card">
+        <mat-icon>route</mat-icon>
+        <div class="bt-stat-info">
+          <span class="bt-stat-value">{{ tracking.journey.distanceCovered }}/{{ tracking.journey.distanceTotal }} km</span>
+          <span class="bt-stat-label">{{ 'tracking.distance' | translate }}</span>
+        </div>
+      </div>
+      <div class="bt-stat-card">
+        <mat-icon>timer</mat-icon>
+        <div class="bt-stat-info">
+          <span class="bt-stat-value">{{ etaFormatted }}</span>
+          <span class="bt-stat-label">{{ 'tracking.eta' | translate }}</span>
+        </div>
+      </div>
+      <div class="bt-stat-card" [ngClass]="delayClass">
+        <mat-icon>{{ tracking.journey.delayMinutes > 0 ? 'watch_later' : tracking.journey.delayMinutes < 0 ? 'fast_forward' : 'check_circle' }}</mat-icon>
+        <div class="bt-stat-info">
+          <span class="bt-stat-value" *ngIf="tracking.journey.delayMinutes === 0">{{ 'tracking.onTime' | translate }}</span>
+          <span class="bt-stat-value" *ngIf="tracking.journey.delayMinutes !== 0">{{ delayValue }} {{ 'tracking.minDelay' | translate }}</span>
+          <span class="bt-stat-label">{{ delayText | translate }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Map Placeholder -->
+    <div class="bt-map">
+      <div class="bt-map-inner">
+        <mat-icon class="bt-map-icon">map</mat-icon>
+        <p class="bt-map-text">{{ 'tracking.mapPlaceholder' | translate }}</p>
+        <p class="bt-map-coords">
+          {{ tracking.currentLocation.latitude.toFixed(4) }}°N,
+          {{ tracking.currentLocation.longitude.toFixed(4) }}°E
+        </p>
+        <p class="bt-map-heading">{{ 'tracking.heading' | translate }}: {{ tracking.currentLocation.heading | number:'1.0-0' }}°</p>
+      </div>
+    </div>
+
+    <!-- Stop Timeline -->
+    <div class="bt-timeline-section">
+      <h3 class="bt-section-title">{{ 'tracking.stopTimeline' | translate }}</h3>
+      <div class="bt-timeline">
+        <div class="bt-stop" *ngFor="let stop of tracking.stops; let i = index"
+             [ngClass]="{ 'bt-stop--crossed': stop.status === 'crossed', 'bt-stop--current': stop.status === 'current', 'bt-stop--upcoming': stop.status === 'upcoming' }">
+          <div class="bt-stop-icon">
+            <mat-icon *ngIf="stop.status === 'crossed'">check_circle</mat-icon>
+            <mat-icon *ngIf="stop.status === 'current'" class="bt-bus-pulse">directions_bus</mat-icon>
+            <mat-icon *ngIf="stop.status === 'upcoming'">radio_button_unchecked</mat-icon>
+          </div>
+          <div class="bt-stop-line" *ngIf="i < tracking.stops.length - 1"></div>
+          <div class="bt-stop-info">
+            <span class="bt-stop-name">{{ stop.name }}</span>
+            <span class="bt-stop-time" *ngIf="stop.status === 'crossed'">{{ 'tracking.departed' | translate }} {{ stop.departureTime }}</span>
+            <span class="bt-stop-time" *ngIf="stop.status === 'current'">{{ 'tracking.currentLocation' | translate }}</span>
+            <span class="bt-stop-time" *ngIf="stop.status === 'upcoming'">{{ 'tracking.eta' | translate }} {{ stop.etaMinutes }} {{ 'tracking.minDelay' | translate }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Not Started Message -->
+    <div class="bt-not-started" *ngIf="tracking.journey.status === 'not_started'">
+      <mat-icon>schedule</mat-icon>
+      <p>{{ 'tracking.departsAt' | translate }} {{ formatDepartureTime() }}</p>
+    </div>
+
+    <!-- Completed Message -->
+    <div class="bt-completed" *ngIf="tracking.journey.status === 'completed'">
+      <mat-icon>check_circle</mat-icon>
+      <p>{{ 'tracking.journeyCompleted' | translate }}</p>
+    </div>
+
+  </div>
+
+  <!-- Loading State -->
+  <div class="bt-loading" *ngIf="loading">
+    <div class="bt-spinner"></div>
+    <p>{{ 'tracking.loading' | translate }}</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="bt-error" *ngIf="!loading && error">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error | translate }}</p>
+    <button class="btn-premium" (click)="loadTracking()">{{ 'common.retry' | translate }}</button>
+  </div>
+</div>

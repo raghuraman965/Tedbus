@@ -1,0 +1,14 @@
+<div
+  class="offline-banner"
+  [class.offline-banner--visible]="isOffline"
+  [class.offline-banner--back-online]="showBackOnline"
+>
+  <div class="offline-banner__content" *ngIf="isOffline">
+    <span class="material-icons offline-banner__icon">wifi_off</span>
+    <span>{{ 'offline.noConnection' | translate }}</span>
+  </div>
+  <div class="offline-banner__content" *ngIf="showBackOnline">
+    <span class="material-icons offline-banner__icon">wifi</span>
+    <span>{{ 'offline.backOnline' | translate }}</span>
+  </div>
+</div>

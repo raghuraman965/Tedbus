@@ -1,0 +1,138 @@
+<div class="bc-page">
+  <div *ngIf="loading" class="bc-state">
+    <div class="bc-spinner"></div>
+    <span>{{ 'booking.loading' | translate }}</span>
+  </div>
+
+  <div *ngIf="!loading && error" class="bc-state bc-state--error">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ error }}</span>
+    <button class="bc-btn bc-btn--primary" (click)="bookAnother()">{{ 'booking.backHome' | translate }}</button>
+  </div>
+
+  <div *ngIf="!loading && !error && booking" class="bc-wrap">
+
+    <!-- Success header -->
+    <div class="bc-hero">
+      <div class="bc-hero-icon">
+        <mat-icon>verified</mat-icon>
+      </div>
+      <div class="bc-hero-title">{{ 'confirmation.successTitle' | translate }}</div>
+      <div class="bc-hero-sub">{{ 'confirmation.successSub' | translate }}</div>
+      <div class="bc-pnr-chip">{{ 'confirmation.pnrLabel' | translate }}: <strong>{{ pnrDisplay }}</strong></div>
+    </div>
+
+    <!-- Journey + bus card -->
+    <div class="bc-card">
+      <div class="bc-card-head">
+        <img class="bc-bus-img" [src]="busImage" [attr.alt]="'confirmation.bus' | translate" />
+        <div class="bc-operator">
+          <div class="bc-operator-name">{{ booking?.busDetails?.operatorName || booking?.operatorName || '--' }}</div>
+          <div class="bc-operator-type">{{ booking?.busDetails?.busType || ('common.acSeater' | translate) }}</div>
+        </div>
+        <span class="bc-badge" [class]="statusBadge.cls">{{ statusBadge.key | translate }}</span>
+      </div>
+
+      <div class="bc-journey">
+        <div class="bc-point">
+          <div class="bc-city">{{ (booking?.departureDetails?.city || '--') | cityName }}</div>
+          <div class="bc-time">{{ formatTime(booking?.departureDetails?.time) }}</div>
+          <div class="bc-date">{{ formatDate(booking?.departureDetails?.date || booking?.bookingDate) }}</div>
+          <div class="bc-loc">{{ booking?.departureDetails?.location || ('confirmation.boardingPoint' | translate) }}</div>
+        </div>
+        <div class="bc-route-line">
+          <div class="bc-dot"></div>
+          <div class="bc-line"></div>
+          <mat-icon class="bc-bus-icon">directions_bus</mat-icon>
+          <div class="bc-line"></div>
+          <div class="bc-dot"></div>
+        </div>
+        <div class="bc-point bc-point--right">
+          <div class="bc-city">{{ (booking?.arrivalDetails?.city || '--') | cityName }}</div>
+          <div class="bc-time">{{ formatTime(booking?.arrivalDetails?.time) }}</div>
+          <div class="bc-date">{{ formatDate(booking?.arrivalDetails?.date || booking?.bookingDate) }}</div>
+          <div class="bc-loc">{{ booking?.arrivalDetails?.location || ('confirmation.droppingPoint' | translate) }}</div>
+        </div>
+      </div>
+
+      <div class="bc-meta">
+        <div class="bc-meta-item">
+          <mat-icon>event_seat</mat-icon>
+          <div>
+            <div class="bc-meta-label">{{ 'confirmation.seats' | translate }}</div>
+            <div class="bc-meta-value">{{ seatsLabel() }}</div>
+          </div>
+        </div>
+        <div class="bc-meta-item">
+          <mat-icon>person</mat-icon>
+          <div>
+            <div class="bc-meta-label">{{ 'confirmation.passengers' | translate }}</div>
+            <div class="bc-meta-value">{{ booking?.passengerDetails?.length || 0 }}</div>
+          </div>
+        </div>
+        <div class="bc-meta-item">
+          <mat-icon>payments</mat-icon>
+          <div>
+            <div class="bc-meta-label">{{ 'confirmation.totalFare' | translate }}</div>
+            <div class="bc-meta-value">{{ formatMoney(booking?.fare) }}</div>
+          </div>
+        </div>
+        <div class="bc-meta-item">
+          <mat-icon>account_balance_wallet</mat-icon>
+          <div>
+            <div class="bc-meta-label">{{ 'confirmation.paymentStatus' | translate }}</div>
+            <span class="bc-badge bc-badge--sm" [class]="paymentBadge.cls">{{ paymentBadge.key | translate }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Passenger details -->
+    <div class="bc-card" *ngIf="booking?.passengerDetails?.length">
+      <div class="bc-card-title">{{ 'confirmation.passengerDetails' | translate }}</div>
+      <div class="bc-passengers">
+        <div class="bc-passenger" *ngFor="let p of booking.passengerDetails">
+          <span class="bc-passenger-icon"><mat-icon>person</mat-icon></span>
+          <span class="bc-passenger-name">{{ p.name }}</span>
+          <span class="bc-passenger-info">{{ p.age }} yrs, {{ p.gender }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="bc-card" *ngIf="booking?.status === 'cancelled' || (booking?.status !== 'cancelled')">
+      <div class="bc-card-title">{{ 'confirmation.timeline' | translate }}</div>
+      <div class="bc-timeline">
+        <ng-container *ngFor="let step of timelineSteps(booking); let isLast = last">
+          <div class="bc-tl-step" [class.done]="step.done">
+            <span class="bc-tl-icon" [class.done]="step.done">
+              <mat-icon>{{ step.done ? 'check' : step.icon }}</mat-icon>
+            </span>
+            <span class="bc-tl-label">{{ step.key | translate }}</span>
+          </div>
+          <div class="bc-tl-connector" *ngIf="!isLast" [class.done]="step.done"></div>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="bc-actions">
+      <button class="bc-btn bc-btn--primary" (click)="downloadTicket()" [disabled]="downloading">
+        <mat-icon>{{ downloading ? 'hourglass_top' : 'download' }}</mat-icon>
+        {{ downloading ? ('confirmation.downloading' | translate) : ('confirmation.downloadTicket' | translate) }}
+      </button>
+      <button class="bc-btn" (click)="viewTicket()">
+        <mat-icon>confirmation_number</mat-icon>
+        {{ 'confirmation.viewTicket' | translate }}
+      </button>
+      <button class="bc-btn" (click)="goToTrips()">
+        <mat-icon>luggage</mat-icon>
+        {{ 'confirmation.goToTrips' | translate }}
+      </button>
+      <button class="bc-btn" (click)="bookAnother()">
+        <mat-icon>search</mat-icon>
+        {{ 'confirmation.bookAnother' | translate }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,48 @@
+<div class="login-page">
+  <div class="login-card">
+    <!-- Brand -->
+    <div class="brand-section">
+      <div class="brand-badge">TB</div>
+      <h1 class="brand-title">{{ 'admin.login.title' | translate }}</h1>
+      <p class="brand-subtitle">{{ 'admin.login.subtitle' | translate }}</p>
+    </div>
+
+    <!-- Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>{{ 'admin.login.username' | translate }}</mat-label>
+        <input matInput formControlName="username" type="text" autocomplete="username">
+        <mat-icon matPrefix>person</mat-icon>
+        <mat-error *ngIf="loginForm.get('username')?.hasError('required')">
+          {{ 'admin.login.required' | translate }}
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>{{ 'admin.login.password' | translate }}</mat-label>
+        <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" autocomplete="current-password">
+        <mat-icon matPrefix>lock</mat-icon>
+        <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
+          <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <mat-error *ngIf="loginForm.get('password')?.hasError('required')">
+          {{ 'admin.login.required' | translate }}
+        </mat-error>
+      </mat-form-field>
+
+      <button mat-flat-button class="submit-btn" type="submit" [disabled]="loading">
+        <mat-spinner *ngIf="loading" diameter="20" class="btn-spinner"></mat-spinner>
+        <span *ngIf="!loading">{{ 'admin.login.signIn' | translate }}</span>
+      </button>
+    </form>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <a routerLink="/" class="back-link">
+        <mat-icon>arrow_back</mat-icon>
+        {{ 'admin.login.backToTedBus' | translate }}
+      </a>
+      <p class="hint-text">{{ 'admin.login.defaultHint' | translate }}</p>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,224 @@
+<div class="ep-container" *ngIf="!loading || originalProfile">
+  <!-- Header -->
+  <div class="ep-header">
+    <div class="ep-header-left">
+      <button class="ep-back-btn" (click)="onCancel()">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <div>
+        <h1 class="ep-title">{{ 'editProfile.title' | translate }}</h1>
+        <p class="ep-subtitle">{{ 'editProfile.subtitle' | translate }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success/Error Banners -->
+  <div class="ep-banner ep-banner--success" *ngIf="successMessage">
+    <mat-icon>check_circle</mat-icon>
+    <span>{{ successMessage }}</span>
+    <button class="ep-banner-close" (click)="successMessage = ''"><mat-icon>close</mat-icon></button>
+  </div>
+  <div class="ep-banner ep-banner--error" *ngIf="errorMessage">
+    <mat-icon>error</mat-icon>
+    <span>{{ errorMessage }}</span>
+    <button class="ep-banner-close" (click)="errorMessage = ''"><mat-icon>close</mat-icon></button>
+  </div>
+
+  <form [formGroup]="profileForm" (ngSubmit)="onSubmit()">
+
+    <!-- Profile Photo Section -->
+    <div class="ep-card ep-photo-card">
+      <h2 class="ep-card-title">{{ 'editProfile.profilePhoto' | translate }}</h2>
+      <div class="ep-photo-section">
+        <div class="ep-photo-preview">
+          <img *ngIf="photoPreview" [src]="photoPreview" alt="Profile photo" class="ep-photo-img" />
+          <div *ngIf="!photoPreview" class="ep-photo-placeholder">
+            <mat-icon>person</mat-icon>
+          </div>
+        </div>
+        <div class="ep-photo-actions">
+          <label class="ep-btn ep-btn--primary ep-btn--sm">
+            <mat-icon>camera_alt</mat-icon>
+            {{ 'editProfile.changePhoto' | translate }}
+            <input type="file" accept="image/png,image/jpeg,image/gif,image/webp" (change)="onFileSelected($event)" hidden />
+          </label>
+          <button *ngIf="photoPreview" type="button" class="ep-btn ep-btn--outline ep-btn--sm" (click)="removePhoto()">
+            <mat-icon>delete</mat-icon>
+            {{ 'editProfile.removePhoto' | translate }}
+          </button>
+          <span class="ep-photo-hint">{{ 'editProfile.photoHint' | translate }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal Information -->
+    <div class="ep-card">
+      <h2 class="ep-card-title">{{ 'editProfile.personalInfo' | translate }}</h2>
+      <div class="ep-form-grid">
+        <div class="ep-field">
+          <label class="ep-label" for="name">{{ 'editProfile.fullName' | translate }} *</label>
+          <input id="name" class="ep-input" formControlName="name" [class.ep-input--error]="getFieldError('name')" />
+          <span class="ep-error" *ngIf="getFieldError('name')">{{ getFieldError('name') }}</span>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="gender">{{ 'editProfile.gender' | translate }}</label>
+          <select id="gender" class="ep-input ep-select" formControlName="gender">
+            <option *ngFor="let g of genderOptions" [value]="g.value">{{ g.label | translate }}</option>
+          </select>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="dob">{{ 'editProfile.dateOfBirth' | translate }}</label>
+          <input id="dob" type="date" class="ep-input" formControlName="dateOfBirth" />
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="age">{{ 'editProfile.age' | translate }}</label>
+          <input id="age" type="number" class="ep-input" formControlName="age" min="1" max="150" [class.ep-input--error]="getFieldError('age')" />
+          <span class="ep-error" *ngIf="getFieldError('age')">{{ getFieldError('age') }}</span>
+        </div>
+
+        <div class="ep-field ep-field--full">
+          <label class="ep-label" for="bio">{{ 'editProfile.bio' | translate }}</label>
+          <textarea id="bio" class="ep-input ep-textarea" formControlName="bio" rows="3" maxlength="500" [placeholder]="'editProfile.bioPlaceholder' | translate"></textarea>
+          <span class="ep-char-count">{{ profileForm.get('bio')?.value?.length || 0 }}/500</span>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="location">{{ 'editProfile.location' | translate }}</label>
+          <input id="location" class="ep-input" formControlName="location" [placeholder]="'editProfile.locationPlaceholder' | translate" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="ep-card">
+      <h2 class="ep-card-title">{{ 'editProfile.contactInfo' | translate }}</h2>
+      <div class="ep-form-grid">
+        <div class="ep-field">
+          <label class="ep-label">{{ 'editProfile.email' | translate }}</label>
+          <input class="ep-input ep-input--readonly" [value]="originalProfile?.email || ''" readonly />
+          <span class="ep-hint">{{ 'editProfile.emailReadonly' | translate }}</span>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="phone">{{ 'editProfile.phone' | translate }}</label>
+          <input id="phone" class="ep-input" formControlName="phone" [placeholder]="'editProfile.phonePlaceholder' | translate" [class.ep-input--error]="getFieldError('phone')" />
+          <span class="ep-error" *ngIf="getFieldError('phone')">{{ getFieldError('phone') }}</span>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="altPhone">{{ 'editProfile.altPhone' | translate }}</label>
+          <input id="altPhone" class="ep-input" formControlName="alternatePhone" [placeholder]="'editProfile.altPhonePlaceholder' | translate" [class.ep-input--error]="getFieldError('alternatePhone')" />
+          <span class="ep-error" *ngIf="getFieldError('alternatePhone')">{{ getFieldError('alternatePhone') }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Address -->
+    <div class="ep-card">
+      <h2 class="ep-card-title">{{ 'editProfile.address' | translate }}</h2>
+      <div formGroupName="address" class="ep-form-grid">
+        <div class="ep-field ep-field--full">
+          <label class="ep-label" for="street">{{ 'editProfile.street' | translate }}</label>
+          <input id="street" class="ep-input" formControlName="street" [placeholder]="'editProfile.streetPlaceholder' | translate" />
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="city">{{ 'editProfile.city' | translate }}</label>
+          <input id="city" class="ep-input" formControlName="city" />
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="state">{{ 'editProfile.state' | translate }}</label>
+          <input id="state" class="ep-input" formControlName="state" />
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="pincode">{{ 'editProfile.pincode' | translate }}</label>
+          <input id="pincode" class="ep-input" formControlName="pincode" [class.ep-input--error]="getFieldError('address.pincode')" />
+          <span class="ep-error" *ngIf="getFieldError('address.pincode')">{{ getFieldError('address.pincode') }}</span>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="country">{{ 'editProfile.country' | translate }}</label>
+          <input id="country" class="ep-input" formControlName="country" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Emergency Contact -->
+    <div class="ep-card">
+      <h2 class="ep-card-title">{{ 'editProfile.emergencyContact' | translate }}</h2>
+      <div formGroupName="emergencyContact" class="ep-form-grid">
+        <div class="ep-field">
+          <label class="ep-label" for="ecName">{{ 'editProfile.contactName' | translate }}</label>
+          <input id="ecName" class="ep-input" formControlName="name" />
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="ecPhone">{{ 'editProfile.contactPhone' | translate }}</label>
+          <input id="ecPhone" class="ep-input" formControlName="phone" [class.ep-input--error]="getFieldError('emergencyContact.phone')" />
+          <span class="ep-error" *ngIf="getFieldError('emergencyContact.phone')">{{ getFieldError('emergencyContact.phone') }}</span>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="ecRelation">{{ 'editProfile.relation' | translate }}</label>
+          <input id="ecRelation" class="ep-input" formControlName="relation" [placeholder]="'editProfile.relationPlaceholder' | translate" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Travel Preferences -->
+    <div class="ep-card">
+      <h2 class="ep-card-title">{{ 'editProfile.travelPreferences' | translate }}</h2>
+      <div formGroupName="travelPreferences" class="ep-form-grid">
+        <div class="ep-field">
+          <label class="ep-label" for="seatType">{{ 'editProfile.preferredSeat' | translate }}</label>
+          <select id="seatType" class="ep-input ep-select" formControlName="seatType">
+            <option *ngFor="let s of seatTypes" [value]="s.value">{{ s.label | translate }}</option>
+          </select>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="busType">{{ 'editProfile.preferredBus' | translate }}</label>
+          <select id="busType" class="ep-input ep-select" formControlName="busType">
+            <option *ngFor="let b of busTypes" [value]="b.value">{{ b.label | translate }}</option>
+          </select>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-label" for="prefLang">{{ 'editProfile.preferredLang' | translate }}</label>
+          <select id="prefLang" class="ep-input ep-select" formControlName="language">
+            <option *ngFor="let l of languages" [value]="l.value">{{ l.label | translate }}</option>
+          </select>
+        </div>
+
+        <div class="ep-field">
+          <label class="ep-checkbox-label">
+            <input type="checkbox" formControlName="notifications" class="ep-checkbox" />
+            {{ 'editProfile.emailNotifications' | translate }}
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="ep-actions">
+      <button type="button" class="ep-btn ep-btn--outline" (click)="onCancel()" [disabled]="loading">
+        {{ 'editProfile.cancel' | translate }}
+      </button>
+      <button type="submit" class="ep-btn ep-btn--primary" [disabled]="loading || uploadingPhoto">
+        <mat-icon *ngIf="loading" class="ep-spinner">sync</mat-icon>
+        {{ 'editProfile.saveChanges' | translate }}
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Loading State -->
+<div class="ep-loading" *ngIf="loading && !originalProfile">
+  <mat-icon class="ep-loading-icon">sync</mat-icon>
+  <p>{{ 'editProfile.loading' | translate }}</p>
+</div>

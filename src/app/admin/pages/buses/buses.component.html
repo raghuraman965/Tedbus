@@ -1,0 +1,96 @@
+<div class="page-head">
+  <div class="head-row">
+    <div class="head-left">
+      <mat-icon class="head-icon">directions_bus</mat-icon>
+      <h2>{{ 'admin.buses.title' | translate }}</h2>
+      <span class="badge" *ngIf="total">{{ total }}</span>
+    </div>
+    <div class="head-right">
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
+        <input [(ngModel)]="search" (keyup.enter)="onSearch()" [placeholder]="'admin.buses.searchPlaceholder' | translate" />
+      </div>
+      <button class="adm-btn adm-btn-primary" (click)="openDialog()">
+        <mat-icon>add</mat-icon> {{ 'admin.buses.addBus' | translate }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="error" class="page-error-bar">
+  <mat-icon>error_outline</mat-icon>
+  <span>{{ error | translate }}</span>
+  <button mat-flat-button color="warn" (click)="load()">
+    <mat-icon>refresh</mat-icon> {{ 'admin.common.retry' | translate }}
+  </button>
+</div>
+
+<div *ngIf="loading" class="loading-wrap">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>
+
+<div *ngIf="!loading && !error && items.length === 0" class="empty">
+  <mat-icon style="font-size:48px;width:48px;height:48px;opacity:0.4;margin-bottom:8px;">directions_bus_filled</mat-icon>
+  <p>{{ 'admin.buses.empty' | translate }}</p>
+</div>
+
+<div *ngIf="!loading && items.length > 0" class="table-scroll">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ 'admin.buses.colOperator' | translate }}</th>
+        <th>{{ 'admin.buses.colType' | translate }}</th>
+        <th>{{ 'admin.buses.colDeparture' | translate }}</th>
+        <th>{{ 'admin.buses.colRating' | translate }}</th>
+        <th>{{ 'admin.buses.colSeats' | translate }}</th>
+        <th>{{ 'admin.buses.colActions' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let b of items">
+        <td>
+          <div class="user-cell">
+            <div class="avatar">{{ initials(b.operatorName || b.operator) }}</div>
+            <div class="user-meta">
+              <strong>{{ b.operatorName || b.operator || '-' }}</strong>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span class="badge muted-badge">{{ b.busType || b.type || '-' }}</span>
+        </td>
+        <td>{{ departureLabel(b) }}</td>
+        <td>
+          <span style="display:inline-flex;align-items:center;gap:4px;">
+            <mat-icon style="font-size:16px;width:16px;height:16px;color:#f59e0b;">star</mat-icon>
+            {{ avgRating(b) }}
+          </span>
+        </td>
+        <td>{{ b.totalSeats || b.seats || '-' }}</td>
+        <td class="actions-col">
+          <button class="icon-btn" (click)="openDialog(b)" matTooltip="{{ 'admin.common.edit' | translate }}">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button class="icon-btn danger" (click)="deleteBus(b)" matTooltip="{{ 'admin.common.delete' | translate }}">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div *ngIf="!loading && items.length > 0" class="pager">
+  <span class="pager-info">
+    {{ 'admin.common.showing' | translate }} {{ items.length }} {{ 'admin.common.of' | translate }} {{ total }}
+  </span>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="icon-btn" [disabled]="page <= 1" (click)="pageChange(page - 1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="mono" style="font-size:13px;font-weight:600;">{{ page }} / {{ totalPages }}</span>
+    <button class="icon-btn" [disabled]="page >= totalPages" (click)="pageChange(page + 1)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>

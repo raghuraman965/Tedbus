@@ -1,0 +1,108 @@
+<div class="page-head">
+  <h2>{{ 'admin.payments.title' | translate }}</h2>
+  <p class="muted">{{ 'admin.payments.subtitle' | translate }}</p>
+</div>
+
+<div *ngIf="error" class="page-error-bar">
+  <mat-icon>error_outline</mat-icon>
+  <span>{{ error | translate }}</span>
+  <button mat-flat-button color="warn" (click)="load()">
+    <mat-icon>refresh</mat-icon> {{ 'admin.common.retry' | translate }}
+  </button>
+</div>
+
+<div class="toolbar">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>{{ 'admin.payments.searchPlaceholder' | translate }}</mat-label>
+    <input matInput [(ngModel)]="search" (ngModelChange)="onSearchInput()" />
+    <mat-icon matPrefix>search</mat-icon>
+  </mat-form-field>
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>{{ 'admin.payments.filterStatus' | translate }}</mat-label>
+    <mat-select [(ngModel)]="statusFilter" (selectionChange)="onFilter()">
+      <mat-option value="">{{ 'admin.payments.allStatuses' | translate }}</mat-option>
+      <mat-option value="completed">{{ 'admin.payments.statusCompleted' | translate }}</mat-option>
+      <mat-option value="pending">{{ 'admin.payments.statusPending' | translate }}</mat-option>
+      <mat-option value="failed">{{ 'admin.payments.statusFailed' | translate }}</mat-option>
+      <mat-option value="refunded">{{ 'admin.payments.statusRefunded' | translate }}</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<div *ngIf="loading" class="loading-wrap">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>
+
+<div *ngIf="!loading && !error && items.length === 0" class="empty">
+  <mat-icon style="font-size:48px;width:48px;height:48px;opacity:0.4;margin-bottom:8px;">receipt_long</mat-icon>
+  <p>{{ 'admin.payments.empty' | translate }}</p>
+</div>
+
+<div *ngIf="!loading && items.length > 0" class="table-scroll">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ 'admin.payments.colPnr' | translate }}</th>
+        <th>{{ 'admin.payments.colCustomer' | translate }}</th>
+        <th>{{ 'admin.payments.colRoute' | translate }}</th>
+        <th>{{ 'admin.payments.colAmount' | translate }}</th>
+        <th>{{ 'admin.payments.colMethod' | translate }}</th>
+        <th>{{ 'admin.payments.colStatus' | translate }}</th>
+        <th>{{ 'admin.payments.colTransactionId' | translate }}</th>
+        <th>{{ 'admin.payments.colDate' | translate }}</th>
+        <th>{{ 'admin.payments.colRefund' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let p of items">
+        <td class="mono">{{ p.pnr || '—' }}</td>
+        <td>
+          <div class="customer-cell" *ngIf="p.customerName || p.email">
+            <span class="customer-name">{{ p.customerName || '—' }}</span>
+            <span class="customer-email">{{ p.email || '—' }}</span>
+          </div>
+          <span *ngIf="!p.customerName && !p.email">—</span>
+        </td>
+        <td>
+          <span *ngIf="p.departureCity && p.arrivalCity">{{ p.departureCity }} → {{ p.arrivalCity }}</span>
+          <span *ngIf="!p.departureCity && p.operatorName">{{ p.operatorName }}</span>
+          <span *ngIf="!p.departureCity && !p.operatorName">—</span>
+        </td>
+        <td class="mono">{{ fmt(p.amount || p.fare) }}</td>
+        <td><span class="badge" [ngClass]="methodCls(p.method)">{{ p.method || '—' }}</span></td>
+        <td>
+          <span class="badge" [ngClass]="paymentStatusCls(p.status)">
+            {{ p.status || '—' }}
+          </span>
+        </td>
+        <td class="mono">{{ p.transactionId || '—' }}</td>
+        <td class="mono">{{ fmtD(p.createdAt) }}</td>
+        <td>
+          <span
+            *ngIf="refundStatus(p)"
+            class="badge"
+            [ngClass]="p.status === 'refunded' ? 'st-ok' : 'st-warn'"
+          >
+            {{ refundStatus(p) | translate }}
+          </span>
+          <span *ngIf="!refundStatus(p)">—</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div *ngIf="!loading && items.length > 0" class="pager">
+  <span class="pager-info">
+    {{ 'admin.common.showing' | translate }} {{ items.length }} {{ 'admin.common.of' | translate }} {{ total }}
+  </span>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="icon-btn" [disabled]="page <= 1" (click)="pageChange(page - 1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="mono" style="font-size:13px;font-weight:600;">{{ page }} / {{ totalPages }}</span>
+    <button class="icon-btn" [disabled]="page >= totalPages" (click)="pageChange(page + 1)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>

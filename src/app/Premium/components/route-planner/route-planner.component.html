@@ -1,0 +1,303 @@
+<div class="route-planner-page brand-fade-in">
+
+  <header class="planner-header">
+    <div class="planner-title-block">
+      <span class="planner-eyebrow">{{ 'routePlanner.eyebrow' | translate }}</span>
+      <h1>{{ 'routePlanner.title' | translate }}</h1>
+      <p>{{ 'routePlanner.subtitle' | translate }}</p>
+    </div>
+    <div class="header-tags">
+      <span class="info-chip"><mat-icon>public</mat-icon> Google Maps</span>
+      <span class="info-chip traffic-chip" *ngIf="trafficProvider === 'google'" title="{{ 'routePlanner.trafficTitle' | translate }}">
+        <mat-icon>traffic</mat-icon> {{ 'savedRoutes.estimatedTraffic' | translate }} ({{ trafficModeLabel }})
+      </span>
+      <span class="info-chip" *ngIf="trafficProvider !== 'google'" title="{{ 'routePlanner.trafficTitle' | translate }}">
+        <mat-icon>traffic</mat-icon> {{ 'savedRoutes.estimatedTraffic' | translate }}
+      </span>
+    </div>
+  </header>
+
+  <section class="planner-controls card-premium">
+    <div class="field-row">
+
+      <div class="autocomplete-field">
+        <mat-icon class="field-icon source-icon">trip_origin</mat-icon>
+        <div class="field-text">
+          <label>{{ 'common.from' | translate }}</label>
+          <input
+            type="text"
+            placeholder="{{ 'routePlanner.cityPlaceholder' | translate }}"
+            [(ngModel)]="sourceQuery"
+            (ngModelChange)="onInput('source', $event)"
+            (focus)="openSearch('source')"
+            (blur)="closeSearch()">
+        </div>
+        <ul class="suggestion-list" *ngIf="activeSearch === 'source' && suggestions.length">
+          <li *ngFor="let s of suggestions" (mousedown)="selectSuggestion('source', s)">
+            <mat-icon>place</mat-icon>
+            <span>{{ s.displayName }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <button class="swap-btn" (click)="swapPlaces()" title="{{ 'routePlanner.swapSourceDestination' | translate }}">
+        <mat-icon>swap_horiz</mat-icon>
+      </button>
+
+      <div class="autocomplete-field">
+        <mat-icon class="field-icon dest-icon">flag</mat-icon>
+        <div class="field-text">
+          <label>{{ 'common.to' | translate }}</label>
+          <input
+            type="text"
+            placeholder="{{ 'routePlanner.cityPlaceholder' | translate }}"
+            [(ngModel)]="destinationQuery"
+            (ngModelChange)="onInput('destination', $event)"
+            (focus)="openSearch('destination')"
+            (blur)="closeSearch()">
+        </div>
+        <ul class="suggestion-list" *ngIf="activeSearch === 'destination' && suggestions.length">
+          <li *ngFor="let s of suggestions" (mousedown)="selectSuggestion('destination', s)">
+            <mat-icon>place</mat-icon>
+            <span>{{ s.displayName }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="autocomplete-field stop-adder">
+        <mat-icon class="field-icon stop-icon">add_circle_outline</mat-icon>
+        <div class="field-text">
+          <label>{{ 'routePlanner.addStop' | translate }}</label>
+          <input
+            type="text"
+            placeholder="{{ 'routePlanner.stopPlaceholder' | translate }}"
+            [(ngModel)]="stopQuery"
+            (ngModelChange)="onInput('stop', $event)"
+            (focus)="openSearch('stop')"
+            (blur)="closeSearch()">
+        </div>
+        <ul class="suggestion-list" *ngIf="activeSearch === 'stop' && suggestions.length">
+          <li *ngFor="let s of suggestions" (mousedown)="selectSuggestion('stop', s)">
+            <mat-icon>add_location</mat-icon>
+            <span>{{ s.displayName }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <button class="map-pick-btn" [class.active]="mapPickMode" (click)="toggleMapPick()" title="{{ 'routePlanner.mapPickTitle' | translate }}">
+        <mat-icon>{{ mapPickMode ? 'my_location' : 'add_location' }}</mat-icon>
+        <span>{{ mapPickMode ? ('routePlanner.clickOnMap' | translate) : ('routePlanner.addStopOnMap' | translate) }}</span>
+      </button>
+
+      <button class="map-pick-btn clear-btn" (click)="clearAll()" title="{{ 'routePlanner.clearPlannerTitle' | translate }}">
+        <mat-icon>delete_sweep</mat-icon>
+        <span>{{ 'common.clear' | translate }}</span>
+      </button>
+    </div>
+
+    <div class="stops-list" *ngIf="stops.length">
+      <div class="stop-row" *ngFor="let stop of stops; let i = index">
+        <span class="stop-index">{{ i + 2 }}</span>
+        <span class="stop-name">{{ stop.name || ('routePlanner.stop' | translate: { n: (i + 2) }) }}</span>
+        <div class="stop-actions">
+          <button (click)="moveStop(i, -1)" [disabled]="i === 0" title="{{ 'routePlanner.moveUp' | translate }}"><mat-icon>arrow_upward</mat-icon></button>
+          <button (click)="moveStop(i, 1)" [disabled]="i === stops.length - 1" title="{{ 'routePlanner.moveDown' | translate }}"><mat-icon>arrow_downward</mat-icon></button>
+          <button class="remove-stop" (click)="removeStop(i)" title="{{ 'routePlanner.removeStop' | translate }}"><mat-icon>close</mat-icon></button>
+        </div>
+      </div>
+      <div class="stops-hint">{{ 'routePlanner.stopsHint' | translate }}</div>
+    </div>
+
+    <div class="controls-footer">
+      <button class="btn-premium" (click)="recalculate()" [disabled]="isLoading">
+        <mat-icon>route</mat-icon> {{ 'routePlanner.planRoute' | translate }}
+      </button>
+      <span class="hint" *ngIf="isLoading"><mat-icon class="spin">autorenew</mat-icon> {{ 'routePlanner.calculating' | translate }}</span>
+      <span class="hint" *ngIf="!isLoading && !hasRoute">{{ 'routePlanner.planHint' | translate }}</span>
+    </div>
+  </section>
+
+  <div class="error-banner" *ngIf="errorMessage">
+    <mat-icon>error_outline</mat-icon>
+    <span>{{ errorMessage }}</span>
+    <button (click)="recalculate()">{{ 'common.retry' | translate }}</button>
+  </div>
+
+  <div class="traffic-notice" *ngIf="trafficChanged">
+    <mat-icon>warning</mat-icon>
+    <span>{{ 'routePlanner.trafficChanged' | translate }}</span>
+    <button (click)="dismissTrafficNotice()">{{ 'common.ok' | translate }}</button>
+  </div>
+
+  <div class="planner-body">
+    <div class="map-shell card-premium" #mapDiv>
+      <div class="map-overlay" *ngIf="isLoading">
+        <div class="spinner"></div>
+        <span>{{ 'routePlanner.calculatingRoute' | translate }}</span>
+      </div>
+      <div class="map-empty" *ngIf="mapsLoading && !mapsReady && !mapsLoadError">
+        <div class="spinner"></div>
+        <p>{{ 'routePlanner.loadingMap' | translate }}</p>
+      </div>
+      <div class="map-empty" *ngIf="!isLoading && !mapsLoading && !hasRoute && !mapsLoadError && !mapsReady">
+        <mat-icon>map</mat-icon>
+        <p>{{ 'routePlanner.mapEmptyTitle' | translate }}<br>{{ 'routePlanner.mapEmptySub' | translate }}</p>
+      </div>
+      <div class="map-empty" *ngIf="mapsLoadError">
+        <mat-icon>error_outline</mat-icon>
+        <p>{{ 'routePlanner.mapLoadError' | translate }}</p>
+        <button class="retry-map-btn" (click)="retryMapsLoad()">{{ 'common.retry' | translate }}</button>
+      </div>
+
+      <div class="map-controls-float" *ngIf="mapsReady">
+        <button class="map-float-btn" [class.active]="trafficLayerVisible" (click)="toggleTrafficLayer()" title="{{ 'routePlanner.trafficLayer' | translate }}">
+          <mat-icon>layers</mat-icon>
+        </button>
+        <button class="map-float-btn" (click)="getCurrentLocation()" [disabled]="locating" title="{{ 'routePlanner.currentLocation' | translate }}">
+          <mat-icon>{{ locating ? 'hourglass_top' : 'my_location' }}</mat-icon>
+        </button>
+      </div>
+
+      <div class="map-legend" *ngIf="hasRoute && !isLoading">
+        <span class="legend-item"><i style="background:#2E9E56"></i>{{ 'routePlanner.start' | translate }}</span>
+        <span class="legend-item"><i style="background:#1D6FEB"></i>{{ 'routePlanner.stops' | translate }}</span>
+        <span class="legend-item"><i style="background:#D84E55"></i>{{ 'routePlanner.end' | translate }}</span>
+      </div>
+    </div>
+
+    <aside class="planner-sidebar">
+
+      <div class="summary-card card-premium" *ngIf="selectedRoute">
+        <div class="card-head">
+          <h3>{{ 'routePlanner.journeySummary' | translate }}</h3>
+          <span class="badge-recommended">{{ 'routePlanner.recommended' | translate }}</span>
+        </div>
+        <div class="summary-route">
+          <div class="sum-point">
+            <span class="sum-dot start"></span>
+            <span class="sum-name">{{ summaryFrom }}</span>
+          </div>
+          <mat-icon class="sum-arrow">arrow_downward</mat-icon>
+          <div class="sum-point">
+            <span class="sum-dot end"></span>
+            <span class="sum-name">{{ summaryTo }}</span>
+          </div>
+        </div>
+        <div class="summary-stats">
+          <div class="stat">
+            <mat-icon>straighten</mat-icon>
+            <span class="stat-value">{{ selectedRoute.distanceKm }} km</span>
+            <span class="stat-label">{{ 'routePlanner.distance' | translate }}</span>
+          </div>
+          <div class="stat">
+            <mat-icon>schedule</mat-icon>
+            <span class="stat-value">{{ formatDuration(selectedRoute.durationMin) }}</span>
+            <span class="stat-label">{{ 'routePlanner.freeFlowTime' | translate }}</span>
+          </div>
+          <div class="stat">
+            <mat-icon>flag</mat-icon>
+            <span class="stat-value">{{ totalStops }}</span>
+            <span class="stat-label">{{ 'routePlanner.stops' | translate }}</span>
+          </div>
+        </div>
+
+        <div class="traffic-estimate" *ngIf="selectedRoute.trafficDurationMin > 0">
+          <mat-icon>traffic</mat-icon>
+          <div>
+            <span class="te-title">{{ 'routePlanner.estWithTraffic' | translate: { duration: formatDuration(selectedRoute.trafficDurationMin) } }}</span>
+            <span class="te-note" *ngIf="selectedRoute.trafficDelayMin > 0">
+              {{ 'routePlanner.trafficDelay' | translate }}: +{{ formatDuration(selectedRoute.trafficDelayMin) }}
+              &middot; {{ 'routePlanner.trafficLevel' | translate }}:
+              <span [style.color]="trafficLevelColor(selectedRoute.trafficLevel)">{{ trafficLevelText(selectedRoute.trafficLevel) }}</span>
+            </span>
+            <span class="te-note" *ngIf="selectedRoute.trafficDelayMin === 0">{{ 'routePlanner.trafficNote' | translate }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="comparison-card card-premium" *ngIf="routes.length > 1">
+        <div class="card-head">
+          <h3>{{ 'routePlanner.compareRoutes' | translate }}</h3>
+        </div>
+        <div class="sort-bar">
+          <button class="sort-chip" [class.active]="sortBy === 'recommended'" (click)="sortRoutes('recommended')">{{ 'routePlanner.sortRecommended' | translate }}</button>
+          <button class="sort-chip" [class.active]="sortBy === 'fastest'" (click)="sortRoutes('fastest')">{{ 'routePlanner.sortFastest' | translate }}</button>
+          <button class="sort-chip" [class.active]="sortBy === 'shortest'" (click)="sortRoutes('shortest')">{{ 'routePlanner.sortShortest' | translate }}</button>
+          <button class="sort-chip" [class.active]="sortBy === 'leastTraffic'" (click)="sortRoutes('leastTraffic')">{{ 'routePlanner.sortLeastTraffic' | translate }}</button>
+        </div>
+        <div class="compare-list">
+          <button
+            class="compare-item"
+            *ngFor="let r of routes; let idx = index"
+            [class.active]="idx === selectedRouteIndex"
+            (click)="selectRoute(idx)">
+            <div class="compare-label-col">
+              <span class="compare-route-label">{{ routeLabel(idx) }}</span>
+              <span class="compare-route-sub">{{ r.distanceKm }} km · {{ formatDuration(r.durationMin) }} · {{ totalStops }} {{ 'routePlanner.stops' | translate }}</span>
+              <span class="compare-traffic" *ngIf="r.trafficDurationMin > 0" [style.color]="trafficLevelColor(r.trafficLevel)">
+                <mat-icon>traffic</mat-icon>
+                {{ formatDuration(r.trafficDurationMin) }} ({{ trafficLevelText(r.trafficLevel) }})
+              </span>
+            </div>
+            <mat-icon class="compare-check" *ngIf="idx === selectedRouteIndex">check_circle</mat-icon>
+            <mat-icon class="compare-arrow" *ngIf="idx !== selectedRouteIndex">chevron_right</mat-icon>
+          </button>
+        </div>
+        <button class="refresh-btn" (click)="refreshTraffic()" [disabled]="isLoading" title="{{ 'routePlanner.refreshTraffic' | translate }}">
+          <mat-icon>refresh</mat-icon> {{ 'routePlanner.refreshTraffic' | translate }}
+        </button>
+      </div>
+
+      <div class="save-card card-premium" *ngIf="hasRoute && !isLoading">
+        <ng-container *ngIf="isLoggedIn; else loginPrompt">
+          <ng-container *ngIf="!showSaveForm">
+            <button class="btn-premium-outline full" (click)="openSaveForm()">
+              <mat-icon>bookmark_add</mat-icon> {{ 'routePlanner.saveRoute' | translate }}
+            </button>
+          </ng-container>
+          <ng-container *ngIf="showSaveForm">
+            <label class="save-label">{{ 'routePlanner.nameThisRoute' | translate }}</label>
+            <input class="input-premium" [(ngModel)]="saveName" placeholder="{{ 'routePlanner.saveNamePlaceholder' | translate }}">
+            <div class="save-actions">
+              <button class="btn-premium" (click)="saveCurrentRoute()" [disabled]="saving">
+                <mat-icon>{{ saving ? 'hourglass_top' : 'bookmark' }}</mat-icon>
+                {{ saving ? ('routePlanner.saving' | translate) : ('common.save' | translate) }}
+              </button>
+              <button class="btn-premium-outline" (click)="showSaveForm = false">{{ 'common.cancel' | translate }}</button>
+            </div>
+          </ng-container>
+        </ng-container>
+        <ng-template #loginPrompt>
+          <p class="save-login-hint"><mat-icon>lock</mat-icon> {{ 'routePlanner.loginToSave' | translate }}</p>
+          <button class="btn-premium-outline full" (click)="goToLogin()"><mat-icon>login</mat-icon> {{ 'routePlanner.loginSignup' | translate }}</button>
+        </ng-template>
+      </div>
+
+      <div class="saved-routes-card card-premium" *ngIf="isLoggedIn">
+        <button class="saved-routes-toggle" (click)="loadSavedRoutes()">
+          <mat-icon>bookmark</mat-icon>
+          <span>{{ 'routePlanner.mySavedRoutes' | translate }}</span>
+          <mat-icon class="toggle-arrow" [class.open]="savedRoutesVisible">{{ savedRoutesVisible ? 'expand_less' : 'expand_more' }}</mat-icon>
+        </button>
+        <div class="saved-routes-list" *ngIf="savedRoutesVisible">
+          <div class="saved-route-empty" *ngIf="savedRoutesLoaded && savedRoutes.length === 0">
+            <mat-icon>bookmark_border</mat-icon>
+            <span>{{ 'routePlanner.noSavedRoutes' | translate }}</span>
+          </div>
+          <div class="saved-route-item" *ngFor="let sr of savedRoutes">
+            <div class="saved-route-info" (click)="openSavedRoute(sr)">
+              <span class="saved-route-name">{{ sr.name }}</span>
+              <span class="saved-route-detail">{{ sr.source }} → {{ sr.destination }}</span>
+              <span class="saved-route-meta">{{ sr.distanceKm }} km · {{ formatDuration(sr.durationMin) }}</span>
+            </div>
+            <button class="saved-route-delete" (click)="deleteSavedRoute(sr._id!)" [disabled]="deletingSavedId === sr._id" title="{{ 'common.delete' | translate }}">
+              <mat-icon>{{ deletingSavedId === sr._id ? 'hourglass_top' : 'delete_outline' }}</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+
+</div>

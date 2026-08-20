@@ -1,0 +1,141 @@
+<div class="page-head">
+  <h2>{{ 'admin.notifications.title' | translate }}</h2>
+  <p class="muted">{{ 'admin.notifications.subtitle' | translate }}</p>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-val">{{ stats.total || 0 }}</div>
+    <div class="stat-lbl">{{ 'admin.notifications.statTotal' | translate }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val">{{ stats.unread || 0 }}</div>
+    <div class="stat-lbl">{{ 'admin.notifications.statUnread' | translate }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val">{{ items.length || 0 }}</div>
+    <div class="stat-lbl">{{ 'admin.notifications.statOnPage' | translate }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-val">{{ totalPages }}</div>
+    <div class="stat-lbl">{{ 'admin.notifications.statTotalPages' | translate }}</div>
+  </div>
+</div>
+
+<div *ngIf="error" class="page-error-bar">
+  <mat-icon>error_outline</mat-icon>
+  <span>{{ error | translate }}</span>
+  <button mat-flat-button color="warn" (click)="load()">
+    <mat-icon>refresh</mat-icon> {{ 'admin.common.retry' | translate }}
+  </button>
+</div>
+
+<div class="toolbar">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>{{ 'admin.notifications.searchPlaceholder' | translate }}</mat-label>
+    <input matInput [(ngModel)]="search" (ngModelChange)="onSearchInput()" />
+    <mat-icon matPrefix>search</mat-icon>
+  </mat-form-field>
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>{{ 'admin.notifications.filterCategory' | translate }}</mat-label>
+    <mat-select [(ngModel)]="categoryFilter" (selectionChange)="onFilter()">
+      <mat-option *ngFor="let c of categories" [value]="c.value">
+        {{ c.labelKey | translate }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<div *ngIf="loading" class="loading-wrap">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>
+
+<div *ngIf="!loading && !error && items.length === 0" class="empty">
+  <mat-icon style="font-size:48px;width:48px;height:48px;opacity:0.4;margin-bottom:8px;">notifications_off</mat-icon>
+  <p>{{ 'admin.notifications.empty' | translate }}</p>
+</div>
+
+<div *ngIf="!loading && items.length > 0" class="table-scroll">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ 'admin.notifications.colTitle' | translate }}</th>
+        <th>{{ 'admin.notifications.colMessage' | translate }}</th>
+        <th>{{ 'admin.notifications.colCategory' | translate }}</th>
+        <th>{{ 'admin.notifications.colType' | translate }}</th>
+        <th>{{ 'admin.notifications.colPriority' | translate }}</th>
+        <th>{{ 'admin.notifications.colChannels' | translate }}</th>
+        <th>{{ 'admin.notifications.colRead' | translate }}</th>
+        <th>{{ 'admin.notifications.colDate' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let n of items">
+        <td class="notif-title">{{ n.title || '—' }}</td>
+        <td class="notif-msg">{{ truncate(n.message) }}</td>
+        <td><span class="badge st-info">{{ n.category || '—' }}</span></td>
+        <td>{{ n.type || '—' }}</td>
+        <td>
+          <span class="badge" [ngClass]="priorityCls(n.priority)">
+            {{ n.priority || 'normal' }}
+          </span>
+        </td>
+        <td>
+          <div class="channels-cell">
+            <span
+              class="channel-dot"
+              [ngClass]="{
+                'ch-sent': channelStatus(n, 'inapp') === 'sent',
+                'ch-pending': channelStatus(n, 'inapp') === 'pending',
+                'ch-failed': channelStatus(n, 'inapp') === 'failed',
+                'ch-none': channelStatus(n, 'inapp') === 'none'
+              }"
+              [title]="'admin.notifications.channelInApp' | translate"
+            ></span>
+            <span
+              class="channel-dot"
+              [ngClass]="{
+                'ch-sent': channelStatus(n, 'email') === 'sent',
+                'ch-pending': channelStatus(n, 'email') === 'pending',
+                'ch-failed': channelStatus(n, 'email') === 'failed',
+                'ch-none': channelStatus(n, 'email') === 'none'
+              }"
+              [title]="'admin.notifications.channelEmail' | translate"
+            ></span>
+            <span
+              class="channel-dot"
+              [ngClass]="{
+                'ch-sent': channelStatus(n, 'push') === 'sent',
+                'ch-pending': channelStatus(n, 'push') === 'pending',
+                'ch-failed': channelStatus(n, 'push') === 'failed',
+                'ch-none': channelStatus(n, 'push') === 'none'
+              }"
+              [title]="'admin.notifications.channelPush' | translate"
+            ></span>
+          </div>
+        </td>
+        <td>
+          <span class="badge" [ngClass]="n.read ? 'st-ok' : 'st-warn'">
+            {{ n.read ? ('admin.notifications.read' | translate) : ('admin.notifications.unread' | translate) }}
+          </span>
+        </td>
+        <td class="mono">{{ fmtD(n.createdAt) }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div *ngIf="!loading && items.length > 0" class="pager">
+  <span class="pager-info">
+    {{ 'admin.common.showing' | translate }} {{ items.length }} {{ 'admin.common.of' | translate }} {{ total }}
+  </span>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="icon-btn" [disabled]="page <= 1" (click)="pageChange(page - 1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="mono" style="font-size:13px;font-weight:600;">{{ page }} / {{ totalPages }}</span>
+    <button class="icon-btn" [disabled]="page >= totalPages" (click)="pageChange(page + 1)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>

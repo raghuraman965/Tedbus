@@ -1,0 +1,49 @@
+:host { display: block; }
+
+.search-field { flex: 1; min-width: 200px; }
+.filter-field { width: 180px; margin-bottom: 0; }
+
+.page-error-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  margin-bottom: 18px;
+  color: #dc2626;
+}
+
+html[data-theme="dark"] :host .page-error-bar {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
+.mono {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 13px;
+}
+
+.customer-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customer-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--adm-text, #1a1d23);
+}
+
+.customer-email {
+  font-size: 12px;
+  color: var(--adm-text-secondary, #6b7280);
+}
+
+@media (max-width: 560px) {
+  .search-field { min-width: 100%; }
+  .filter-field { width: 100%; }
+}

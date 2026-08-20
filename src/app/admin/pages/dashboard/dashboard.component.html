@@ -1,0 +1,167 @@
+<div class="dash-wrap">
+  <!-- Error -->
+  <div *ngIf="error" class="dash-error">
+    <mat-icon class="err-icon">error_outline</mat-icon>
+    <p>{{ error | translate }}</p>
+    <button mat-flat-button color="warn" (click)="load()">
+      <mat-icon>refresh</mat-icon> {{ 'admin.common.retry' | translate }}
+    </button>
+  </div>
+
+  <!-- Loading Skeleton -->
+  <div *ngIf="loading" class="dash-skeleton">
+    <div class="skel-card" *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12]"></div>
+  </div>
+
+  <!-- Dashboard Content -->
+  <ng-container *ngIf="!loading && !error && stats">
+    <!-- Revenue Section -->
+    <div class="sec-title">
+      <mat-icon>account_balance_wallet</mat-icon>
+      <h2>{{ 'admin.dashboard.revenueOverview' | translate }}</h2>
+    </div>
+    <div class="rev-grid">
+      <div class="rev-card">
+        <div class="rev-icon rev-total"><mat-icon>payments</mat-icon></div>
+        <div class="rev-text">
+          <span class="rev-label">{{ 'admin.dashboard.totalRevenue' | translate }}</span>
+          <span class="rev-value">{{ fmt(stats.revenue) }}</span>
+        </div>
+      </div>
+      <div class="rev-card">
+        <div class="rev-icon rev-net"><mat-icon>account_balance</mat-icon></div>
+        <div class="rev-text">
+          <span class="rev-label">{{ 'admin.dashboard.netRevenue' | translate }}</span>
+          <span class="rev-value">{{ fmt(stats.netRevenue) }}</span>
+        </div>
+      </div>
+      <div class="rev-card">
+        <div class="rev-icon rev-today"><mat-icon>trending_up</mat-icon></div>
+        <div class="rev-text">
+          <span class="rev-label">{{ 'admin.dashboard.todayRevenue' | translate }}</span>
+          <span class="rev-value">{{ fmt(stats.todayRevenue) }}</span>
+        </div>
+      </div>
+      <div class="rev-card">
+        <div class="rev-icon rev-refund"><mat-icon>replay</mat-icon></div>
+        <div class="rev-text">
+          <span class="rev-label">{{ 'admin.dashboard.refunded' | translate }}</span>
+          <span class="rev-value">{{ fmt(stats.refundedAmount) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="sec-title">
+      <mat-icon>bar_chart</mat-icon>
+      <h2>{{ 'admin.dashboard.statistics' | translate }}</h2>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon si-cust"><mat-icon>people</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.customers) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.customers' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-book"><mat-icon>confirmation_number</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.bookings) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.bookings' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-conf"><mat-icon>check_circle</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.confirmedBookings) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.confirmed' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-cancel"><mat-icon>cancel</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.cancelledBookings) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.cancelled' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-pend"><mat-icon>pending</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.pendingBookings) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.pending' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-today"><mat-icon>today</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.todayBookings) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.todayBookings' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-upcoming"><mat-icon>event</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.upcomingJourneys) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.upcomingTrips' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-bus"><mat-icon>directions_bus</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.activeBuses) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.activeBuses' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-route"><mat-icon>route</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.routes) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.routes' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-driver"><mat-icon>person</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.drivers) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.drivers' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-pay"><mat-icon>receipt_long</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.totalPayments) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.totalPayments' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-spay"><mat-icon>verified</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.successfulPayments) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.successfulPayments' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-fpay"><mat-icon>error</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.failedPayments) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.failedPayments' | translate }}</span>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon si-offer"><mat-icon>local_offer</mat-icon></div>
+        <span class="stat-val">{{ fmtN(stats.activeOffers) }}</span>
+        <span class="stat-lbl">{{ 'admin.dashboard.activeOffers' | translate }}</span>
+      </div>
+    </div>
+
+    <!-- Recent Bookings -->
+    <div class="sec-title">
+      <mat-icon>list_alt</mat-icon>
+      <h2>{{ 'admin.dashboard.recentBookings' | translate }}</h2>
+    </div>
+    <div class="table-scroll">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'admin.dashboard.route' | translate }}</th>
+            <th>{{ 'admin.dashboard.customer' | translate }}</th>
+            <th>{{ 'admin.dashboard.fare' | translate }}</th>
+            <th>{{ 'admin.dashboard.status' | translate }}</th>
+            <th>{{ 'admin.dashboard.date' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of (stats.recentBookings || [])">
+            <td>{{ b.routeName || b.route?.name || '-' }}</td>
+            <td>{{ b.customerName || b.user?.name || '-' }}</td>
+            <td class="mono">{{ fmt(b.totalAmount || b.fare) }}</td>
+            <td>
+              <span class="badge" [ngClass]="statusCls(b.status)">
+                {{ 'admin.status.' + b.status | translate }}
+              </span>
+            </td>
+            <td>{{ fmtD(b.createdAt) }}</td>
+          </tr>
+          <tr *ngIf="!stats.recentBookings?.length">
+            <td colspan="5" class="empty">{{ 'admin.dashboard.noRecentBookings' | translate }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</div>

@@ -1,0 +1,28 @@
+<div class="auth-landing-wrap">
+  <div class="auth-landing-card brand-fade-in">
+    <img src="../../../../assets/redbus-logo.svg" [attr.alt]="'auth.tedbusAlt' | translate" class="auth-logo">
+    <h1>{{ 'auth.welcomeTedbus' | translate }}</h1>
+    <p>{{ 'auth.landingSubtitle' | translate }}</p>
+
+    <div class="auth-notice" *ngIf="message">
+      <mat-icon>lock</mat-icon>
+      <span>{{ message | translate }}</span>
+    </div>
+
+    <div class="auth-actions">
+      <button class="btn-premium" (click)="openLogin()">
+        <mat-icon>login</mat-icon>
+        {{ 'common.login' | translate }}
+      </button>
+      <button class="btn-premium-outline" (click)="goToSignup()">
+        <mat-icon>person_add</mat-icon>
+        {{ 'auth.createAccount' | translate }}
+      </button>
+    </div>
+
+    <a class="back-home" routerLink="/">
+      <mat-icon>arrow_back</mat-icon>
+      {{ 'auth.backToHome' | translate }}
+    </a>
+  </div>
+</div>

@@ -1,0 +1,140 @@
+<div class="bus-box">
+    <div class="bus-box-main">
+        <div class="bus-brand">
+            <div class="bus-avatar">{{ operatorInitial }}</div>
+            <div class="bus-brand-info">
+                <div class="bus-name">{{operatorname}}</div>
+                <span class="bus-type-tag">{{bustypename | translate}}</span>
+            </div>
+        </div>
+
+        <div class="rating-pill">
+            <i class="material-icons">star</i>
+            <span class="rating-value">{{avgrating}}</span>
+            <span class="rating-reviews">({{totalreview}})</span>
+        </div>
+
+        <button class="view-route-btn" (click)="toggleRouteTimeline()">
+            <i class="material-icons">route</i>
+            {{ 'search.viewRoute' | translate }}
+        </button>
+
+        <div class="timeline">
+            <div class="time-block">
+                <div class="time-value">{{busdeparturetime}}</div>
+                <div class="time-city">{{routedetails.departureLocation.name | cityName}}</div>
+                <div class="time-day">{{ 'search.today' | translate }}</div>
+            </div>
+            <div class="timeline-mid">
+                <div class="duration-label">{{formatDurationFunc(routedetails.duration)}}</div>
+                <div class="timeline-rail">
+                    <span class="rail-dot start"></span>
+                    <span class="rail-line"></span>
+                    <i class="material-icons rail-bus">directions_bus</i>
+                    <span class="rail-line"></span>
+                    <span class="rail-dot end"></span>
+                </div>
+                <div class="via-label">{{ 'search.nonStop' | translate }}</div>
+            </div>
+            <div class="time-block right">
+                <div class="time-value">{{busarrivaltime}}</div>
+                <div class="time-city">{{routedetails.arrivalLocation.name | cityName}}</div>
+                <div class="time-day">{{ 'search.today' | translate }}</div>
+            </div>
+        </div>
+
+        <div class="seats-col">
+            <div class="seats-count">{{totalSeats - filledseats.length}}</div>
+            <div class="seats-label">{{ 'search.seatsAvailable' | translate }}</div>
+            <div class="seats-progress">
+                <div class="seats-progress-fill" [style.width.%]="seatFillPercent()"></div>
+            </div>
+        </div>
+
+        <div class="price-col">
+            <div class="price-row">
+                <span class="price-currency">₹</span>
+                <span class="price-value">{{seatprivce}}</span>
+            </div>
+            <div class="deal-row">
+                <i class="material-icons">local_offer</i>
+                <span>{{ 'classic.redealApplied' | translate }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="bus-box-footer">
+        <div class="amenities">
+            <span matTooltip="{{ 'search.amenities.charging' | translate }}">
+                <i class="material-icons">power</i>
+            </span>
+            <span matTooltip="{{ 'search.amenities.movie' | translate }}">
+                <i class="material-icons">movie_filter</i>
+            </span>
+            <span matTooltip="{{ 'search.amenities.reading' | translate }}">
+                <i class="material-icons">light_mode</i>
+            </span>
+            <span matTooltip="{{ 'search.amenities.blanket' | translate }}">
+                <i class="material-icons">bedtime</i>
+            </span>
+            <span matTooltip="{{ 'search.amenities.water' | translate }}">
+                <i class="material-icons">water_drop</i>
+            </span>
+        </div>
+        <div class="feature-badges">
+            <div class="feature-badge live" *ngIf="livetracking === 1">
+                <i class="material-icons">gps_fixed</i>
+                <span>{{ 'search.liveTracking' | translate }}</span>
+            </div>
+            <div class="feature-badge" *ngIf="reschedulable === 1">
+                <i class="material-icons">restore</i>
+                <span>{{ 'search.reschedulable' | translate }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="route-timeline-panel" *ngIf="showRouteTimeline">
+        <div class="timeline-header">
+            <i class="material-icons">route</i>
+            <h4>{{ 'search.routeDetails' | translate }}</h4>
+            <button class="close-timeline-btn" (click)="toggleRouteTimeline()">
+                <i class="material-icons">close</i>
+            </button>
+        </div>
+        <div *ngIf="!routedetails?.stops?.length" class="non-stop-message">
+            <i class="material-icons">check_circle</i>
+            <span>{{ 'search.nonStop' | translate }}</span>
+        </div>
+        <div class="route-stops" *ngIf="routedetails?.stops?.length">
+            <div class="route-stop" *ngFor="let stop of routedetails.stops; let last = last; let idx = index">
+                <div class="stop-indicator">
+                    <span class="stop-dot" [class.origin]="!last && idx === 0"
+                          [class.destination]="last"></span>
+                    <span class="stop-line" *ngIf="!last"></span>
+                </div>
+                <div class="stop-info">
+                    <span class="stop-name">{{ stop.stopName }}</span>
+                    <span class="stop-times" *ngIf="stop.arrivalTime || stop.departureTime">
+                        <span *ngIf="stop.arrivalTime">Arr: {{ stop.arrivalTime }}</span>
+                        <span *ngIf="stop.departureTime">Dep: {{ stop.departureTime }}</span>
+                    </span>
+                    <span class="stop-boarding" *ngIf="stop.boardingPoints?.length">
+                        Boarding: {{ stop.boardingPoints.join(', ') }}
+                    </span>
+                    <span class="stop-distance" *ngIf="stop.distanceFromOrigin > 0">{{ stop.distanceFromOrigin }} km</span>
+                </div>
+            </div>
+        </div>
+        <div class="route-summary">
+            <span>{{ (routedetails?.stops?.length || 0) }} {{ 'search.stops' | translate }}</span>
+            <span *ngIf="(routedetails?.totalDistanceKm || 0) > 0">{{ routedetails.totalDistanceKm }} km</span>
+            <span>{{ formatDurationFunc(routedetails.duration) }}</span>
+        </div>
+    </div>
+
+    <div class="bus-box-tabs">
+        <app-bottom-tab [busid]='busid' [filledseats]="filledseats" [seatprice]="seatprivce" [routedetials]="routedetails"
+            [busarrivaltime]="getArrivalMinutes()" [busdeparturetime]="getDepartureMinutes()"
+            [operatorname]="operatorname" [date]="date" [routeId]="routeId" (seatsTaken)="seatsTaken.emit($event)"></app-bottom-tab>
+    </div>
+</div>

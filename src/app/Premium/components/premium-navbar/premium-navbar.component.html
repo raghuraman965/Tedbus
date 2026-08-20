@@ -1,0 +1,88 @@
+<nav class="premium-navbar" [class.scrolled]="isScrolled">
+  <div class="navbar-inner">
+    <a class="brand" routerLink="/">
+      <img src="../../../../assets/redbus-logo.svg" alt="TedBus" class="brand-logo">
+    </a>
+
+    <div class="nav-links desktop-only">
+      <a
+        *ngFor="let link of navLinks"
+        class="nav-link"
+        [routerLink]="link.route"
+        (click)="onNavLinkClick()"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{exact: true}">
+        <mat-icon>{{ link.icon }}</mat-icon>
+        <span tedTextTransition>{{ link.labelKey | translate }}</span>
+      </a>
+    </div>
+
+    <div class="nav-right">
+      <app-language-selector></app-language-selector>
+      <app-theme-toggle></app-theme-toggle>
+
+      <app-notification-center></app-notification-center>
+
+      <button class="login-btn btn-premium" *ngIf="!isloggedIn" (click)="goToLogin()">
+        <mat-icon>login</mat-icon>
+<span tedTextTransition>{{ 'common.login' | translate }}</span>
+      </button>
+
+      <div class="account-area desktop-only" *ngIf="isloggedIn">
+        <button class="account-btn" [matMenuTriggerFor]="menu">
+          <mat-icon>account_circle</mat-icon>
+          <span tedTextTransition>{{ 'navbar.account' | translate }}</span>
+          <mat-icon class="chevron">expand_more</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item (click)="navigateToProfileTab('trips')">{{ 'navbar.myTrips' | translate }}</button>
+          <button mat-menu-item (click)="navigateToProfileTab('wallet')">{{ 'navbar.walletCards' | translate }}</button>
+          <button mat-menu-item (click)="navigate('/profile')">{{ 'navbar.myProfile' | translate }}</button>
+          <button mat-menu-item (click)="handlelogout()">{{ 'navbar.signOut' | translate }}</button>
+        </mat-menu>
+      </div>
+
+      <button class="mobile-menu-btn mobile-only" (click)="toggleMobileMenu()">
+        <mat-icon>{{ mobileMenuOpen ? 'close' : 'menu' }}</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-drawer" [class.open]="mobileMenuOpen">
+    <div class="mobile-theme-row">
+      <span tedTextTransition>{{ 'navbar.darkMode' | translate }}</span>
+      <app-theme-toggle></app-theme-toggle>
+    </div>
+    <a
+      *ngFor="let link of navLinks"
+      class="mobile-nav-link"
+      [routerLink]="link.route"
+      (click)="onNavLinkClick()">
+      <mat-icon>{{ link.icon }}</mat-icon>
+      <span tedTextTransition>{{ link.labelKey | translate }}</span>
+    </a>
+    <div class="mobile-lang-row">
+      <app-language-selector></app-language-selector>
+    </div>
+    <button class="mobile-nav-link" *ngIf="!isloggedIn" (click)="goToLogin()">
+      <mat-icon>login</mat-icon>
+      <span tedTextTransition>{{ 'common.login' | translate }}</span>
+    </button>
+    <button class="mobile-nav-link" *ngIf="isloggedIn" (click)="navigateToProfileTab('trips')">
+      <mat-icon>luggage</mat-icon>
+      <span tedTextTransition>{{ 'navbar.myTrips' | translate }}</span>
+    </button>
+    <button class="mobile-nav-link" *ngIf="isloggedIn" (click)="navigateToProfileTab('wallet')">
+      <mat-icon>account_balance_wallet</mat-icon>
+      <span tedTextTransition>{{ 'navbar.walletCards' | translate }}</span>
+    </button>
+    <button class="mobile-nav-link" *ngIf="isloggedIn" (click)="navigate('/profile')">
+      <mat-icon>account_circle</mat-icon>
+      <span tedTextTransition>{{ 'navbar.myProfile' | translate }}</span>
+    </button>
+    <button class="mobile-nav-link" *ngIf="isloggedIn" (click)="handlelogout()">
+      <mat-icon>logout</mat-icon>
+      <span tedTextTransition>{{ 'navbar.signOut' | translate }}</span>
+    </button>
+  </div>
+</nav>

@@ -1,0 +1,144 @@
+<!-- Filter Tabs -->
+<div class="mt-filters">
+  <button class="mt-filter" [class.mt-filter--active]="activeFilter === 'all'" (click)="setFilter('all')">
+    {{ 'trips.filterAll' | translate }}
+    <span class="mt-filter-count">{{ filterCounts.all }}</span>
+  </button>
+  <button class="mt-filter" [class.mt-filter--active]="activeFilter === 'upcoming'" (click)="setFilter('upcoming')">
+    {{ 'trips.filterUpcoming' | translate }}
+    <span class="mt-filter-count">{{ filterCounts.upcoming }}</span>
+  </button>
+  <button class="mt-filter" [class.mt-filter--active]="activeFilter === 'completed'" (click)="setFilter('completed')">
+    {{ 'trips.filterCompleted' | translate }}
+    <span class="mt-filter-count">{{ filterCounts.completed }}</span>
+  </button>
+  <button class="mt-filter" [class.mt-filter--active]="activeFilter === 'cancelled'" (click)="setFilter('cancelled')">
+    {{ 'trips.filterCancelled' | translate }}
+    <span class="mt-filter-count">{{ filterCounts.cancelled }}</span>
+  </button>
+  <button class="mt-filter" [class.mt-filter--active]="activeFilter === 'expired'" (click)="setFilter('expired')">
+    {{ 'trips.filterExpired' | translate }}
+    <span class="mt-filter-count">{{ filterCounts.expired }}</span>
+  </button>
+</div>
+
+<!-- Ticket Cards -->
+<div class="mt-list" *ngIf="filteredBookings.length">
+  <div class="mt-card"
+       [class.mt-card--cancelled]="isCancelled(b)"
+       [class.mt-card--expired]="isExpired(b)"
+       [class.mt-card--completed]="isCompleted(b)"
+       *ngFor="let b of filteredBookings">
+
+    <!-- Header: operator + status badges -->
+    <div class="mt-card-head">
+      <div class="mt-operator">
+        <div class="mt-bus-img-wrap">
+          <img class="mt-bus-img" [src]="busImage(b)" [attr.alt]="'trips.bus' | translate"
+               (error)="b._imgFailed = true"
+               [class.mt-bus-img--hidden]="b._imgFailed" />
+          <div class="mt-bus-img-fallback" *ngIf="b._imgFailed">
+            <mat-icon>directions_bus</mat-icon>
+          </div>
+        </div>
+        <div class="mt-operator-info">
+          <div class="mt-operator-name">{{ b.busDetails?.operatorName || '--' }}</div>
+          <div class="mt-operator-type">{{ b.busDetails?.busType || ('trips.acSeater' | translate) }}</div>
+        </div>
+      </div>
+      <div class="mt-badges">
+        <span class="mt-badge" [class]="statusBadge(b).cls">{{ statusBadge(b).key | translate }}</span>
+        <span class="mt-badge" [class]="paymentBadge(b).cls">{{ paymentBadge(b).key | translate }}</span>
+      </div>
+    </div>
+
+    <!-- Journey Route -->
+    <div class="mt-journey">
+      <div class="mt-point">
+        <div class="mt-city">{{ (b.departureDetails?.city || '--') | cityName }}</div>
+        <div class="mt-time">{{ formatTime(b.departureDetails?.time) }}</div>
+        <div class="mt-sub">{{ formatDate(b.departureDetails?.date || b.bookingDate) }}</div>
+        <div class="mt-sub mt-location">{{ b.departureDetails?.location || ('trips.boardingPoint' | translate) }}</div>
+      </div>
+      <div class="mt-route">
+        <div class="mt-dot"></div>
+        <div class="mt-line"></div>
+        <mat-icon class="mt-bus">directions_bus</mat-icon>
+        <div class="mt-line"></div>
+        <div class="mt-dot"></div>
+      </div>
+      <div class="mt-point mt-point--right">
+        <div class="mt-city">{{ (b.arrivalDetails?.city || '--') | cityName }}</div>
+        <div class="mt-time">{{ formatTime(b.arrivalDetails?.time) }}</div>
+        <div class="mt-sub">{{ formatDate(b.arrivalDetails?.date || b.bookingDate) }}</div>
+        <div class="mt-sub mt-location">{{ b.arrivalDetails?.location || ('trips.droppingPoint' | translate) }}</div>
+      </div>
+    </div>
+
+    <!-- Booking Meta -->
+    <div class="mt-meta">
+      <div class="mt-meta-item">
+        <mat-icon>confirmation_number</mat-icon>
+        <div>
+          <div class="mt-meta-label">{{ 'trips.pnr' | translate }}</div>
+          <div class="mt-meta-value mt-pnr">{{ pnr(b) }}</div>
+        </div>
+      </div>
+      <div class="mt-meta-item">
+        <mat-icon>event_seat</mat-icon>
+        <div>
+          <div class="mt-meta-label">{{ 'trips.seats' | translate }}</div>
+          <div class="mt-meta-value">{{ seatsLabel(b) }}</div>
+        </div>
+      </div>
+      <div class="mt-meta-item">
+        <mat-icon>person</mat-icon>
+        <div>
+          <div class="mt-meta-label">{{ 'trips.passengers' | translate }}</div>
+          <div class="mt-meta-value">{{ b.passengerDetails?.length || 0 }}</div>
+        </div>
+      </div>
+      <div class="mt-meta-item">
+        <mat-icon>payments</mat-icon>
+        <div>
+          <div class="mt-meta-label">{{ 'trips.totalFare' | translate }}</div>
+          <div class="mt-meta-value">{{ formatMoney(b.fare) }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Expired Hint -->
+    <div class="mt-expired-hint" *ngIf="isExpired(b)">
+      <mat-icon>info_outline</mat-icon>
+      <span>{{ 'trips.expiredHint' | translate }}</span>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-actions">
+      <button class="mt-btn" (click)="viewTicket(b)">
+        <mat-icon>confirmation_number</mat-icon> {{ 'trips.viewTicket' | translate }}
+      </button>
+      <button class="mt-btn" (click)="downloadTicket(b)" [disabled]="downloadingId === pnrOf(b)">
+        <mat-icon>{{ downloadingId === pnrOf(b) ? 'hourglass_top' : 'download' }}</mat-icon>
+        {{ 'trips.downloadTicket' | translate }}
+      </button>
+      <button class="mt-btn" *ngIf="showTrack(b)" (click)="trackBus(b)">
+        <mat-icon>my_location</mat-icon> {{ 'trips.trackBus' | translate }}
+      </button>
+      <button class="mt-btn mt-btn--danger" *ngIf="showCancel(b)" (click)="cancelBooking(b)"
+        [disabled]="cancellingId === pnrOf(b)">
+        <mat-icon>{{ cancellingId === pnrOf(b) ? 'hourglass_top' : 'cancel' }}</mat-icon>
+        {{ 'trips.cancelTicket' | translate }}
+      </button>
+      <span class="mt-cancelled-label" *ngIf="isCancelled(b)">
+        <mat-icon>cancel</mat-icon> {{ 'trips.cancelled' | translate }}
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Empty State: No results from filter (but bookings exist) -->
+<app-empty-state *ngIf="filteredBookings.length === 0 && booking.length > 0" icon="filter_list_off" titleKey="states.empty.noSearchResults" subtitleKey="states.empty.noSearchResultsSub"></app-empty-state>
+
+<!-- Empty State: No bookings at all -->
+<app-empty-state *ngIf="booking.length === 0" icon="flight_takeoff" titleKey="states.empty.noBookings" subtitleKey="states.empty.noBookingsSub" actionLabelKey="states.empty.bookNow" actionRoute="/"></app-empty-state>

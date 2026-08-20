@@ -1,0 +1,115 @@
+.theme-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.theme-toggle:focus-visible .toggle-track {
+  box-shadow: 0 0 0 3px var(--brand-primary-light, #FBE9EA);
+}
+
+.toggle-track {
+  width: 52px;
+  height: 28px;
+  border-radius: 14px;
+  background: #d1d5db;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  position: relative;
+  transition: background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.25s ease;
+}
+
+.theme-toggle.dark .toggle-track {
+  background: #1e293b;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.toggle-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+              background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  transform: translateX(0);
+  position: relative;
+}
+
+.theme-toggle.dark .toggle-thumb {
+  transform: translateX(24px);
+  background: #0f172a;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+}
+
+.theme-toggle:active .toggle-thumb {
+  width: 26px;
+}
+
+.theme-toggle.dark:active .toggle-thumb {
+  transform: translateX(20px);
+}
+
+.toggle-thumb mat-icon {
+  position: absolute;
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.icon-sun {
+  color: #f59e0b;
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.theme-toggle.dark .icon-sun {
+  opacity: 0;
+  transform: rotate(180deg) scale(0.3);
+}
+
+.icon-moon {
+  color: #818cf8;
+  opacity: 0;
+  transform: rotate(-180deg) scale(0.3);
+}
+
+.theme-toggle.dark .icon-moon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+.theme-toggle:hover .toggle-track {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.06);
+}
+
+.theme-toggle.dark:hover .toggle-track {
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3),
+              0 0 0 2px rgba(129, 140, 248, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toggle-track {
+    transition-duration: 0.1s;
+  }
+  .toggle-thumb {
+    transition-duration: 0.1s;
+  }
+  .toggle-thumb mat-icon {
+    transition-duration: 0.05s;
+  }
+}

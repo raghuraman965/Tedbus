@@ -1,0 +1,163 @@
+<div class="loading-state" *ngIf="loading">
+  <div class="skeleton-premium" style="width: 60%; height: 24px; margin: 0 auto 16px;"></div>
+  <div class="skeleton-premium" style="width: 100%; height: 340px; max-width: 780px; margin: 0 auto;"></div>
+</div>
+
+<div class="detail-wrap" *ngIf="!loading && post">
+  <button class="back-btn" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+    {{ 'community.backToCommunity' | translate }}
+  </button>
+
+  <article class="detail-card">
+    <div class="detail-header">
+      <div class="user-info" (click)="goToProfile(post.user.id)">
+        <img class="avatar" [src]="post.user.avatar" [alt]="post.user.name" (error)="onImageError($event)">
+        <div>
+          <div class="name-row">
+            <span class="username">{{ post.user.name }}</span>
+            <mat-icon *ngIf="post.user.verified" class="verified-badge">verified</mat-icon>
+            <span class="badge" *ngIf="post.user.badge">{{ post.user.badge }}</span>
+          </div>
+          <span class="rank-label" *ngIf="post.user.rank">{{ post.user.rank }}</span>
+          <span class="follow-count" *ngIf="post.user.followers !== undefined">{{ post.user.followers }} {{ 'community.followersCount' | translate }}</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button
+          *ngIf="!isOwner && !post.user.isSuspended"
+          class="follow-btn"
+          [class.following]="post.user.isFollowing"
+          (click)="toggleFollowAuthor()">
+          <mat-icon *ngIf="post.user.isFollowing">check</mat-icon>
+          {{ post.user.isFollowing ? ('community.following' | translate) : ('community.follow' | translate) }}
+        </button>
+        <span class="category-badge">{{ post.category }}</span>
+        <button mat-icon-button class="more-btn" [matMenuTriggerFor]="menu" [title]="'community.moreOptions' | translate">
+          <mat-icon>more_horiz</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <div class="menu-header" *ngIf="!isOwner">{{ 'community.reportPost' | translate }}</div>
+          <button mat-menu-item *ngFor="let reason of reportReasons" (click)="report(reason)">
+            {{ reason | translate }}
+          </button>
+          <mat-divider *ngIf="isOwner"></mat-divider>
+          <button mat-menu-item *ngIf="isOwner" (click)="deletePost()" class="danger-item">
+            <mat-icon>delete</mat-icon> {{ 'community.deletePost' | translate }}
+          </button>
+        </mat-menu>
+      </div>
+    </div>
+
+    <div class="action-message" *ngIf="reportMessage">
+      <mat-icon>{{ reportSubmitted ? 'check_circle' : 'info' }}</mat-icon>
+      {{ reportMessage }}
+    </div>
+
+    <div class="main-image-wrap" *ngIf="post.images.length">
+      <img class="main-image" [src]="getImageUrl(post.images[activeImageIndex])" [alt]="post.title" (error)="onImageError($event)">
+    </div>
+    <div class="thumbnail-row" *ngIf="post.images.length > 1">
+      <img
+        *ngFor="let img of post.images; let i = index"
+        [src]="getImageUrl(img)"
+        [class.active]="i === activeImageIndex"
+        (click)="setActiveImage(i)"
+        (error)="onImageError($event)"
+        class="thumbnail">
+    </div>
+
+    <div class="detail-body">
+      <h1 class="detail-title">{{ post.title }}</h1>
+
+      <div class="meta-grid">
+        <div class="meta-item">
+          <mat-icon>route</mat-icon>
+          <span>{{ post.route | cityName }}</span>
+        </div>
+        <div class="meta-item">
+          <mat-icon>place</mat-icon>
+          <span>{{ post.destination | cityName }}</span>
+        </div>
+        <div class="meta-item">
+          <mat-icon>event</mat-icon>
+          <span>{{ post.travelDate | date:'mediumDate' }}</span>
+        </div>
+        <div class="meta-item">
+          <mat-icon>visibility</mat-icon>
+          <span>{{ post.views }} {{ 'community.views' | translate }}</span>
+        </div>
+      </div>
+
+      <p class="detail-story">{{ post.story }}</p>
+
+      <div class="tips-block" *ngIf="post.tips?.length">
+        <div class="tips-title">
+          <mat-icon>tips_and_updates</mat-icon>
+          {{ 'community.travelTips' | translate }}
+        </div>
+        <ul>
+          <li *ngFor="let tip of post.tips">{{ tip }}</li>
+        </ul>
+      </div>
+
+      <div class="tags-row" *ngIf="post.tags?.length">
+        <span class="tag" *ngFor="let tag of post.tags">#{{ tag }}</span>
+      </div>
+    </div>
+
+    <div class="detail-footer">
+      <button class="action-btn" [class.active]="post.liked" (click)="toggleLike()">
+        <mat-icon>{{ post.liked ? 'favorite' : 'favorite_border' }}</mat-icon>
+        {{ post.likes }} {{ 'community.likes' | translate }}
+      </button>
+      <button class="action-btn">
+        <mat-icon>mode_comment</mat-icon>
+        {{ post.commentsCount }} {{ 'community.comments' | translate }}
+      </button>
+      <app-share-menu
+        [title]="post.title"
+        [path]="'/community/post/' + post.id"
+        [count]="post.shares"
+        (shared)="onShared()">
+      </app-share-menu>
+      <button class="action-btn bookmark-btn" [class.active]="post.bookmarked" (click)="toggleBookmark()">
+        <mat-icon>{{ post.bookmarked ? 'bookmark' : 'bookmark_border' }}</mat-icon>
+      </button>
+      <span class="time-posted">{{ post.timePosted | timeAgo }}</span>
+    </div>
+  </article>
+
+  <section class="comments-section">
+    <h2>{{ 'community.comments' | translate }} ({{ post.commentsCount }})</h2>
+
+    <div class="new-comment-box">
+      <input type="text" [placeholder]="'community.commentPlaceholder' | translate" [(ngModel)]="newComment" [disabled]="postingComment" (keyup.enter)="postComment()">
+      <button (click)="postComment()" [disabled]="postingComment">
+        <mat-icon>send</mat-icon>
+      </button>
+    </div>
+
+    <div class="comments-list" *ngIf="post.comments.length; else noComments">
+      <app-comment-item
+        *ngFor="let comment of post.comments"
+        [comment]="comment"
+        [postId]="post.id"
+        (refresh)="loadPost(post.id)">
+      </app-comment-item>
+    </div>
+
+    <ng-template #noComments>
+      <app-empty-state icon="chat_bubble_outline" titleKey="states.empty.noComments" subtitleKey="states.empty.noCommentsSub"></app-empty-state>
+    </ng-template>
+  </section>
+
+  <section class="related-section" *ngIf="relatedPosts.length">
+    <h2>{{ 'community.relatedStories' | translate }}</h2>
+    <app-post-card *ngFor="let post of relatedPosts" [post]="post" [compact]="true" (openPost)="openPost($event)"></app-post-card>
+  </section>
+</div>
+
+<div class="not-found" *ngIf="!loading && !post">
+  <app-error-state [errorMessage]="errorMessage" (retry)="ngOnInit()"></app-error-state>
+</div>

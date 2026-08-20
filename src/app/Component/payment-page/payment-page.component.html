@@ -1,0 +1,232 @@
+
+<div class="payment__fullContainer">
+    <!-- left Container -->
+    <div class="payment__fullContainer_leftContainer">
+        <input class="payment__fullContainer_rightContainer_inputOfferCOde" [placeholder]="'payment.offerCode' | translate" />
+        <div class="payment__fullContainer_rightContainer_infobar">
+            <div class="banner_chip">
+                <img src="https://s3.rdbuz.com/Images/webplatform/Common/Payment/safe-payments.svg" [attr.alt]="'payment.cc' | translate" />
+                <div class="banner_text">
+                    <div>{{ 'payment.safeSecure' | translate }}</div>
+                    <div>{{ 'payment.onlinePayments' | translate }}</div>
+                </div>
+            </div>
+            <div class="banner_chip">
+                <img src="https://s3.rdbuz.com/Images/webplatform/Common/Payment/transactions.svg"
+                    [attr.alt]="'payment.millionTransactions' | translate" />
+                <div class="banner_text">
+                    <div>{{ 'payment.millionPlus' | translate }}</div>
+                    <div>{{ 'payment.transactions' | translate }}</div>
+                </div>
+            </div>
+            <div class="banner_chip">
+                <img src="https://s3.rdbuz.com/Images/webplatform/Common/Payment/trust.svg" [attr.alt]="'payment.reliable' | translate" />
+                <div class="banner_text">
+                    <div>{{ 'payment.yearsOf' | translate }}</div>
+                    <div>{{ 'payment.trust' | translate }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="payment__fullContainer_leftContainer_paymentInstruments">
+            <div class="choose_payment_heading">{{ 'payment.selectMethod' | translate }}</div>
+
+            <!-- Payment method radio group -->
+            <div class="payment__fullContainer_leftContainer_paymentInstrument">
+                <label *ngFor="let method of paymentMethods"
+                    class="payment__fullContainer_leftContainer_eachPaymentInstruments payment-option"
+                    [class.payment-option--active]="selectedMethod.value === method.id">
+                    <input class="payment-radio" type="radio" name="paymentMethod"
+                        [value]="method.id" [formControl]="selectedMethod"
+                        (change)="onMethodChange(method.id)" />
+                    <span class="payment-radio-dot"></span>
+                    <span class="radioButtonText">{{ method.label | translate }}</span>
+                    <span *ngIf="method.badge" class="payment__fullContainer_leftContainer_eachPaymentInstruments_new">
+                        {{ method.badge | translate }}
+                    </span>
+                    <span class="paymentIconList" *ngIf="method.icons.length">
+                        <img *ngFor="let icon of method.icons" class="payment_icon_img" [src]="icon" alt="" />
+                    </span>
+                    <span class="payment-radio-check" *ngIf="selectedMethod.value === method.id">
+                        <mat-icon>check</mat-icon>
+                    </span>
+                </label>
+            </div>
+
+            <!-- QR panel -->
+            <div *ngIf="selectedMethod.value === 'qr'" class="qr-panel">
+                <div class="qr-panel-title">
+                    <mat-icon>qr_code_scanner</mat-icon>
+                    {{ 'payment.qrTitle' | translate }}
+                </div>
+
+                <div *ngIf="qrLoading" class="qr-state qr-state--loading">
+                    <div class="qr-spinner"></div>
+                    <span>{{ 'payment.qrFetching' | translate }}</span>
+                </div>
+
+                <div *ngIf="!qrLoading && qrError" class="qr-state qr-state--error">
+                    <mat-icon>error_outline</mat-icon>
+                    <span>{{ qrError }}</span>
+                </div>
+
+                <div *ngIf="!qrLoading && !qrError && !qrAvailable" class="qr-state qr-state--error">
+                    <mat-icon>error_outline</mat-icon>
+                    <span>{{ 'payment.qrUnavailable' | translate }}</span>
+                </div>
+
+                <div *ngIf="!qrLoading && !qrError && qrAvailable" class="qr-content">
+                    <div class="qr-image-box">
+                        <img class="qr-image" [src]="qrImageUrl" [attr.alt]="'payment.scanToPay' | translate" />
+                    </div>
+                    <div class="qr-details">
+                        <div class="qr-merchant">{{ paymentSettings?.merchantName }}</div>
+                        <div class="qr-amount-label">{{ 'payment.amountPayable' | translate }}</div>
+                        <div class="qr-amount">{{ formatCurrency(passfare) }}</div>
+                        <div class="qr-upi-row">
+                            <span class="qr-upi-value">{{ paymentSettings?.upiId }}</span>
+                            <button class="qr-copy-btn" (click)="copyUpiId()">
+                                <mat-icon>{{ copied ? 'check_circle' : 'content_copy' }}</mat-icon>
+                                {{ copied ? ('payment.copied' | translate) : ('payment.copyUpiId' | translate) }}
+                            </button>
+                        </div>
+                        <p class="qr-hint">{{ 'payment.qrHint' | translate }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error message -->
+            <div *ngIf="paymentError" class="payment-error-banner">
+                <mat-icon>error_outline</mat-icon>
+                <span>{{ paymentError }}</span>
+            </div>
+
+            <!-- Action button -->
+            <div class="Payment__stripe">
+                <button *ngIf="selectedMethod.value === 'stripe'" class="Payment__stripe__button"
+                    [disabled]="processing" (click)="payWithStripe()">
+                    <span *ngIf="processing" class="btn-spinner"></span>
+                    {{ processing ? ('payment.processing' | translate) : ('payment.payWithStripe' | translate) }}
+                </button>
+                <button *ngIf="selectedMethod.value === 'qr'" class="Payment__stripe__button"
+                    [disabled]="processing || qrLoading || !qrAvailable" (click)="completeQrPayment()">
+                    <span *ngIf="processing" class="btn-spinner"></span>
+                    {{ processing ? ('payment.processing' | translate) : ('payment.completedPayment' | translate) }}
+                </button>
+                <button *ngIf="selectedMethod.value && selectedMethod.value !== 'qr' && selectedMethod.value !== 'stripe'"
+                    class="Payment__stripe__button" [disabled]="processing" (click)="payNow()">
+                    <span *ngIf="processing" class="btn-spinner"></span>
+                    {{ processing ? ('payment.processing' | translate) : ('payment.proceedToPay' | translate) }}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="payment__fullContainer_rightContainer">
+        <div class="payment__fullContainer_rightContainer_trip_container">
+          <div class="travel_operator_info">
+            <div class="travel_title">{{ operatorname }}</div>
+            <div class="travel_specification">{{ 'payment.busType' | translate }}</div>
+          </div>
+          <div class="line"></div>
+          <div style="display: flex; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; width: 200px;">
+              <mat-icon class="icons">date_range</mat-icon>
+              <div style="display: flex; flex-direction: column;">
+                <div class="travel_specification">{{ 'payment.bookingDate' | translate }}</div>
+                <div style="display: flex; width: 150px;">
+                  <div>{{ bookingdate | date: 'yyyy-MM-dd' }}</div>
+                </div>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; margin-right: 10px;">
+              <div>{{ 'payment.seatsBooked' | translate }}</div>
+              <div>{{ passseatarray }}</div>
+            </div>
+          </div>
+          <div class="line"></div>
+          <div style="display: flex; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; width: 150px;">
+              <mat-icon class="icons">location_on</mat-icon>
+              <div style="display: flex; flex-direction: column;">
+                <div class="travel_specification">{{ 'payment.boardingPoint' | translate }}</div>
+                <div>{{ routedetails.departureLocation.name | cityName }}</div>
+                <div>{{ bookingdate }}</div>
+                <div>{{ formatTime(busdepauturetime) }}</div>
+                 <div>{{routedetails.departureLocation.name | cityName}}</div>
+
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+              <div class="travel_specification">{{ 'payment.droppingPoint' | translate }}</div>
+              <div>{{ routedetails.arrivalLocation.name | cityName }}</div>
+              <div>{{ bookingdate }}</div>
+              <div>{{ formatTime(busarrivaltime) }}</div>
+            </div>
+          </div>
+          <div class="passangerInfo">
+            <mat-icon class="icons">account_box</mat-icon>
+            <div class="passangerName">{{ customerid.name }}</div>
+          </div>
+        </div>
+        <div class="payment__fullContainer_rightContainer_fair_container">
+          <div style="display: flex; justify-content: space-between;">
+            <div class="travel_title">{{ 'payment.fareBreakup' | translate }}</div>
+            <img src="https://s3.rdbuz.com/Images/webplatform/Common/Payment/down.svg" width="14" height="14" alt="">
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 10px;"></div>
+          <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <div class="travel_specification" style="font-weight: bold;">{{ 'payment.totalPayable' | translate }}</div>
+            <div class="travel_specification" style="font-weight: bold;">{{ formatCurrency(passfare) }}</div>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-around; margin-top: 10px; width: 95%;">
+          <img class="payment_banner_icon_img" src="https://s3.rdbuz.com/Images/webplatform/Common/Payment/master-card-secure-code.png" alt="">
+          <img class="payment_banner_icon_img" src="https://s3.rdbuz.com/Images/webplatform/Common/Payment/verified-by-visa.svg" alt="">
+          <img class="payment_banner_icon_img" src="https://s3.rdbuz.com/Images/webplatform/Common/Payment/verisign-secured.png" alt="">
+        </div>
+      </div>
+
+</div>
+
+<!-- Payment flow overlay (verifying → booking → generating → success) -->
+<div *ngIf="processing || paymentStage === 'success'" class="payment-flow-overlay">
+    <div class="payment-flow-card" [class.payment-flow-card--success]="paymentStage === 'success'">
+        <div class="payment-flow-icon" [class.payment-flow-icon--success]="paymentStage === 'success'">
+            <div *ngIf="paymentStage !== 'success'" class="flow-spinner"></div>
+            <mat-icon *ngIf="paymentStage === 'success'">check_circle</mat-icon>
+        </div>
+        <div class="payment-flow-title">{{ 'payment.flow.' + paymentStage | translate }}</div>
+        <div class="payment-flow-text" *ngIf="paymentStage !== 'success'">{{ 'payment.flowNote' | translate }}</div>
+
+        <div class="payment-flow-steps">
+            <div class="payment-flow-step" [class.done]="paymentStage === 'booking' || paymentStage === 'generating' || paymentStage === 'success'">
+                <mat-icon>{{ paymentStage === 'verifying' ? 'more_horiz' : 'check' }}</mat-icon>
+                <span>{{ 'payment.step.verify' | translate }}</span>
+            </div>
+            <div class="payment-flow-step" [class.done]="paymentStage === 'generating' || paymentStage === 'success'">
+                <mat-icon>{{ paymentStage === 'booking' ? 'more_horiz' : 'check' }}</mat-icon>
+                <span>{{ 'payment.step.book' | translate }}</span>
+            </div>
+            <div class="payment-flow-step" [class.done]="paymentStage === 'success'">
+                <mat-icon>{{ paymentStage === 'generating' ? 'more_horiz' : 'check' }}</mat-icon>
+                <span>{{ 'payment.step.generate' | translate }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Failure panel -->
+<div *ngIf="paymentStage === 'failed'" class="payment-flow-overlay">
+    <div class="payment-flow-card payment-flow-card--failed">
+        <div class="payment-flow-icon payment-flow-icon--failed">
+            <mat-icon>error_outline</mat-icon>
+        </div>
+        <div class="payment-flow-title">{{ 'payment.errTitle' | translate }}</div>
+        <div class="payment-flow-text payment-failed-message">{{ paymentFailedMessage }}</div>
+        <div class="payment-failed-actions">
+            <button class="payment-success-btn" (click)="retryPayment()">{{ 'payment.retry' | translate }}</button>
+            <button class="payment-success-btn payment-failed-cancel" (click)="retryPayment()">{{ 'payment.cancel' | translate }}</button>
+        </div>
+    </div>
+</div>

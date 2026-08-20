@@ -1,0 +1,126 @@
+<div class="complete-profile-wrapper">
+  <div class="complete-profile-card">
+
+    <div class="card-body">
+      <div class="card-header">
+        <div class="brand-icon">
+          <mat-icon class="profile-icon">person_add</mat-icon>
+        </div>
+        <h1>{{ 'completeProfile.title' | translate }}</h1>
+        <p class="subtitle">{{ 'completeProfile.subtitle' | translate }}</p>
+      </div>
+
+      <div class="error-banner" *ngIf="errorMessage">
+        <span class="error-icon">!</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="success-banner" *ngIf="successMessage">
+        <mat-icon class="success-icon">check_circle</mat-icon>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <!-- Full Name -->
+      <div class="field-group">
+        <label>{{ 'completeProfile.fullName' | translate }} *</label>
+        <div class="input-wrapper">
+          <span class="input-icon">
+            <mat-icon>person</mat-icon>
+          </span>
+          <input
+            type="text"
+            class="form-input"
+            [placeholder]="'completeProfile.fullNamePlaceholder' | translate"
+            [(ngModel)]="name"
+            [disabled]="isSaving"
+            autocomplete="name">
+        </div>
+      </div>
+
+      <!-- Phone Number -->
+      <div class="field-group">
+        <label>{{ 'completeProfile.phoneNumber' | translate }} *</label>
+        <div class="input-wrapper">
+          <span class="input-icon">
+            <mat-icon>phone</mat-icon>
+          </span>
+          <input
+            type="tel"
+            class="form-input"
+            [placeholder]="'completeProfile.phonePlaceholder' | translate"
+            [(ngModel)]="phone"
+            [disabled]="isSaving"
+            autocomplete="tel">
+        </div>
+      </div>
+
+      <!-- Date of Birth -->
+      <div class="field-group">
+        <label>{{ 'completeProfile.dateOfBirth' | translate }} *</label>
+        <div class="input-wrapper">
+          <span class="input-icon">
+            <mat-icon>cake</mat-icon>
+          </span>
+          <input
+            type="date"
+            class="form-input"
+            [(ngModel)]="dateOfBirth"
+            [disabled]="isSaving"
+            autocomplete="bday">
+        </div>
+      </div>
+
+      <!-- Gender -->
+      <div class="field-group">
+        <label>{{ 'completeProfile.gender' | translate }}</label>
+        <div class="input-wrapper">
+          <span class="input-icon">
+            <mat-icon>wc</mat-icon>
+          </span>
+          <select
+            class="form-input form-select"
+            [(ngModel)]="gender"
+            [disabled]="isSaving">
+            <option value="">{{ 'completeProfile.genderSelect' | translate }}</option>
+            <option value="male">{{ 'completeProfile.genderMale' | translate }}</option>
+            <option value="female">{{ 'completeProfile.genderFemale' | translate }}</option>
+            <option value="other">{{ 'completeProfile.genderOther' | translate }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Location -->
+      <div class="field-group">
+        <label>{{ 'completeProfile.location' | translate }} <span class="optional-tag">({{ 'common.optional' | translate }})</span></label>
+        <div class="input-wrapper">
+          <span class="input-icon">
+            <mat-icon>location_on</mat-icon>
+          </span>
+          <input
+            type="text"
+            class="form-input"
+            [placeholder]="'completeProfile.locationPlaceholder' | translate"
+            [(ngModel)]="location"
+            [disabled]="isSaving"
+            autocomplete="address-level2">
+        </div>
+      </div>
+
+      <button
+        class="btn-primary full-width"
+        [disabled]="isSaving"
+        (click)="saveProfile()">
+        <span class="spinner" *ngIf="isSaving"></span>
+        {{ isSaving ? ('completeProfile.saving' | translate) : ('completeProfile.saveAndContinue' | translate) }}
+      </button>
+
+      <div class="skip-row">
+        <button class="link-btn" (click)="skip()" [disabled]="isSaving">
+          {{ 'completeProfile.skipForNow' | translate }}
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,76 @@
+<div class="admin-reviews">
+  <div class="page-header">
+    <h2>{{ 'admin.reviews.pageTitle' | translate }}</h2>
+    <span class="count">{{ total }} {{ 'admin.reviews.total' | translate }}</span>
+  </div>
+
+  <div class="filters">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>{{ 'admin.reviews.filterVisible' | translate }}</mat-label>
+      <mat-select [(value)]="filterVisible" (selectionChange)="onFilterChange()">
+        <mat-option value="">{{ 'admin.reviews.all' | translate }}</mat-option>
+        <mat-option value="true">{{ 'admin.reviews.visible' | translate }}</mat-option>
+        <mat-option value="false">{{ 'admin.reviews.hidden' | translate }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>{{ 'admin.reviews.busId' | translate }}</mat-label>
+      <input matInput [(ngModel)]="filterBusId" (ngModelChange)="onFilterChange()">
+    </mat-form-field>
+  </div>
+
+  <div *ngIf="loading" class="spinner-wrap">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!loading && reviews.length === 0" class="empty-state">
+    {{ 'admin.reviews.noReviews' | translate }}
+  </div>
+
+  <div class="reviews-table" *ngIf="!loading && reviews.length > 0">
+    <div class="table-header">
+      <span class="col-user">{{ 'admin.reviews.user' | translate }}</span>
+      <span class="col-bus">{{ 'admin.reviews.bus' | translate }}</span>
+      <span class="col-rating">{{ 'admin.reviews.rating' | translate }}</span>
+      <span class="col-title">{{ 'admin.reviews.title' | translate }}</span>
+      <span class="col-comment">{{ 'admin.reviews.comment' | translate }}</span>
+      <span class="col-status">{{ 'admin.reviews.status' | translate }}</span>
+      <span class="col-date">{{ 'admin.reviews.date' | translate }}</span>
+      <span class="col-actions">{{ 'admin.reviews.actions' | translate }}</span>
+    </div>
+    <div class="table-row" *ngFor="let review of reviews">
+      <span class="col-user">{{ review.customerName || 'Anonymous' }}</span>
+      <span class="col-bus">{{ review.busId?.busname || review.busId || '-' }}</span>
+      <span class="col-rating">
+        <span class="star" *ngFor="let s of [1,2,3,4,5]">
+          <mat-icon>{{ s <= review.rating ? 'star' : 'star_border' }}</mat-icon>
+        </span>
+      </span>
+      <span class="col-title">{{ review.title || '-' }}</span>
+      <span class="col-comment">{{ review.comment | slice:0:80 }}{{ review.comment.length > 80 ? '...' : '' }}</span>
+      <span class="col-status">
+        <span class="status-dot" [class.active]="review.visible" [class.inactive]="!review.visible"></span>
+        {{ (review.visible ? 'admin.reviews.visible' : 'admin.reviews.hidden') | translate }}
+      </span>
+      <span class="col-date">{{ review.createdAt | date:'mediumDate' }}</span>
+      <span class="col-actions">
+        <button mat-icon-button (click)="toggleVisibility(review)" [matTooltip]="(review.visible ? 'admin.reviews.hide' : 'admin.reviews.show') | translate">
+          <mat-icon>{{ review.visible ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        <button mat-icon-button color="warn" (click)="deleteReview(review)" matTooltip="{{ 'admin.reviews.delete' | translate }}">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </span>
+    </div>
+  </div>
+
+  <div class="pagination" *ngIf="pages > 1">
+    <button mat-button (click)="prevPage()" [disabled]="page <= 1">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span>{{ page }} / {{ pages }}</span>
+    <button mat-button (click)="nextPage()" [disabled]="page >= pages">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>

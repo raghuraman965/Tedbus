@@ -1,0 +1,70 @@
+<div class="dialog-title">
+  <mat-icon>directions_bus</mat-icon>
+  <h2>{{ isEdit ? ('admin.buses.editBus' | translate) : ('admin.buses.addBus' | translate) }}</h2>
+</div>
+
+<mat-dialog-content class="dialog-content">
+  <form [formGroup]="form" class="dialog-form">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ 'admin.buses.fieldOperatorName' | translate }}</mat-label>
+      <input matInput formControlName="operatorName" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ 'admin.buses.fieldBusType' | translate }}</mat-label>
+      <mat-select formControlName="busType">
+        <mat-option *ngFor="let t of busTypes" [value]="t">{{ busTypeLabel(t) }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ 'admin.buses.fieldDepartureHour' | translate }}</mat-label>
+      <mat-select formControlName="departureTime">
+        <mat-option *ngFor="let h of hours" [value]="h.value">{{ h.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ 'admin.buses.fieldTotalSeats' | translate }}</mat-label>
+      <input matInput type="number" formControlName="totalSeats" min="1" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ 'admin.buses.fieldRoute' | translate }}</mat-label>
+      <mat-select formControlName="routes">
+        <mat-option *ngFor="let r of routes" [value]="r._id || r.id">
+          {{ r.routeName || r.name || r.sourceName + ' → ' + r.destinationName }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ 'admin.buses.fieldImages' | translate }}</mat-label>
+      <input matInput formControlName="images" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ 'admin.buses.fieldLiveTracking' | translate }}</mat-label>
+      <mat-select formControlName="liveTracking">
+        <mat-option [value]="0">{{ 'admin.common.no' | translate }}</mat-option>
+        <mat-option [value]="1">{{ 'admin.common.yes' | translate }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ 'admin.buses.fieldReschedulable' | translate }}</mat-label>
+      <mat-select formControlName="reschedulable">
+        <mat-option [value]="0">{{ 'admin.common.no' | translate }}</mat-option>
+        <mat-option [value]="1">{{ 'admin.common.yes' | translate }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions class="dialog-actions">
+  <button mat-button (click)="close()">{{ 'admin.common.cancel' | translate }}</button>
+  <button mat-flat-button class="save-btn" [disabled]="form.invalid || saving" (click)="submit()">
+    <mat-spinner *ngIf="saving" diameter="18" class="btn-spinner"></mat-spinner>
+    {{ isEdit ? ('admin.common.update' | translate) : ('admin.common.create' | translate) }}
+  </button>
+</mat-dialog-actions>

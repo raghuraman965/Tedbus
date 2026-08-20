@@ -1,0 +1,35 @@
+<section class="hero">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
+    <span class="hero-eyebrow">{{ 'community.heroEyebrow' | translate }}</span>
+    <h1 class="hero-title">{{ 'community.heroTitle' | translate }}</h1>
+    <p class="hero-subtitle">
+      {{ 'community.heroSubtitle' | translate }}
+    </p>
+
+    <div class="hero-search">
+      <mat-icon>search</mat-icon>
+      <input
+        type="text"
+        [placeholder]="'community.heroSearchPlaceholder' | translate"
+        [(ngModel)]="searchTerm"
+        [cityInput]="searchTerm"
+        (keyup.enter)="onSearch()">
+      <button class="search-btn" (click)="onSearch()">{{ 'common.search' | translate }}</button>
+    </div>
+
+    <div class="hero-trending">
+      <span class="trending-label">{{ 'community.trendingTopics' | translate }}</span>
+      <div class="trending-chips">
+        <button class="trending-chip" *ngFor="let topic of trendingTopics" (click)="selectTopic(topic)">
+          {{ topic }}
+        </button>
+      </div>
+    </div>
+
+    <button class="create-post-btn" (click)="goToCreatePost()">
+      <mat-icon>add_circle</mat-icon>
+      {{ 'community.createPost' | translate }}
+    </button>
+  </div>
+</section>

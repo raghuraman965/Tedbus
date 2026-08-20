@@ -1,0 +1,23 @@
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+  font-family: var(--brand-font);
+}
+
+.error-state__icon {
+  font-size: 72px;
+  color: var(--brand-error);
+  margin-bottom: 20px;
+}
+
+.error-state__message {
+  font-size: 1rem;
+  color: var(--brand-dark-gray);
+  margin: 0 0 24px;
+  max-width: 400px;
+  line-height: 1.5;
+}

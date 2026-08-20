@@ -1,0 +1,15 @@
+.app-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-shell > .route-outlet-wrapper {
+  flex: 1;
+}
+
+.route-outlet-wrapper {
+  position: relative;
+  min-height: 300px;
+  overflow: hidden;
+}

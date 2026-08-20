@@ -1,0 +1,262 @@
+:host {
+  --lg-bg: #f4f5f7;
+  --lg-card: #ffffff;
+  --lg-card-border: #e2e5ea;
+  --lg-text: #1a1d23;
+  --lg-text-secondary: #6b7280;
+  --lg-border: #d1d5db;
+  --lg-primary: #d84e55;
+  --lg-primary-hover: #c44048;
+  --lg-gradient-start: #d84e55;
+  --lg-gradient-end: #b83a42;
+  --lg-error: #ef4444;
+  display: block;
+}
+
+html[data-theme='dark'] :host {
+  --lg-bg: #0f1117;
+  --lg-card: #1a1d27;
+  --lg-card-border: #2a2d38;
+  --lg-text: #e4e6eb;
+  --lg-text-secondary: #9ca3af;
+  --lg-border: #3a3d48;
+  --lg-primary: #ef5b62;
+  --lg-primary-hover: #d84e55;
+}
+
+/* ===================== PAGE ===================== */
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a1028 0%, #0d1117 40%, #1a0a0c 100%);
+  padding: 24px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ===================== CARD ===================== */
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--lg-card);
+  border: 1px solid var(--lg-card-border);
+  border-radius: 16px;
+  padding: 40px 32px 32px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15), 0 0 80px rgba(216, 78, 85, 0.05);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+/* ===================== BRAND ===================== */
+.brand-section {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.brand-badge {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--lg-gradient-start), var(--lg-gradient-end));
+  color: #fff;
+  font-weight: 800;
+  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(216, 78, 85, 0.3);
+}
+
+.brand-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--lg-text);
+  margin: 0 0 6px;
+  letter-spacing: -0.3px;
+}
+
+.brand-subtitle {
+  font-size: 14px;
+  color: var(--lg-text-secondary);
+  margin: 0;
+}
+
+/* ===================== FORM ===================== */
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+/* Material form field overrides */
+::ng-deep .login-card mat-form-field {
+  font-size: 14px;
+}
+
+::ng-deep .login-card .mat-mdc-text-field-wrapper {
+  background: transparent;
+}
+
+::ng-deep .login-card .mdc-notched-outline__leading,
+::ng-deep .login-card .mdc-notched-outline__trailing {
+  border-color: var(--lg-border) !important;
+  transition: border-color 0.2s ease;
+}
+
+::ng-deep .login-card .mdc-notched-outline__notch {
+  border-color: transparent !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+::ng-deep .login-card .mat-mdc-form-field-focus-overlay {
+  background: transparent;
+}
+
+::ng-deep .login-card .mat-mdc-input-element {
+  color: var(--lg-text) !important;
+}
+
+::ng-deep .login-card .mat-mdc-floating-label {
+  color: var(--lg-text-secondary) !important;
+}
+
+::ng-deep .login-card.mat-focused .mdc-notched-outline__leading,
+::ng-deep .login-card.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--lg-primary) !important;
+}
+
+::ng-deep .login-card .mat-mdc-floating-label.mat-focused {
+  color: var(--lg-primary) !important;
+}
+
+::ng-deep .login-card mat-form-field.mat-focused .mdc-notched-outline__notch {
+  border-left: none !important;
+  border-right: none !important;
+}
+
+::ng-deep .login-card .mat-mdc-form-field-icon-prefix {
+  color: var(--lg-text-secondary);
+  padding-right: 8px;
+}
+
+::ng-deep .login-card .mdc-notched-outline__notch {
+  padding-right: 0;
+}
+
+::ng-deep .login-card .mat-mdc-form-field-subscript-wrapper {
+  display: none;
+}
+
+::ng-deep .login-card .mat-mdc-icon-button.mat-mdc-button-base {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+::ng-deep .login-card .mat-mdc-icon-button .mat-icon {
+  color: var(--lg-text-secondary);
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+/* ===================== SUBMIT BUTTON ===================== */
+.submit-btn {
+  width: 100%;
+  height: 44px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  background: linear-gradient(135deg, var(--lg-gradient-start), var(--lg-gradient-end)) !important;
+  color: #fff !important;
+  border: none;
+  margin-top: 12px;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.submit-btn:hover:not(:disabled) {
+  box-shadow: 0 4px 16px rgba(216, 78, 85, 0.35);
+  transform: translateY(-1px);
+}
+
+.submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-spinner {
+  display: inline-block;
+}
+
+::ng-deep .submit-btn .mat-mdc-progress-spinner {
+  --mdc-circular-progress-active-indicator-color: #fff;
+}
+
+/* ===================== FOOTER ===================== */
+.login-footer {
+  text-align: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--lg-card-border);
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--lg-text-secondary);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.back-link:hover {
+  color: var(--lg-primary);
+}
+
+.back-link mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+}
+
+.hint-text {
+  font-size: 12px;
+  color: var(--lg-text-secondary);
+  margin: 12px 0 0;
+  opacity: 0.7;
+}
+
+/* ===================== RESPONSIVE: 480px ===================== */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 32px 20px 24px;
+    border-radius: 12px;
+  }
+
+  .brand-badge {
+    width: 48px;
+    height: 48px;
+    font-size: 18px;
+    border-radius: 12px;
+  }
+
+  .brand-title {
+    font-size: 20px;
+  }
+}

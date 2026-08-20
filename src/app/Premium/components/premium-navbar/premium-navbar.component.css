@@ -1,0 +1,235 @@
+.premium-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--navbar-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--brand-mid-gray);
+  transition: box-shadow var(--brand-transition), background var(--brand-transition);
+}
+
+.premium-navbar.scrolled {
+  box-shadow: 0 6px 24px rgba(30, 30, 40, 0.08);
+}
+
+.navbar-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  gap: 12px;
+  min-width: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.brand-logo {
+  height: 40px;
+  width: auto;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+  justify-content: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.nav-links::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--brand-radius-lg);
+  color: var(--brand-dark-gray);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background var(--brand-transition), color var(--brand-transition);
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.nav-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-link mat-icon {
+  font-size: 19px;
+  width: 19px;
+  height: 19px;
+  color: var(--brand-text-muted);
+  transition: color var(--brand-transition);
+}
+
+.nav-link:hover {
+  background: var(--brand-light-gray);
+}
+
+.nav-link.active {
+  background: var(--brand-primary-light);
+  color: var(--brand-primary-dark);
+}
+
+.nav-link.active mat-icon {
+  color: var(--brand-primary);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.account-area {
+  position: relative;
+}
+
+.login-btn {
+  padding: 9px 20px !important;
+  font-size: 0.85rem !important;
+}
+
+.account-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--brand-light-gray);
+  border: none;
+  padding: 9px 16px;
+  border-radius: var(--brand-radius-lg);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.86rem;
+  color: var(--brand-dark-gray);
+  transition: background var(--brand-transition);
+}
+
+.account-btn:hover {
+  background: var(--brand-primary-light);
+  color: var(--brand-primary-dark);
+}
+
+.account-btn mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.chevron {
+  font-size: 16px !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.mobile-menu-btn {
+  background: var(--brand-light-gray);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--brand-dark-gray);
+}
+
+.desktop-only {
+  display: flex;
+}
+
+.mobile-only {
+  display: none;
+}
+
+.mobile-drawer {
+  max-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--brand-white);
+  border-top: 1px solid var(--brand-mid-gray);
+  transition: max-height 0.3s ease;
+}
+
+.mobile-drawer.open {
+  max-height: 600px;
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: none;
+  border: none;
+  text-align: left;
+  color: var(--brand-dark-gray);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border-bottom: 1px solid var(--brand-light-gray);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.mobile-nav-link mat-icon {
+  color: var(--brand-primary);
+}
+
+.mobile-theme-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--brand-light-gray);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--brand-dark-gray);
+}
+
+@media (max-width: 900px) {
+  .desktop-only {
+    display: none;
+  }
+  .mobile-only {
+    display: flex;
+  }
+  .brand-logo {
+    height: 34px;
+  }
+  .navbar-inner {
+    padding: 8px 12px;
+    gap: 8px;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1200px) {
+  .nav-link {
+    padding: 10px 10px;
+    font-size: 0.82rem;
+  }
+  .nav-links {
+    gap: 2px;
+  }
+}

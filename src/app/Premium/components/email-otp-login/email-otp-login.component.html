@@ -1,0 +1,128 @@
+<div class="email-otp-wrapper">
+  <div class="email-otp-card">
+
+    <!-- ═══════ EMAIL STATE ═══════ -->
+    <div class="card-body" *ngIf="mode === 'email'">
+      <div class="card-header">
+        <div class="brand-icon">
+          <img src="../../../../assets/redbus-logo.svg" [attr.alt]="'auth.tedbusAlt' | translate" class="auth-logo">
+        </div>
+        <h1>{{ 'auth.loginTitle' | translate }}</h1>
+        <p class="subtitle">{{ 'auth.loginSubtitle' | translate }}</p>
+      </div>
+
+      <div class="error-banner" *ngIf="errorMessage">
+        <span class="error-icon">!</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="field-group">
+        <label>{{ 'auth.email' | translate }}</label>
+        <div class="input-wrapper">
+          <span class="input-icon">
+            <mat-icon>email</mat-icon>
+          </span>
+          <input
+            type="email"
+            class="form-input"
+            [placeholder]="'auth.emailPlaceholder' | translate"
+            [(ngModel)]="email"
+            (keyup.enter)="sendEmailOtp()"
+            [disabled]="isSending"
+            autocomplete="email">
+        </div>
+      </div>
+
+      <button
+        class="btn-primary full-width"
+        [disabled]="isSending"
+        (click)="sendEmailOtp()">
+        <span class="spinner" *ngIf="isSending"></span>
+        {{ isSending ? ('auth.sending' | translate) : ('auth.continue' | translate) }}
+      </button>
+
+      <div class="divider">
+        <span>{{ 'auth.or' | translate }}</span>
+      </div>
+
+      <div id="email-otp-google-btn" class="google-btn-slot"></div>
+
+      <p class="alt-action">
+        {{ 'auth.dontHaveAccount' | translate }}
+        <button class="link-btn" (click)="goToSignup()">{{ 'auth.signup' | translate }}</button>
+      </p>
+    </div>
+
+    <!-- ═══════ OTP STATE ═══════ -->
+    <div class="card-body" *ngIf="mode === 'otp'">
+      <button class="back-link" (click)="changeEmail()">
+        <mat-icon>arrow_back</mat-icon>
+        <span>{{ 'common.back' | translate }}</span>
+      </button>
+
+      <div class="card-header">
+        <h1>{{ 'auth.enterOtp' | translate }}</h1>
+        <p class="subtitle">
+          {{ 'auth.otpSentTo' | translate }}
+          <span class="email-highlight">{{ email }}</span>
+        </p>
+      </div>
+
+      <div class="error-banner" *ngIf="errorMessage">
+        <span class="error-icon">!</span>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <div class="otp-input-group">
+        <input
+          *ngFor="let digit of otpDigits; let i = index; trackBy: trackByIndex"
+          id="otp-digit-{{i}}"
+          type="text"
+          inputmode="numeric"
+          maxlength="1"
+          class="otp-digit"
+          [class.filled]="digit !== ''"
+          (input)="onOtpInput($event, i)"
+          (keydown)="onOtpKeydown($event, i)"
+          (paste)="onOtpPaste($event)"
+          autocomplete="one-time-code">
+      </div>
+
+      <div class="countdown-row" *ngIf="!isCountdownExpired">
+        <mat-icon class="countdown-icon">timer</mat-icon>
+        <span class="countdown-text">
+          {{ 'auth.otpExpiresIn' | translate }}: <strong>{{ countdownDisplay }}</strong>
+        </span>
+      </div>
+
+      <div class="countdown-row expired" *ngIf="isCountdownExpired">
+        <mat-icon class="countdown-icon">timer_off</mat-icon>
+        <span class="countdown-text">{{ 'auth.otpExpired' | translate }}</span>
+      </div>
+
+      <button
+        class="btn-primary full-width"
+        [disabled]="isVerifying || otp.length !== 6"
+        (click)="verifyOtp()">
+        <span class="spinner" *ngIf="isVerifying"></span>
+        {{ isVerifying ? ('auth.verifying' | translate) : ('auth.verifyOtp' | translate) }}
+      </button>
+
+      <div class="otp-actions">
+        <button
+          class="link-btn"
+          [disabled]="!canResend"
+          (click)="resendOtp()">
+          <span *ngIf="canResend">{{ 'auth.resendOtp' | translate }}</span>
+          <span *ngIf="!canResend">{{ 'auth.resendIn' | translate }} {{ resendCooldown }}s</span>
+        </button>
+
+        <button class="link-btn" (click)="changeEmail()">
+          <mat-icon>edit</mat-icon>
+          {{ 'auth.changeEmail' | translate }}
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>

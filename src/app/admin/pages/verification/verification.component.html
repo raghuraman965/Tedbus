@@ -1,0 +1,89 @@
+<div class="admin-verification">
+  <div class="page-header">
+    <h2>{{ 'admin.verification.pageTitle' | translate }}</h2>
+    <span class="count">{{ total }} {{ 'admin.verification.total' | translate }}</span>
+  </div>
+
+  <div class="filters">
+    <button mat-stroked-button (click)="filterByStatus('')" [class.active-filter]="filterStatus === ''">
+      {{ 'admin.verification.all' | translate }}
+    </button>
+    <button mat-stroked-button (click)="filterByStatus('pending')" [class.active-filter]="filterStatus === 'pending'">
+      {{ 'admin.verification.pending' | translate }}
+    </button>
+    <button mat-stroked-button (click)="filterByStatus('approved')" [class.active-filter]="filterStatus === 'approved'">
+      {{ 'admin.verification.approved' | translate }}
+    </button>
+    <button mat-stroked-button (click)="filterByStatus('rejected')" [class.active-filter]="filterStatus === 'rejected'">
+      {{ 'admin.verification.rejected' | translate }}
+    </button>
+  </div>
+
+  <div *ngIf="isLoading" class="spinner-wrap">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+
+  <div *ngIf="!isLoading && requests.length === 0" class="empty-state">
+    {{ 'admin.verification.noRequests' | translate }}
+  </div>
+
+  <div class="verification-table" *ngIf="!isLoading && requests.length > 0">
+    <div class="table-header">
+      <span class="col-id">#</span>
+      <span class="col-user">{{ 'admin.verification.user' | translate }}</span>
+      <span class="col-name">{{ 'admin.verification.fullName' | translate }}</span>
+      <span class="col-phone">{{ 'admin.verification.phone' | translate }}</span>
+      <span class="col-dob">{{ 'admin.verification.dob' | translate }}</span>
+      <span class="col-idproof">{{ 'admin.verification.idProof' | translate }}</span>
+      <span class="col-status">{{ 'admin.verification.status' | translate }}</span>
+      <span class="col-date">{{ 'admin.verification.submitted' | translate }}</span>
+      <span class="col-actions">{{ 'admin.verification.actions' | translate }}</span>
+    </div>
+    <div class="table-row" *ngFor="let req of requests; let i = index">
+      <span class="col-id">{{ (page - 1) * limit + i + 1 }}</span>
+      <span class="col-user">
+        <div class="user-info">
+          <span class="user-email">{{ req.customerId?.email || req.email || '-' }}</span>
+        </div>
+      </span>
+      <span class="col-name">{{ req.fullName || '-' }}</span>
+      <span class="col-phone">{{ req.phone || '-' }}</span>
+      <span class="col-dob">{{ req.dateOfBirth | date:'mediumDate' }}</span>
+      <span class="col-idproof">
+        <a *ngIf="req.idProofUrl" [href]="req.idProofUrl" target="_blank" class="proof-link">
+          <mat-icon>description</mat-icon>
+        </a>
+        <span *ngIf="!req.idProofUrl">-</span>
+      </span>
+      <span class="col-status">
+        <span class="status-badge" [ngClass]="req.status">
+          {{ req.status | titlecase }}
+        </span>
+      </span>
+      <span class="col-date">{{ req.createdAt | date:'mediumDate' }}</span>
+      <span class="col-actions">
+        <ng-container *ngIf="req.status === 'pending'">
+          <button mat-icon-button color="primary" (click)="approve(req._id)" matTooltip="{{ 'admin.verification.approve' | translate }}">
+            <mat-icon>check_circle</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="reject(req._id)" matTooltip="{{ 'admin.verification.reject' | translate }}">
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </ng-container>
+        <span *ngIf="req.status !== 'pending' && req.adminNote" class="admin-note" matTooltip="{{ req.adminNote }}">
+          <mat-icon>info_outline</mat-icon>
+        </span>
+      </span>
+    </div>
+  </div>
+
+  <div class="pagination" *ngIf="pages > 1">
+    <button mat-button (click)="prevPage()" [disabled]="page <= 1">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span>{{ page }} / {{ pages }}</span>
+    <button mat-button (click)="nextPage()" [disabled]="page >= pages">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>

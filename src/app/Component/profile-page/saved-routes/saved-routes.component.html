@@ -1,0 +1,55 @@
+<div class="saved-routes-panel">
+  <div class="sr-head">
+    <div>
+      <h3>{{ 'savedRoutes.myRoutes' | translate }}</h3>
+      <p>{{ 'savedRoutes.subtitle' | translate }}</p>
+    </div>
+    <button class="btn-premium" (click)="planNewRoute()">
+      <mat-icon>add_location_alt</mat-icon> {{ 'savedRoutes.planRoute' | translate }}
+    </button>
+  </div>
+
+  <div class="sr-error" *ngIf="errorMessage">
+    <app-error-state [errorMessage]="errorMessage" (retry)="loadRoutes()"></app-error-state>
+  </div>
+
+  <div class="sr-loading" *ngIf="loading">
+    <div class="skeleton-premium sr-skeleton"></div>
+    <div class="skeleton-premium sr-skeleton"></div>
+    <div class="skeleton-premium sr-skeleton"></div>
+  </div>
+
+  <div class="sr-empty" *ngIf="!loading && !errorMessage && !routes.length">
+    <app-empty-state icon="bookmark_border" titleKey="states.empty.noSavedRoutes" subtitleKey="states.empty.noSavedRoutesSub"></app-empty-state>
+  </div>
+
+  <div class="sr-list" *ngIf="!loading && routes.length">
+    <div class="sr-card card-premium" *ngFor="let r of routes">
+      <div class="sr-main">
+        <div class="sr-title-row">
+          <mat-icon class="sr-icon">route</mat-icon>
+          <span class="sr-name">{{ (r.name || (r.source + ('savedRoutes.to' | translate) + r.destination)) | cityName }}</span>
+        </div>
+        <div class="sr-journey">
+          <span class="sr-city">{{ r.source | cityName }}</span>
+          <mat-icon class="sr-arrow">arrow_right_alt</mat-icon>
+          <span class="sr-city">{{ r.destination | cityName }}</span>
+        </div>
+        <div class="sr-meta">
+          <span><mat-icon>straighten</mat-icon>{{ r.distanceKm }} {{ 'savedRoutes.km' | translate }}</span>
+          <span><mat-icon>schedule</mat-icon>{{ formatDuration(r.durationMin) }}</span>
+          <span><mat-icon>flag</mat-icon>{{ 'savedRoutes.stops' | translate: { count: r.stops } }}</span>
+          <span class="sr-estimated"><mat-icon>traffic</mat-icon>{{ 'savedRoutes.estimatedTraffic' | translate }}</span>
+        </div>
+      </div>
+      <div class="sr-actions">
+        <button class="sr-view-btn" (click)="viewRoute(r)">
+          <mat-icon>map</mat-icon> {{ 'savedRoutes.viewOnMap' | translate }}
+        </button>
+        <button class="sr-delete-btn" (click)="deleteRoute(r)" [title]="'savedRoutes.deleteRoute' | translate">
+          <mat-icon>delete</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

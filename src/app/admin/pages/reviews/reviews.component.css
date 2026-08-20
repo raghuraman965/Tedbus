@@ -1,0 +1,19 @@
+.admin-reviews { padding: 24px; }
+.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+.page-header h2 { margin: 0; font-size: 22px; font-weight: 600; color: var(--adm-text, #1a1a2e); }
+.count { font-size: 14px; color: var(--adm-muted, #6b7280); }
+.filters { display: flex; gap: 12px; margin-bottom: 20px; }
+.filter-field { width: 200px; }
+.spinner-wrap { display: flex; justify-content: center; padding: 60px 0; }
+.empty-state { text-align: center; padding: 60px 0; color: var(--adm-muted, #6b7280); font-size: 16px; }
+.reviews-table { overflow-x: auto; }
+.table-header, .table-row { display: grid; grid-template-columns: 1fr 1fr 120px 1fr 1.5fr 100px 100px 120px; gap: 8px; padding: 12px 8px; align-items: center; }
+.table-header { background: var(--adm-surface, #f8f9fa); font-weight: 600; font-size: 13px; color: var(--adm-muted, #6b7280); border-radius: 8px; }
+.table-row { border-bottom: 1px solid var(--adm-border, #e5e7eb); font-size: 14px; color: var(--adm-text, #1a1a2e); }
+.table-row:hover { background: var(--adm-surface, #f8f9fa); }
+.star mat-icon { font-size: 16px; width: 16px; height: 16px; color: #f59e0b; }
+.status-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+.status-dot.active { background: #22c55e; }
+.status-dot.inactive { background: #ef4444; }
+.pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 20px; }
+.col-comment { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

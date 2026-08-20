@@ -1,0 +1,90 @@
+.dialog-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 24px 0;
+}
+
+.dialog-title mat-icon {
+  color: var(--adm-primary, #d84e55);
+  font-size: 24px;
+  width: 24px;
+  height: 24px;
+}
+
+.dialog-title h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.dialog-content {
+  padding: 16px 24px;
+  max-height: 65vh;
+  overflow-y: auto;
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 16px;
+}
+
+.form-grid mat-form-field {
+  width: 100%;
+}
+
+.toggle-field {
+  grid-column: 1 / -1;
+  padding: 12px 0 4px;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 24px 20px;
+}
+
+.adm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.adm-btn:hover {
+  transform: translateY(-1px);
+}
+
+.adm-btn-save {
+  background: linear-gradient(135deg, var(--adm-primary, #d84e55), #b83a42);
+  color: #fff;
+}
+
+.adm-btn-save:disabled {
+  opacity: 0.6;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.btn-spinner {
+  display: inline-block;
+}
+
+@media (max-width: 480px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

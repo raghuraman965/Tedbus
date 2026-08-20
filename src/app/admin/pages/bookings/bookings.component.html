@@ -1,0 +1,95 @@
+<div class="page-head">
+  <h2>{{ 'admin.bookings.title' | translate }}</h2>
+  <p class="muted">{{ 'admin.bookings.subtitle' | translate }}</p>
+</div>
+
+<div *ngIf="error" class="page-error-bar">
+  <mat-icon>error_outline</mat-icon>
+  <span>{{ error | translate }}</span>
+  <button mat-flat-button color="warn" (click)="load()">
+    <mat-icon>refresh</mat-icon> {{ 'admin.common.retry' | translate }}
+  </button>
+</div>
+
+<div class="toolbar">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>{{ 'admin.bookings.searchPlaceholder' | translate }}</mat-label>
+    <input matInput [(ngModel)]="search" (ngModelChange)="onSearchInput()" />
+    <mat-icon matPrefix>search</mat-icon>
+  </mat-form-field>
+  <mat-form-field appearance="outline" class="filter-field">
+    <mat-label>{{ 'admin.bookings.filterStatus' | translate }}</mat-label>
+    <mat-select [(ngModel)]="status" (selectionChange)="onFilter()">
+      <mat-option value="">{{ 'admin.bookings.allStatuses' | translate }}</mat-option>
+      <mat-option *ngFor="let s of statuses" [value]="s">
+        {{ 'admin.status.' + s | translate }}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
+<div *ngIf="loading" class="loading-wrap">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>
+
+<div *ngIf="!loading && !error && items.length === 0" class="empty">
+  <mat-icon style="font-size:48px;width:48px;height:48px;opacity:0.4;margin-bottom:8px;">event_busy</mat-icon>
+  <p>{{ 'admin.bookings.empty' | translate }}</p>
+</div>
+
+<div *ngIf="!loading && items.length > 0" class="table-scroll">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ 'admin.bookings.colPnr' | translate }}</th>
+        <th>{{ 'admin.bookings.colRoute' | translate }}</th>
+        <th>{{ 'admin.bookings.colPassenger' | translate }}</th>
+        <th>{{ 'admin.bookings.colSeats' | translate }}</th>
+        <th>{{ 'admin.bookings.colAmount' | translate }}</th>
+        <th>{{ 'admin.bookings.colStatus' | translate }}</th>
+        <th>{{ 'admin.bookings.colDate' | translate }}</th>
+        <th>{{ 'admin.bookings.colActions' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let b of items">
+        <td class="mono">{{ idOf(b) }}</td>
+        <td>{{ routeOf(b) }}</td>
+        <td>{{ b.passengerName || b.customerName || b.user?.name || '-' }}</td>
+        <td>{{ seatsOf(b) }}</td>
+        <td class="mono">{{ fmt(b.totalAmount || b.fare) }}</td>
+        <td>
+          <span class="badge" [ngClass]="statusCls(b.status)">
+            {{ 'admin.status.' + b.status | translate }}
+          </span>
+        </td>
+        <td>{{ fmtD(b.createdAt) }}</td>
+        <td class="actions-col">
+          <button
+            *ngIf="b.status !== 'cancelled' && b.status !== 'completed'"
+            class="icon-btn danger"
+            matTooltip="{{ 'admin.bookings.cancelBooking' | translate }}"
+            (click)="cancelBooking(b)"
+          >
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div *ngIf="!loading && items.length > 0" class="pager">
+  <span class="pager-info">
+    {{ 'admin.common.showing' | translate }} {{ items.length }} {{ 'admin.common.of' | translate }} {{ total }}
+  </span>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="icon-btn" [disabled]="page <= 1" (click)="pageChange(page - 1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="mono" style="font-size:13px;font-weight:600;">{{ page }} / {{ totalPages }}</span>
+    <button class="icon-btn" [disabled]="page >= totalPages" (click)="pageChange(page + 1)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>

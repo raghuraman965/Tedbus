@@ -1,0 +1,231 @@
+<!-- ================= HERO SECTION ================= -->
+<section class="hero">
+  <div class="hero-overlay"></div>
+  <mat-icon class="hero-bus-watermark">directions_bus</mat-icon>
+  <div class="hero-content brand-fade-in">
+    <span class="hero-eyebrow">{{ 'home.eyebrow' | translate }}</span>
+    <h1 class="hero-title">{{ 'home.title' | translate }}</h1>
+    <p class="hero-subtitle">{{ 'home.subtitle' | translate }}</p>
+  </div>
+</section>
+
+<div class="search-panel glass-panel brand-fade-in">
+    <label class="round-trip-toggle">
+      <input type="checkbox" [checked]="isRoundTrip" (change)="toggleRoundTrip()">
+      <span>{{ 'home.roundTrip' | translate }}</span>
+    </label>
+
+    <div class="search-fields">
+      <div class="search-field autocomplete-field">
+        <mat-icon>directions_bus</mat-icon>
+        <div class="field-text">
+          <label>{{ 'common.from' | translate }}</label>
+          <input
+            type="text"
+            [placeholder]="'home.typeCity' | translate"
+            [ngModel]="fromQuery"
+            [cityInput]="fromQuery"
+            (ngModelChange)="onFromInput($event)"
+            (focus)="showFromSuggestions = true"
+            (blur)="closeFromSuggestions()">
+        </div>
+        <ul class="suggestion-list" *ngIf="showFromSuggestions && filteredFromCities.length">
+          <li *ngFor="let city of filteredFromCities" (mousedown)="fromEvent(city)">
+            <mat-icon>place</mat-icon>{{ city | cityName }}
+          </li>
+        </ul>
+      </div>
+
+      <button class="swap-btn" (click)="swapCities()" [title]="'home.swapCities' | translate">
+        <mat-icon>swap_horiz</mat-icon>
+      </button>
+
+      <div class="search-field autocomplete-field">
+        <mat-icon>place</mat-icon>
+        <div class="field-text">
+          <label>{{ 'common.to' | translate }}</label>
+          <input
+            type="text"
+            [placeholder]="'home.typeCity' | translate"
+            [ngModel]="toQuery"
+            [cityInput]="toQuery"
+            (ngModelChange)="onToInput($event)"
+            (focus)="showToSuggestions = true"
+            (blur)="closeToSuggestions()">
+        </div>
+        <ul class="suggestion-list" *ngIf="showToSuggestions && filteredToCities.length">
+          <li *ngFor="let city of filteredToCities" (mousedown)="toEvent(city)">
+            <mat-icon>place</mat-icon>{{ city | cityName }}
+          </li>
+        </ul>
+      </div>
+
+      <div class="search-field date-field">
+        <mat-icon>event</mat-icon>
+        <div class="field-text">
+          <label>{{ 'home.dateOfJourney' | translate }}</label>
+          <input matInput [placeholder]="'home.selectDate' | translate" [matDatepicker]="picker" (click)="picker.open()" (dateChange)="matchDate($event)" readonly>
+        </div>
+        <mat-datepicker #picker></mat-datepicker>
+      </div>
+
+      <div class="search-field date-field" *ngIf="isRoundTrip">
+        <mat-icon>event_repeat</mat-icon>
+        <div class="field-text">
+          <label>{{ 'home.returnDate' | translate }}</label>
+          <input matInput [placeholder]="'home.selectDate' | translate" [matDatepicker]="returnPicker" (click)="returnPicker.open()" (dateChange)="matchReturnDate($event)" readonly>
+        </div>
+        <mat-datepicker #returnPicker></mat-datepicker>
+      </div>
+
+      <div class="search-field passenger-field">
+        <mat-icon>group</mat-icon>
+        <div class="field-text">
+          <label>{{ 'home.passengers' | translate }}</label>
+          <span class="passenger-value">{{ passengers }} {{ passengers === 1 ? ('home.traveller' | translate) : ('home.travellers' | translate) }}</span>
+        </div>
+        <div class="passenger-stepper">
+          <button type="button" (click)="decrementPassengers()" [disabled]="passengers <= minPassengers">
+            <mat-icon>remove</mat-icon>
+          </button>
+          <button type="button" (click)="incrementPassengers()" [disabled]="passengers >= maxPassengers">
+            <mat-icon>add</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <button class="search-btn ripple-surface" (click)="submit()">
+        <mat-icon>search</mat-icon>
+        {{ 'home.searchBuses' | translate }}
+      </button>
+    </div>
+
+    <div class="quick-routes">
+      <span>{{ 'home.popular' | translate }}</span>
+      <button class="quick-route-chip" *ngFor="let r of featuredRoutes" (click)="quickSearch(r.from, r.to)">
+        {{ r.from | cityName }} → {{ r.to | cityName }}
+      </button>
+    </div>
+</div>
+
+
+<!-- ================= FEATURED ROUTES ================= -->
+<section class="section">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>{{ 'home.featuredRoutes' | translate }}</h2>
+      <p>{{ 'home.featuredSubtitle' | translate }}</p>
+    </div>
+    <div class="route-grid">
+      <div class="route-card card-premium" *ngFor="let r of featuredRoutes" (click)="quickSearch(r.from, r.to)">
+        <div class="route-image-wrap">
+          <img [src]="r.image" [alt]="r.to" (error)="onImageError($event)">
+          <span class="route-price">{{ r.price }}</span>
+        </div>
+        <div class="route-info">
+          <span class="route-from">{{ r.from | cityName }}</span>
+          <mat-icon>arrow_right_alt</mat-icon>
+          <span class="route-to">{{ r.to | cityName }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= TRENDING DESTINATIONS ================= -->
+<section class="section alt-bg">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>{{ 'home.trendingDestinations' | translate }}</h2>
+      <p>{{ 'home.trendingSubtitle' | translate }}</p>
+    </div>
+    <div class="destination-grid">
+      <div class="destination-card card-premium" *ngFor="let d of trendingDestinations">
+        <img [src]="d.image" [alt]="d.name" (error)="onImageError($event)">
+        <div class="destination-overlay">
+          <h3>{{ d.name | cityName }}</h3>
+          <span>{{ 'home.tripsBooked' | translate:{ n: d.trips } }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= OFFERS ================= -->
+<section class="section">
+  <div class="section-inner">
+    <div class="section-header row">
+      <div>
+        <h2>{{ 'home.trendingOffers' | translate }}</h2>
+        <p>{{ 'home.trendingOffersSubtitle' | translate }}</p>
+      </div>
+      <button class="btn-premium-outline">{{ 'home.viewAll' | translate }}</button>
+    </div>
+    <div class="offers-row">
+      <div class="offer-card" *ngFor="let o of offers" [style.background]="o.gradient">
+        <span class="offer-code">{{ o.code }}</span>
+        <h3>{{ o.titleKey | translate }}</h3>
+        <p>{{ o.subtitleKey | translate }}</p>
+        <div class="offer-footer">
+          <mat-icon>content_copy</mat-icon>
+          <span>{{ 'home.copyCode' | translate }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= WHY CHOOSE US ================= -->
+<section class="section alt-bg">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>{{ 'home.whyChooseUs' | translate }}</h2>
+      <p>{{ 'home.whySubtitle' | translate }}</p>
+    </div>
+    <div class="why-grid">
+      <div class="why-card card-premium" *ngFor="let item of whyChooseUs">
+        <div class="why-icon">
+          <mat-icon>{{ item.icon }}</mat-icon>
+        </div>
+        <h3>{{ item.titleKey | translate }}</h3>
+        <p>{{ item.descriptionKey | translate }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= STATISTICS ================= -->
+<section class="stats-section">
+  <div class="section-inner stats-row">
+    <div class="stat-card" *ngFor="let s of stats">
+      <mat-icon>{{ s.icon }}</mat-icon>
+      <span class="stat-value">{{ s.value }}</span>
+      <span class="stat-label">{{ s.labelKey | translate }}</span>
+    </div>
+  </div>
+</section>
+
+<!-- ================= CUSTOMER REVIEWS ================= -->
+<section class="section">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2>{{ 'home.customersSay' | translate }}</h2>
+      <p>{{ 'home.customersSaySubtitle' | translate }}</p>
+    </div>
+    <div class="reviews-grid">
+      <div class="review-card card-premium" *ngFor="let review of reviews">
+        <div class="review-stars">
+          <mat-icon *ngFor="let s of [1,2,3,4,5]">{{ s <= review.rating ? 'star' : 'star_border' }}</mat-icon>
+        </div>
+        <p class="review-text">"{{ review.textKey | translate }}"</p>
+        <div class="review-author">
+          <img [src]="'https://i.pravatar.cc/100?img=' + review.avatarSeed" [alt]="review.name" (error)="onImageError($event)">
+          <div>
+            <span class="review-name">{{ review.name }}</span>
+            <span class="review-route">{{ review.routeKey | translate }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

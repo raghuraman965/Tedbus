@@ -1,0 +1,92 @@
+<div class="page-head">
+  <div class="head-row">
+    <div class="head-left">
+      <mat-icon class="head-icon">route</mat-icon>
+      <h2>{{ 'admin.routes.title' | translate }}</h2>
+      <span class="badge" *ngIf="total">{{ total }}</span>
+    </div>
+    <div class="head-right">
+      <div class="search-box">
+        <mat-icon>search</mat-icon>
+        <input [(ngModel)]="search" (keyup.enter)="onSearch()" [placeholder]="'admin.routes.searchPlaceholder' | translate" />
+      </div>
+      <button class="adm-btn adm-btn-primary" (click)="openDialog()">
+        <mat-icon>add</mat-icon> {{ 'admin.routes.addRoute' | translate }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="error" class="page-error-bar">
+  <mat-icon>error_outline</mat-icon>
+  <span>{{ error | translate }}</span>
+  <button mat-flat-button color="warn" (click)="load()">
+    <mat-icon>refresh</mat-icon> {{ 'admin.common.retry' | translate }}
+  </button>
+</div>
+
+<div *ngIf="loading" class="loading-wrap">
+  <mat-spinner diameter="40"></mat-spinner>
+</div>
+
+<div *ngIf="!loading && !error && items.length === 0" class="empty">
+  <mat-icon style="font-size:48px;width:48px;height:48px;opacity:0.4;margin-bottom:8px;">alt_route</mat-icon>
+  <p>{{ 'admin.routes.empty' | translate }}</p>
+</div>
+
+<div *ngIf="!loading && items.length > 0" class="table-scroll">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>{{ 'admin.routes.colRouteName' | translate }}</th>
+        <th>{{ 'admin.routes.colSourceDestination' | translate }}</th>
+        <th>{{ 'admin.routes.colDistance' | translate }}</th>
+        <th>{{ 'admin.routes.colDuration' | translate }}</th>
+        <th>{{ 'admin.routes.colFare' | translate }}</th>
+        <th>{{ 'admin.routes.colStops' | translate }}</th>
+        <th>{{ 'admin.routes.colActive' | translate }}</th>
+        <th>{{ 'admin.routes.colActions' | translate }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let r of items">
+        <td style="font-weight:600;">{{ r.routeName || r.name || '-' }}</td>
+        <td>{{ srcDst(r) }}</td>
+        <td class="mono">{{ r.totalDistanceKm || r.distance || '-' }} km</td>
+        <td>{{ r.duration || '-' }}</td>
+        <td class="mono">{{ fare(r) }}</td>
+        <td>{{ stopsCount(r) }}</td>
+        <td>
+          <mat-slide-toggle
+            [checked]="r.isActive"
+            (change)="toggleActive(r)"
+            color="primary"
+          ></mat-slide-toggle>
+        </td>
+        <td class="actions-col">
+          <button class="icon-btn" (click)="openDialog(r)" matTooltip="{{ 'admin.common.edit' | translate }}">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button class="icon-btn danger" (click)="deleteRoute(r)" matTooltip="{{ 'admin.common.delete' | translate }}">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div *ngIf="!loading && items.length > 0" class="pager">
+  <span class="pager-info">
+    {{ 'admin.common.showing' | translate }} {{ items.length }} {{ 'admin.common.of' | translate }} {{ total }}
+  </span>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="icon-btn" [disabled]="page <= 1" (click)="pageChange(page - 1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="mono" style="font-size:13px;font-weight:600;">{{ page }} / {{ totalPages }}</span>
+    <button class="icon-btn" [disabled]="page >= totalPages" (click)="pageChange(page + 1)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+</div>

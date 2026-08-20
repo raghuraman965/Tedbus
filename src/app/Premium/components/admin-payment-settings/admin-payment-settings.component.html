@@ -1,0 +1,101 @@
+<div class="admin-page" [formGroup]="form">
+    <div class="admin-header">
+        <div class="admin-header-left">
+            <div class="admin-breadcrumb">
+                <a routerLink="/">{{ 'admin.home' | translate }}</a>
+                <span>/</span>
+                <span>{{ 'admin.admin' | translate }}</span>
+            </div>
+            <h1 class="admin-title">{{ 'admin.title' | translate }}</h1>
+            <p class="admin-subtitle">{{ 'admin.subtitle' | translate }}</p>
+        </div>
+        <a routerLink="/payment" class="admin-back-link">
+            <mat-icon>arrow_back</mat-icon>
+            {{ 'admin.backToApp' | translate }}
+        </a>
+    </div>
+
+    <div *ngIf="loading" class="admin-loading">
+        <div class="admin-spinner"></div>
+        <span>{{ 'admin.loading' | translate }}</span>
+    </div>
+
+    <div *ngIf="!loading" class="admin-content">
+        <div class="admin-card">
+            <h2 class="admin-card-title">{{ 'admin.upiMerchantDetails' | translate }}</h2>
+
+            <div class="admin-form-row">
+                <label class="admin-label" for="merchantName">{{ 'admin.merchantName' | translate }}</label>
+                <input id="merchantName" class="admin-input" type="text" formControlName="merchantName"
+                    [placeholder]="'admin.merchantNamePlaceholder' | translate" />
+                <p class="admin-field-hint">{{ 'admin.merchantNameHint' | translate }}</p>
+            </div>
+
+            <div class="admin-form-row">
+                <label class="admin-label" for="upiId">{{ 'admin.upiId' | translate }}</label>
+                <input id="upiId" class="admin-input" type="text" formControlName="upiId"
+                    [placeholder]="'admin.upiIdPlaceholder' | translate" />
+                <p class="admin-field-hint">{{ 'admin.upiIdHint' | translate }}</p>
+            </div>
+
+            <div class="admin-form-row">
+                <label class="admin-label" for="accountName">{{ 'admin.accountName' | translate }}</label>
+                <input id="accountName" class="admin-input" type="text" formControlName="accountName"
+                    [placeholder]="'admin.accountNamePlaceholder' | translate" />
+                <p class="admin-field-hint">{{ 'admin.accountNameHint' | translate }}</p>
+            </div>
+
+            <div class="admin-form-row admin-checkbox-row">
+                <label class="admin-checkbox">
+                    <input type="checkbox" formControlName="isActive" />
+                    <span>{{ 'admin.qrActive' | translate }}</span>
+                </label>
+                <p class="admin-field-hint">{{ 'admin.qrActiveHint' | translate }}</p>
+            </div>
+        </div>
+
+        <div class="admin-card">
+            <h2 class="admin-card-title">{{ 'admin.qrImage' | translate }}</h2>
+            <p class="admin-field-hint">{{ 'admin.qrImageHint' | translate }}</p>
+
+            <div class="admin-qr-preview">
+                <img *ngIf="activePreview" class="admin-qr-img" [src]="activePreview" [attr.alt]="'admin.qrPreviewAlt' | translate" />
+                <div *ngIf="!activePreview" class="admin-qr-placeholder">
+                    <mat-icon>qr_code_2</mat-icon>
+                    <span>{{ 'admin.noQrImage' | translate }}</span>
+                </div>
+            </div>
+
+            <div class="admin-qr-actions">
+                <label class="admin-file-btn" for="qrFileInput">
+                    <mat-icon>upload</mat-icon>
+                    {{ 'admin.uploadQr' | translate }}
+                </label>
+                <input id="qrFileInput" class="admin-file-input" type="file" accept="image/png,image/jpeg,image/gif,image/webp"
+                    (change)="onFileSelected($event)" />
+                <button *ngIf="hasQrImage" class="admin-remove-btn" (click)="removeQr()">
+                    <mat-icon>delete_outline</mat-icon>
+                    {{ 'admin.remove' | translate }}
+                </button>
+            </div>
+        </div>
+
+        <div *ngIf="saveError" class="admin-banner admin-banner--error">
+            <mat-icon>error_outline</mat-icon>
+            <span>{{ saveError }}</span>
+        </div>
+
+        <div *ngIf="savedMessage" class="admin-banner admin-banner--success">
+            <mat-icon>check_circle</mat-icon>
+            <span>{{ savedMessage }}</span>
+        </div>
+
+        <div class="admin-save-bar">
+            <button class="admin-save-btn" [disabled]="saving" (click)="save()">
+                <span *ngIf="saving" class="admin-btn-spinner"></span>
+                {{ saving ? ('admin.saving' | translate) : ('admin.saveSettings' | translate) }}
+            </button>
+            <button class="admin-reset-btn" [disabled]="saving" (click)="loadSettings()">{{ 'common.cancel' | translate }}</button>
+        </div>
+    </div>
+</div>

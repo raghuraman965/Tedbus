@@ -1,0 +1,263 @@
+<div class="pbd-root">
+    <!-- Backdrop -->
+    <div class="drawer-overlay" *ngIf="open" (click)="closeDrawer()"></div>
+
+    <!-- Drawer -->
+    <aside class="booking-drawer" [class.open]="open" role="dialog" aria-modal="true">
+        <div class="drawer-header">
+            <div class="drawer-header-info">
+                <span class="drawer-eyebrow">{{ 'booking.premiumBooking' | translate }}</span>
+                <h3>{{ operatorname }}</h3>
+                <div class="route-line">
+                    <span class="route-city">{{ routedetails?.departureLocation?.name | cityName }}</span>
+                    <mat-icon>arrow_forward</mat-icon>
+                    <span class="route-city">{{ routedetails?.arrivalLocation?.name | cityName }}</span>
+                </div>
+                <div class="time-line">
+                    <span class="time-badge">{{ getDepartureFormatted() }}</span>
+                    <span class="route-duration">{{ getDurationFormatted() }}</span>
+                    <span class="time-badge">{{ getArrivalFormatted() }}</span>
+                </div>
+            </div>
+            <button class="close-btn" [matTooltip]="'common.close' | translate" matTooltipPosition="left" (click)="closeDrawer()">
+                <mat-icon>close</mat-icon>
+            </button>
+        </div>
+
+        <div class="drawer-body">
+
+            <!-- Boarding & Dropping -->
+            <section class="drawer-section">
+                <div class="section-head">
+                    <mat-icon>place</mat-icon>
+                    <h4>{{ 'booking.boardingDropping' | translate }}</h4>
+                </div>
+                <div class="segment-badge" *ngIf="searchResult">
+                    <mat-icon>route</mat-icon>
+                    <span>{{ searchResult.segment.distanceKm }} km · {{ searchResult.segment.durationMinutes }} min</span>
+                </div>
+                <div class="point-grid">
+                    <div class="point-field">
+                        <label class="field-label">{{ 'booking.boardingPoint' | translate }}</label>
+                        <select class="input-premium" [(ngModel)]="boardingPoint"
+                            [class.invalid]="submitted && !boardingPoint">
+                            <option *ngFor="let p of boardingPoints" [value]="p.name">{{ p.name | cityName }} · {{ p.time }}</option>
+                        </select>
+                        <span class="field-hint" *ngIf="!searchResult">{{ 'booking.pickupTime' | translate:{ time: getDepartureFormatted() } }}</span>
+                        <span class="field-hint" *ngIf="searchResult">{{ searchResult.segment.fromStop.departureTime }}</span>
+                    </div>
+                    <div class="point-field">
+                        <label class="field-label">{{ 'booking.droppingPoint' | translate }}</label>
+                        <select class="input-premium" [(ngModel)]="droppingPoint"
+                            [class.invalid]="submitted && !droppingPoint">
+                            <option *ngFor="let p of droppingPoints" [value]="p.name">{{ p.name | cityName }} · {{ p.time }}</option>
+                        </select>
+                        <span class="field-hint" *ngIf="!searchResult">{{ 'booking.dropTime' | translate:{ time: getArrivalFormatted() } }}</span>
+                        <span class="field-hint" *ngIf="searchResult">{{ searchResult.segment.toStop.arrivalTime }}</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Passenger details -->
+            <section class="drawer-section">
+                <div class="section-head">
+                    <mat-icon>group</mat-icon>
+                    <h4>{{ 'booking.passengerDetails' | translate }}</h4>
+                </div>
+                <div class="passenger-card" *ngFor="let passenger of passdetails; let index = index">
+                    <div class="passenger-head">
+                        <span class="passenger-index">{{ index + 1 }}</span>
+                        <span class="passenger-label">{{ 'booking.passenger' | translate:{ n: index + 1 } }}</span>
+                        <span class="seat-badge">
+                            <mat-icon>event_seat</mat-icon>
+                            {{ 'booking.seat' | translate:{ n: selectedseat[index] } }}
+                        </span>
+                    </div>
+                    <div class="form-grid">
+                        <div class="form-field full">
+                            <label class="field-label">{{ 'booking.fullName' | translate }}</label>
+                            <input class="input-premium" [placeholder]="'booking.enterFullName' | translate" type="text"
+                                [(ngModel)]="passenger.name"
+                                [class.invalid]="submitted && !isNameValid(passenger.name)" />
+                            <span class="field-error" *ngIf="submitted && !isNameValid(passenger.name)">{{ 'booking.errFullName' | translate }}</span>
+                        </div>
+                        <div class="form-field">
+                            <label class="field-label">{{ 'booking.age' | translate }}</label>
+                            <input class="input-premium" [placeholder]="'booking.age' | translate" type="number" min="1" max="120"
+                                [(ngModel)]="passenger.age"
+                                [class.invalid]="submitted && !isAgeValid(passenger.age)" />
+                            <span class="field-error" *ngIf="submitted && !isAgeValid(passenger.age)">{{ 'booking.errAge' | translate }}</span>
+                        </div>
+                        <div class="form-field">
+                            <label class="field-label">{{ 'booking.gender' | translate }}</label>
+                            <div class="gender-group">
+                                <button type="button" class="gender-option"
+                                    [class.active]="passenger.gender === 'Male'"
+                                    (click)="passenger.gender = 'Male'">{{ 'booking.male' | translate }}</button>
+                                <button type="button" class="gender-option"
+                                    [class.active]="passenger.gender === 'Female'"
+                                    (click)="passenger.gender = 'Female'">{{ 'booking.female' | translate }}</button>
+                                <button type="button" class="gender-option"
+                                    [class.active]="passenger.gender === 'Other'"
+                                    (click)="passenger.gender = 'Other'">{{ 'booking.other' | translate }}</button>
+                            </div>
+                            <span class="field-error" *ngIf="submitted && !isGenderValid(passenger.gender)">{{ 'booking.errGender' | translate }}</span>
+                        </div>
+                        <div class="form-field">
+                            <label class="field-label">{{ 'booking.mobileNumber' | translate }}</label>
+                            <input class="input-premium" [placeholder]="'booking.mobilePlaceholder' | translate" type="tel" maxlength="10"
+                                [(ngModel)]="passenger.mobile"
+                                [class.invalid]="submitted && !isPhoneValid(passenger.mobile)" />
+                            <span class="field-error" *ngIf="submitted && !isPhoneValid(passenger.mobile)">{{ 'booking.errMobile' | translate }}</span>
+                        </div>
+                        <div class="form-field">
+                            <label class="field-label">{{ 'booking.email' | translate }} <span class="optional">({{ 'common.optional' | translate }})</span></label>
+                            <input class="input-premium" [placeholder]="'booking.emailPlaceholder' | translate" type="email"
+                                [(ngModel)]="passenger.email"
+                                [class.invalid]="submitted && !!passenger.email && !isEmailValid(passenger.email)" />
+                            <span class="field-error" *ngIf="submitted && !!passenger.email && !isEmailValid(passenger.email)">{{ 'booking.errEmail' | translate }}</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Contact information -->
+            <section class="drawer-section">
+                <div class="section-head">
+                    <mat-icon>email</mat-icon>
+                    <h4>{{ 'booking.contactInfo' | translate }}</h4>
+                </div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label class="field-label">{{ 'booking.email' | translate }}</label>
+                        <input class="input-premium" [placeholder]="'booking.emailPlaceholder' | translate" type="email"
+                            [(ngModel)]="passemail"
+                            [class.invalid]="submitted && !isEmailValid(passemail)" />
+                        <span class="field-error" *ngIf="submitted && !isEmailValid(passemail)">{{ 'booking.errEmail' | translate }}</span>
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label">{{ 'booking.mobileNumber' | translate }}</label>
+                        <input class="input-premium" [placeholder]="'booking.mobilePlaceholder' | translate" type="tel" maxlength="10"
+                            [(ngModel)]="passphn"
+                            [class.invalid]="submitted && !isPhoneValid(passphn)" />
+                        <span class="field-error" *ngIf="submitted && !isPhoneValid(passphn)">{{ 'booking.errMobile' | translate }}</span>
+                    </div>
+                </div>
+                <p class="section-note">{{ 'booking.ticketNote' | translate }}</p>
+            </section>
+
+            <!-- Emergency contact -->
+            <section class="drawer-section">
+                <div class="section-head">
+                    <mat-icon>contact_emergency</mat-icon>
+                    <h4>{{ 'booking.emergencyContact' | translate }}</h4>
+                </div>
+                <div class="form-grid">
+                    <div class="form-field">
+                        <label class="field-label">{{ 'booking.contactPerson' | translate }}</label>
+                        <input class="input-premium" [placeholder]="'booking.namePlaceholder' | translate" type="text" [(ngModel)]="emergencyName" />
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label">{{ 'booking.phone' | translate }}</label>
+                        <input class="input-premium" [placeholder]="'booking.mobilePlaceholder' | translate" type="tel" maxlength="10"
+                            [(ngModel)]="emergencyPhone"
+                            [class.invalid]="submitted && !!emergencyPhone && !isPhoneValid(emergencyPhone)" />
+                        <span class="field-error" *ngIf="submitted && !!emergencyPhone && !isPhoneValid(emergencyPhone)">{{ 'booking.errMobile' | translate }}</span>
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label">{{ 'booking.relation' | translate }}</label>
+                        <input class="input-premium" [placeholder]="'booking.relationPlaceholder' | translate" type="text"
+                            [(ngModel)]="emergencyRelation" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- GST optional -->
+            <section class="drawer-section">
+                <div class="section-head">
+                    <mat-icon>receipt</mat-icon>
+                    <h4>{{ 'booking.gstInvoice' | translate }} <span class="optional">({{ 'common.optional' | translate }})</span></h4>
+                </div>
+                <label class="toggle-row">
+                    <input type="checkbox" [(ngModel)]="gstEnabled" />
+                    <span>{{ 'booking.gstNeed' | translate }}</span>
+                </label>
+                <div class="form-field" *ngIf="gstEnabled">
+                    <label class="field-label">{{ 'booking.gstNumber' | translate }}</label>
+                    <input class="input-premium" [placeholder]="'booking.gstPlaceholder' | translate" type="text" maxlength="15"
+                        [(ngModel)]="gstNumber"
+                        [class.invalid]="submitted && !!gstNumber && !isGstValid(gstNumber)" />
+                    <span class="field-error" *ngIf="submitted && !!gstNumber && !isGstValid(gstNumber)">{{ 'booking.errGst' | translate }}</span>
+                </div>
+            </section>
+
+            <!-- Fare summary -->
+            <section class="drawer-section fare-section">
+                <div class="section-head">
+                    <mat-icon>receipt_long</mat-icon>
+                    <h4>{{ 'booking.fareSummary' | translate }}</h4>
+                </div>
+                <div class="selected-seats-row">
+                    <span class="selected-seats-label">{{ 'booking.selectedSeats' | translate }}</span>
+                    <div class="seat-chips">
+                        <span class="seat-chip" *ngFor="let seat of selectedseat">
+                            <mat-icon>event_seat</mat-icon>
+                            {{ seat }}
+                        </span>
+                    </div>
+                </div>
+                <div class="fare-line" *ngIf="!dynamicFareInfo">
+                    <span>{{ 'booking.seatsXPrice' | translate:{ count: selectedseat.length, price: seatprice } }}</span>
+                    <span>₹{{ baseFare }}</span>
+                </div>
+                <div class="fare-line" *ngIf="dynamicFareInfo?.fare?.perSeat">
+                    <span>{{ 'booking.seatsXPrice' | translate:{ count: selectedseat.length, price: dynamicFareInfo.fare.perSeat } }}</span>
+                    <span>₹{{ dynamicFareInfo.fare.totalForSeats }}</span>
+                </div>
+                <div class="fare-line" *ngIf="dynamicFareInfo?.fare?.seatFare">
+                    <span>{{ 'booking.seatPremium' | translate }}</span>
+                    <span>₹{{ dynamicFareInfo.fare.seatFare }}</span>
+                </div>
+                <div class="fare-line" *ngIf="dynamicFareInfo?.fare?.dynamicFare">
+                    <span>{{ 'booking.dynamicFare' | translate }}</span>
+                    <span>₹{{ dynamicFareInfo.fare.dynamicFare }}</span>
+                </div>
+                <div class="fare-line" *ngIf="dynamicFareInfo?.fare?.tax">
+                    <span>{{ 'booking.tax' | translate }}</span>
+                    <span>₹{{ dynamicFareInfo.fare.tax }}</span>
+                </div>
+                <div class="fare-line" *ngIf="dynamicFareInfo?.fare?.serviceFee">
+                    <span>{{ 'booking.serviceFee' | translate }}</span>
+                    <span>₹{{ dynamicFareInfo.fare.serviceFee }}</span>
+                </div>
+                <div class="fare-line" *ngIf="gstEnabled && !dynamicFareInfo">
+                    <span>{{ 'booking.gstPercent' | translate }}</span>
+                    <span>₹{{ gstAmount }}</span>
+                </div>
+                <div class="fare-line" *ngIf="serviceFeeAmount > 0 && !dynamicFareInfo?.fare?.serviceFee">
+                    <span>{{ 'booking.serviceFee' | translate }}</span>
+                    <span>₹{{ serviceFeeAmount }}</span>
+                </div>
+                <div class="fare-line total">
+                    <span>{{ 'booking.totalPayable' | translate }}</span>
+                    <span>₹{{ totalFare }}</span>
+                </div>
+                <div class="fare-loading" *ngIf="fareLoading">
+                    <mat-icon class="spin">sync</mat-icon> {{ 'booking.calculatingFare' | translate }}
+                </div>
+                <p class="section-note">{{ 'booking.taxNote' | translate }}</p>
+            </section>
+        </div>
+
+        <div class="drawer-footer">
+            <div class="total-preview">
+                <span class="total-preview-label">{{ 'booking.totalPayable' | translate }}</span>
+                <span class="total-preview-value">₹{{ totalFare }}</span>
+            </div>
+            <button class="btn-premium continue-btn" [disabled]="seatChecking" (click)="continueBooking()">
+                <mat-icon>{{ seatChecking ? 'sync' : 'lock' }}</mat-icon>
+                {{ seatChecking ? ('booking.checkingSeats' | translate) : ('booking.continueToPayment' | translate) }}
+            </button>
+        </div>
+    </aside>
+</div>

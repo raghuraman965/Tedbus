@@ -1,0 +1,100 @@
+<div class="settings-page">
+  <div class="page-header">
+    <h2>{{ 'admin.settings.title' | translate }}</h2>
+    <p class="subtitle">{{ 'admin.settings.subtitle' | translate }}</p>
+  </div>
+
+  <div class="settings-grid">
+
+    <!-- 1. Appearance -->
+    <div class="setting-section">
+      <h3>{{ 'admin.settings.appearance' | translate }}</h3>
+      <div class="theme-options">
+        <div class="theme-opt" [class.active]="currentTheme === 'light'" (click)="setTheme('light')">
+          <div class="theme-icon-wrap">
+            <mat-icon>light_mode</mat-icon>
+          </div>
+          <span class="theme-label">{{ 'admin.settings.themeLight' | translate }}</span>
+          <span class="theme-check" *ngIf="currentTheme === 'light'">
+            <mat-icon>check_circle</mat-icon>
+          </span>
+        </div>
+        <div class="theme-opt" [class.active]="currentTheme === 'dark'" (click)="setTheme('dark')">
+          <div class="theme-icon-wrap">
+            <mat-icon>dark_mode</mat-icon>
+          </div>
+          <span class="theme-label">{{ 'admin.settings.themeDark' | translate }}</span>
+          <span class="theme-check" *ngIf="currentTheme === 'dark'">
+            <mat-icon>check_circle</mat-icon>
+          </span>
+        </div>
+        <div class="theme-opt" [class.active]="currentTheme === 'system'" (click)="setTheme('system')">
+          <div class="theme-icon-wrap">
+            <mat-icon>settings_brightness</mat-icon>
+          </div>
+          <span class="theme-label">{{ 'admin.settings.themeSystem' | translate }}</span>
+          <span class="theme-check" *ngIf="currentTheme === 'system'">
+            <mat-icon>check_circle</mat-icon>
+          </span>
+        </div>
+      </div>
+      <p class="theme-hint">
+        {{ 'admin.settings.currentTheme' | translate }}: <strong>{{ currentTheme | titlecase }}</strong>
+      </p>
+    </div>
+
+    <!-- 2. Admin Profile -->
+    <div class="setting-section">
+      <h3>{{ 'admin.settings.adminProfile' | translate }}</h3>
+      <div class="empty-profile" *ngIf="!adminProfile">
+        <mat-icon>account_circle</mat-icon>
+        <span>{{ 'admin.settings.profileUnavailable' | translate }}</span>
+      </div>
+      <div *ngIf="adminProfile" class="profile-fields">
+        <div class="profile-field">
+          <span class="profile-label">{{ 'admin.settings.fieldUsername' | translate }}</span>
+          <span class="profile-value">{{ adminProfile.username || '—' }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">{{ 'admin.settings.fieldName' | translate }}</span>
+          <span class="profile-value">{{ adminProfile.name || adminProfile.username || '—' }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">{{ 'admin.settings.fieldRole' | translate }}</span>
+          <span class="profile-value role-badge">{{ adminProfile.role || 'admin' }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">{{ 'admin.settings.fieldId' | translate }}</span>
+          <span class="profile-value mono">{{ adminProfile._id || '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. System Information -->
+    <div class="setting-section">
+      <h3>{{ 'admin.settings.systemInfo' | translate }}</h3>
+      <div class="profile-fields">
+        <div class="profile-field">
+          <span class="profile-label">{{ 'admin.settings.appName' | translate }}</span>
+          <span class="profile-value">{{ 'admin.settings.appNameValue' | translate }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">{{ 'admin.settings.version' | translate }}</span>
+          <span class="profile-value">7.0.0</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">{{ 'admin.settings.serverStatus' | translate }}</span>
+          <span class="profile-value status-ok">
+            <span class="status-dot-green"></span>
+            {{ 'admin.settings.operational' | translate }}
+          </span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">{{ 'admin.settings.framework' | translate }}</span>
+          <span class="profile-value">{{ 'admin.settings.frameworkValue' | translate }}</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,1097 @@
+/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+html, body { height: 100%; }
+body {
+    margin: 0;
+    font-family: 'Inter', 'Noto Sans', 'Noto Sans Tamil', 'Nirmala UI', 'Latha', 'Noto Sans Devanagari', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--brand-white, #fff);
+    color: var(--brand-dark-gray, #2E2E33);
+    transition: background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+::-webkit-scrollbar{
+    width: 8px;
+    height: 8px;
+    background: var(--brand-light-gray, #F5F6F8);
+}
+::-webkit-scrollbar-thumb{
+    background: var(--brand-mid-gray, #E4E6EA);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover{
+    background: var(--brand-primary, #D84E55);
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+* { scrollbar-width: thin; scrollbar-color: var(--brand-mid-gray, #E4E6EA) transparent; }
+
+/* ===== Travel Community theme tokens (additive, does not affect existing pages) ===== */
+:root {
+    --community-primary: #D84E55;
+    --community-primary-dark: #B93940;
+    --community-primary-light: #FBE9EA;
+    --community-white: #FFFFFF;
+    --community-light-gray: #F5F6F8;
+    --community-mid-gray: #E4E6EA;
+    --community-dark-gray: #2E2E33;
+    --community-text-muted: #767680;
+    --community-success: #1C7D40;
+    --community-success-bg: #E6F7EC;
+    --community-success-border: #B7E4C6;
+    --community-error: #B3261E;
+    --community-error-bg: #FDEAEA;
+    --community-error-border: #F5C6C2;
+    --community-error-solid: #B3261E;
+    --community-warning: #97690A;
+    --community-warning-bg: #FFF4D6;
+    --community-warning-2: #C53D2A;
+    --community-warning-2-bg: #FFE4E0;
+    --community-star: #F5A623;
+    --community-seat-available: #E8EAF0;
+    --community-seat-booked: #5B5B66;
+    --community-seat-selected: #2E9E56;
+    --community-radius: 16px;
+    --community-shadow: 0 2px 10px rgba(30, 30, 40, 0.06);
+    --community-shadow-hover: 0 16px 32px rgba(216, 78, 85, 0.14);
+}
+
+/* ===== Sitewide Premium Theme (additive) =====
+   Shares the exact same design language as the Community feature so the whole
+   site (navbar, footer, homepage, and future pages) feels like one premium
+   application. New premium components should use these --brand-* tokens and
+   utility classes rather than one-off styles. Nothing existing is modified. */
+:root {
+    --brand-primary: var(--community-primary);
+    --brand-primary-dark: var(--community-primary-dark);
+    --brand-primary-light: var(--community-primary-light);
+    --brand-white: var(--community-white);
+    --brand-light-gray: var(--community-light-gray);
+    --brand-mid-gray: var(--community-mid-gray);
+    --brand-page-bg: var(--community-light-gray);
+    --brand-dark-gray: var(--community-dark-gray);
+    --brand-text-muted: var(--community-text-muted);
+    --brand-success: var(--community-success);
+    --brand-success-bg: var(--community-success-bg);
+    --brand-success-border: var(--community-success-border);
+    --brand-error: var(--community-error);
+    --brand-error-bg: var(--community-error-bg);
+    --brand-error-border: var(--community-error-border);
+    --brand-error-solid: var(--community-error-solid);
+    --brand-warning: var(--community-warning);
+    --brand-warning-bg: var(--community-warning-bg);
+    --brand-warning-2: var(--community-warning-2);
+    --brand-warning-2-bg: var(--community-warning-2-bg);
+    --brand-star: var(--community-star);
+    --brand-seat-available: var(--community-seat-available);
+    --brand-seat-booked: var(--community-seat-booked);
+    --brand-seat-selected: var(--community-seat-selected);
+    --brand-radius-sm: 10px;
+    --brand-radius: var(--community-radius);
+    --brand-radius-lg: 24px;
+    --brand-shadow: var(--community-shadow);
+    --brand-shadow-hover: var(--community-shadow-hover);
+    --brand-shadow-lift: 0 20px 40px rgba(30, 30, 40, 0.12);
+    --brand-glass-bg: rgba(255, 255, 255, 0.72);
+    --brand-glass-border: rgba(255, 255, 255, 0.4);
+    --brand-font: 'Inter', 'Noto Sans', 'Noto Sans Tamil', 'Nirmala UI', 'Latha', 'Noto Sans Devanagari', 'Noto Sans Telugu', 'Noto Sans Kannada', 'Noto Sans Malayalam', 'Roboto', 'Helvetica Neue', sans-serif;
+    --brand-transition: 0.25s ease;
+    --navbar-bg: rgba(255, 255, 255, 0.82);
+}
+
+/* ===== Dark Mode (additive) =====
+   Redefines the same community and brand tokens for html[data-theme="dark"].
+   Because every Premium/Community component already reads colors through
+   these variables instead of hardcoded hex values, this one block re-themes
+   the entire new UI (navbar, footer, homepage, community, auth, search
+   results) automatically — no per-component changes needed. Uses
+   html[data-theme="dark"] (rather than just [data-theme="dark"]) so it wins
+   the cascade over :root regardless of stylesheet source order. */
+html[data-theme="dark"] {
+    --community-primary: #E8636A;
+    --community-primary-dark: #C1454C;
+    --community-primary-light: rgba(232, 99, 106, 0.16);
+    --community-white: #1E1E24;
+    --community-light-gray: #17171C;
+    --community-mid-gray: #34343D;
+    --community-dark-gray: #F1F1F4;
+    --community-text-muted: #A3A3AD;
+    --community-success: #4ADE80;
+    --community-success-bg: rgba(74, 222, 128, 0.14);
+    --community-success-border: rgba(74, 222, 128, 0.35);
+    --community-error: #FF8A80;
+    --community-error-bg: rgba(255, 138, 128, 0.12);
+    --community-error-border: rgba(255, 138, 128, 0.35);
+    --community-error-solid: #C94A45;
+    --community-warning: #FBBF24;
+    --community-warning-bg: rgba(251, 191, 36, 0.14);
+    --community-warning-2: #FF8A80;
+    --community-warning-2-bg: rgba(255, 138, 128, 0.12);
+    --community-star: #FBBF24;
+    --community-seat-available: #3A3A44;
+    --community-seat-booked: #6B6B76;
+    --community-seat-selected: #34D399;
+    --community-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    --community-shadow-hover: 0 16px 32px rgba(0, 0, 0, 0.5);
+
+    --brand-shadow-lift: 0 20px 40px rgba(0, 0, 0, 0.55);
+    --brand-glass-bg: rgba(30, 30, 36, 0.72);
+    --brand-glass-border: rgba(255, 255, 255, 0.08);
+    --navbar-bg: rgba(30, 30, 36, 0.82);
+}
+
+/* Angular Material overlay content (menus, datepickers, dialogs) renders
+   inside the CDK overlay container, which is still a descendant of <html>,
+   so these selectors correctly reach it even though it's outside any single
+   component's template. */
+html[data-theme="dark"] .mat-mdc-menu-panel,
+html[data-theme="dark"] .mat-datepicker-content,
+html[data-theme="dark"] .mat-mdc-select-panel,
+html[data-theme="dark"] .mat-mdc-dialog-container .mdc-dialog__surface {
+    background: var(--community-white) !important;
+    color: var(--community-dark-gray) !important;
+}
+
+html[data-theme="dark"] .mat-mdc-menu-item,
+html[data-theme="dark"] .mat-calendar-body-cell-content,
+html[data-theme="dark"] .mat-calendar-table-header {
+    color: var(--community-dark-gray) !important;
+}
+
+html[data-theme="dark"] .mat-mdc-menu-item:hover:not([disabled]) {
+    background: var(--community-light-gray) !important;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+    color-scheme: dark;
+}
+
+/* ===== Classic landing page (Tailwind utilities) dark mode =====
+   The /classic-home page is styled entirely with Tailwind utility classes
+   whose palette colors are hardcoded by Tailwind's generated CSS. These
+   scoped overrides re-map those classes to the theme tokens when dark mode
+   is active. They are scoped to app-landing-page so no other component is
+   affected (no other active component uses Tailwind color utilities). */
+html[data-theme="dark"] app-landing-page .bg-white {
+    background-color: var(--community-white) !important;
+}
+html[data-theme="dark"] app-landing-page .text-gray-700 { color: #F1F1F4; }
+html[data-theme="dark"] app-landing-page .text-gray-600 { color: #D6D6DC; }
+html[data-theme="dark"] app-landing-page .text-gray-500 { color: var(--community-text-muted); }
+html[data-theme="dark"] app-landing-page .text-gray-400 { color: #8A8A92; }
+html[data-theme="dark"] app-landing-page .text-blue-600,
+html[data-theme="dark"] app-landing-page .text-blue-500 { color: #6CA6FF; }
+html[data-theme="dark"] app-landing-page .border-gray-300,
+html[data-theme="dark"] app-landing-page .border-gray-100 { border-color: var(--community-mid-gray) !important; }
+html[data-theme="dark"] app-landing-page .border-gray-500 { border-color: #55555F !important; }
+html[data-theme="dark"] app-landing-page .hover\:bg-slate-100:hover { background-color: var(--community-mid-gray) !important; }
+.btn-premium {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--brand-font);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #fff;
+    background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark));
+    border: none;
+    padding: 12px 26px;
+    border-radius: var(--brand-radius-lg);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(216, 78, 85, 0.32);
+    transition: transform var(--brand-transition), box-shadow var(--brand-transition), opacity var(--brand-transition);
+}
+.btn-premium:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(216, 78, 85, 0.4); }
+.btn-premium:active { transform: translateY(0) scale(0.98); }
+.btn-premium:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-premium-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: var(--brand-font);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--brand-dark-gray);
+    background: var(--brand-white);
+    border: 1.5px solid var(--brand-mid-gray);
+    padding: 12px 26px;
+    border-radius: var(--brand-radius-lg);
+    cursor: pointer;
+    transition: border-color var(--brand-transition), color var(--brand-transition), background var(--brand-transition);
+}
+.btn-premium-outline:hover { border-color: var(--brand-primary); color: var(--brand-primary); background: var(--brand-primary-light); }
+
+/* Ripple effect helper: add class "ripple-surface" to any clickable element and it will
+   automatically show a ripple centred on the click point (requires no JS wiring beyond
+   what individual premium components already include inline). */
+.ripple-surface { position: relative; overflow: hidden; }
+.ripple-surface .ripple-dot {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.55);
+    transform: scale(0);
+    animation: brandRipple 0.6s ease-out;
+    pointer-events: none;
+}
+@keyframes brandRipple {
+    to { transform: scale(2.6); opacity: 0; }
+}
+
+/* Reusable premium input field. */
+.input-premium {
+    width: 100%;
+    font-family: var(--brand-font);
+    font-size: 0.9rem;
+    color: var(--brand-dark-gray);
+    background: var(--brand-white);
+    border: 1.5px solid var(--brand-mid-gray);
+    border-radius: var(--brand-radius-sm);
+    padding: 12px 14px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color var(--brand-transition), box-shadow var(--brand-transition);
+}
+.input-premium:focus { border-color: var(--brand-primary); box-shadow: 0 0 0 3px var(--brand-primary-light); }
+
+/* Reusable premium card. */
+.card-premium {
+    background: var(--brand-white);
+    border-radius: var(--brand-radius);
+    box-shadow: var(--brand-shadow);
+    border: 1px solid var(--brand-mid-gray);
+    transition: transform var(--brand-transition), box-shadow var(--brand-transition);
+}
+.card-premium:hover { transform: translateY(-4px); box-shadow: var(--brand-shadow-hover); }
+
+/* Glassmorphism surface, e.g. floating panels over hero imagery. */
+.glass-panel {
+    background: var(--brand-glass-bg);
+    border: 1px solid var(--brand-glass-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: var(--brand-radius-lg);
+    box-shadow: var(--brand-shadow-lift);
+}
+
+/* Shared page-level fade-in, used by premium pages/sections on load. */
+@keyframes brandFadeIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.brand-fade-in { animation: brandFadeIn 0.5s ease both; }
+
+/* Simple skeleton loader block for premium loading states. */
+.skeleton-premium {
+    background: linear-gradient(90deg, var(--brand-light-gray) 25%, var(--brand-mid-gray) 37%, var(--brand-light-gray) 63%);
+    background-size: 400% 100%;
+    animation: brandSkeleton 1.4s ease infinite;
+    border-radius: var(--brand-radius-sm);
+}
+@keyframes brandSkeleton {
+    0% { background-position: 100% 50%; }
+    100% { background-position: 0 50%; }
+}
+
+/* ===== Share menu (Community) — global because mat-menu renders in the CDK overlay ===== */
+.share-menu-panel .mat-mdc-menu-content {
+    padding: 8px !important;
+}
+.share-menu-panel .share-item {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px !important;
+    border-radius: 10px !important;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--community-dark-gray, #2E2E33);
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+.share-menu-panel .share-item:hover {
+    transform: translateX(2px);
+    background: var(--community-light-gray, #F5F6F8) !important;
+}
+.share-menu-panel .share-item.native-item {
+    background: var(--community-primary-light, #FBE9EA);
+    color: var(--community-primary-dark, #B93940);
+    margin-bottom: 4px;
+}
+.share-menu-panel .share-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+.share-menu-panel .share-icon mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.share-menu-panel .share-icon.native { background: var(--community-primary, #D84E55); }
+.share-menu-panel .share-icon.whatsapp { background: #25D366; }
+.share-menu-panel .share-icon.facebook { background: #1877F2; }
+.share-menu-panel .share-icon.instagram { background: linear-gradient(135deg, #f58529, #dd2a7b, #8134af); }
+.share-menu-panel .share-icon.telegram { background: #229ED9; }
+.share-menu-panel .share-icon.x { background: #000; }
+.share-menu-panel .share-icon.copy { background: var(--community-text-muted, #767680); }
+
+/* ===== Premium retrofit for original booking/payment/profile forms =====
+   Additive-only, global CSS. None of the original component .html/.ts files
+   are touched — these rules simply target the existing class names those
+   components already render, so every original page keeps working exactly
+   as before while picking up the same premium look as the rest of the site. */
+
+/* Payment page */
+.payment__fullContainer input[type="text"],
+.payment__fullContainer_rightContainer_inputOfferCOde {
+  border: 1.5px solid var(--brand-mid-gray) !important;
+  border-radius: var(--brand-radius-sm) !important;
+  padding: 12px 16px !important;
+  font-family: var(--brand-font);
+  outline: none;
+  transition: border-color var(--brand-transition), box-shadow var(--brand-transition);
+}
+.payment__fullContainer input[type="text"]:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px var(--brand-primary-light);
+}
+.payment__fullContainer input[type="radio"] {
+  accent-color: var(--brand-primary);
+}
+.payment__fullContainer button.Payment__stripe__button {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark)) !important;
+  border: none !important;
+  border-radius: var(--brand-radius-lg) !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  padding: 14px 28px !important;
+  cursor: pointer;
+  transition: transform var(--brand-transition), box-shadow var(--brand-transition);
+  box-shadow: 0 10px 24px rgba(216, 78, 85, 0.32);
+}
+.payment__fullContainer button.Payment__stripe__button:hover {
+  transform: translateY(-2px);
+}
+
+/* Profile page — new premium design */
+.pp-shell input[type="text"],
+.pp-shell input[type="email"],
+.pp-shell input[type="number"] {
+  border: 1.5px solid var(--brand-mid-gray);
+  border-radius: var(--brand-radius-sm);
+  padding: 10px 14px;
+  font-family: var(--brand-font);
+  outline: none;
+  transition: border-color var(--brand-transition), box-shadow var(--brand-transition);
+}
+.pp-shell input[type="text"]:focus,
+.pp-shell input[type="email"]:focus,
+.pp-shell input[type="number"]:focus {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px var(--brand-primary-light);
+}
+.pp-shell button {
+  font-family: var(--brand-font);
+}
+
+/* ===== Premium global polish (additive) ===== */
+
+/* Premium scrollable snackbar/dialog surfaces */
+.mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-color: var(--brand-dark-gray) !important;
+  --mdc-snackbar-supporting-text-color: var(--brand-white) !important;
+  border-radius: var(--brand-radius) !important;
+  box-shadow: var(--brand-shadow-lift) !important;
+}
+
+html[data-theme="dark"] .mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-color: var(--brand-mid-gray) !important;
+  --mdc-snackbar-supporting-text-color: var(--brand-dark-gray) !important;
+}
+
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  border-radius: var(--brand-radius-lg) !important;
+  box-shadow: var(--brand-shadow-lift) !important;
+}
+
+/* Material menu panels: smoother animation + premium look */
+.mat-mdc-menu-panel {
+  border-radius: var(--brand-radius) !important;
+  box-shadow: var(--brand-shadow-lift) !important;
+  border: 1px solid var(--brand-mid-gray);
+  animation: menuIn 0.18s ease;
+}
+@keyframes menuIn {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Focus ring for accessibility that matches the premium palette */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* Buttons share a consistent micro-interaction baseline */
+button {
+  font-family: var(--brand-font);
+}
+
+/* Consistent icon sizing baseline */
+mat-icon {
+  line-height: 1;
+}
+
+/* ===== Radial theme reveal (View Transition API + fallback) ===== */
+
+/* When View Transition API is active, the old snapshot stays fully visible
+   while the new snapshot animates in via a circular clip-path reveal that
+   expands from the toggle button position. */
+::view-transition-old(root) {
+  z-index: 99998;
+  animation: none;
+  /* Prevent the old snapshot from inheriting any clip-path from a
+     prior transition — without this the browser can leave a small
+     circular remnant (the "leftover dot") after the reveal completes. */
+  clip-path: inset(0) !important;
+}
+
+::view-transition-new(root) {
+  z-index: 99999;
+  animation: theme-radial-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes theme-radial-reveal {
+  from {
+    clip-path: circle(0% at var(--reveal-x, 50%) var(--reveal-y, 50%));
+  }
+  to {
+    clip-path: circle(150vmax at var(--reveal-x, 50%) var(--reveal-y, 50%));
+  }
+}
+
+/* Fallback overlay used when View Transition API is unavailable.
+   Created by theme-toggle.component.ts — a temporary fixed div with the
+   new theme background that grows from 0 to full viewport via clip-path. */
+.ted-theme-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  pointer-events: none;
+  will-change: clip-path;
+  clip-path: circle(0% at var(--reveal-x, 50%) var(--reveal-y, 50%));
+  transition: clip-path 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ted-theme-reveal.expand {
+  clip-path: circle(150vmax at var(--reveal-x, 50%) var(--reveal-y, 50%));
+}
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root) { animation: none; }
+  ::view-transition-new(root) { animation: none; }
+  .ted-theme-reveal { transition-duration: 0.1s; }
+}
+
+/* ===== Language text transition directive styles ===== */
+.ted-text-transition {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+.ted-text-exit {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.97);
+  filter: blur(2px);
+  transition: opacity 0.12s ease-in, transform 0.12s ease-in, filter 0.12s ease-in;
+}
+
+.ted-text-enter {
+  opacity: 0;
+  transform: translateY(10px) scale(0.97);
+  filter: blur(2px);
+}
+
+.ted-text-settle {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  filter: blur(0);
+  transition: opacity 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              filter 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ted-text-exit {
+    transition: opacity 0.08s ease;
+    transform: none;
+    filter: none;
+  }
+  .ted-text-enter {
+    transform: none;
+    filter: none;
+  }
+  .ted-text-settle {
+    transition: opacity 0.08s ease;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* Skeleton shimmer component style for reuse */
+.skeleton-line { border-radius: 8px; }
+
+/* Drawer side panel used by the booking flow */
+.mat-drawer-backdrop {
+  background-color: rgba(10, 10, 14, 0.55) !important;
+}
+
+.mat-drawer {
+  animation: drawerIn 0.28s ease;
+}
+@keyframes drawerIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+/* ==========================================================================
+   Route Planner map (Leaflet) - GLOBAL overrides
+   Leaflet injects panes, controls, markers, tooltips and SVG paths into the
+   DOM at runtime; those nodes carry NO Angular _ngcontent attributes, so this
+   styling must live in the global stylesheet (view-encapsulated component
+   styles would silently never match them).
+   ========================================================================== */
+
+app-route-planner .leaflet-container {
+  width: 100% !important;
+  border-radius: var(--brand-radius);
+  font-family: var(--brand-font);
+  outline: none;
+}
+
+/* Zoom controls */
+app-route-planner .leaflet-control-zoom a {
+  background: var(--brand-white) !important;
+  color: var(--brand-dark-gray) !important;
+  border-color: var(--brand-mid-gray) !important;
+  border-radius: 0 !important;
+  box-shadow: var(--brand-shadow);
+}
+app-route-planner .leaflet-control-zoom a:hover {
+  background: var(--brand-primary-light) !important;
+  color: var(--brand-primary) !important;
+}
+
+/* Attribution (light) */
+app-route-planner .leaflet-control-attribution {
+  background: var(--brand-glass-bg) !important;
+  color: var(--brand-text-muted) !important;
+  font-size: 10px !important;
+  border-radius: 8px 0 0 0 !important;
+}
+app-route-planner .leaflet-control-attribution a { color: #2f6fbf !important; }
+
+/* Tooltips */
+app-route-planner .leaflet-tooltip {
+  background: var(--brand-dark-gray);
+  color: var(--brand-white);
+  border: none;
+  border-radius: 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  box-shadow: var(--brand-shadow-lift);
+}
+app-route-planner .leaflet-tooltip-top::before { border-top-color: var(--brand-dark-gray); }
+
+/* Waypoint badges */
+app-route-planner .planner-marker { background: transparent; border: none; }
+
+app-route-planner .planner-badge {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.8rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+}
+app-route-planner .planner-badge span { transform: rotate(45deg); }
+
+/* Animated route polylines */
+app-route-planner .planner-route-line {
+  stroke-dasharray: 10 14;
+  animation: plannerDashMove 1.1s linear infinite;
+}
+app-route-planner .planner-alt-line { animation: plannerDashMove 2.2s linear infinite; }
+
+@keyframes plannerDashMove { to { stroke-dashoffset: -24; } }
+
+/* Dark mode map overrides */
+html[data-theme="dark"] app-route-planner .leaflet-control-attribution {
+  background: rgba(30, 30, 36, 0.88) !important;
+  color: #9a9aa4 !important;
+}
+html[data-theme="dark"] app-route-planner .leaflet-control-attribution a { color: #7aa7e6 !important; }
+html[data-theme="dark"] app-route-planner .leaflet-control-zoom a {
+  background: #2a2a31 !important;
+  color: #d6d6dc !important;
+  border-color: #3c3c44 !important;
+}
+html[data-theme="dark"] app-route-planner .leaflet-container {
+  background: #17171c;
+}
+
+/* ==========================================================================
+   TedBus Admin Panel — Global Shared Styles
+   
+   All admin pages inherit these utility classes.
+   Colors use --adm-* CSS custom properties defined by the shell component.
+   Dark mode works via html[data-theme="dark"] inheriting shell's .dark vars.
+   ========================================================================== */
+
+/* ── Kill the vertical notch divider lines on ALL outlined Material fields ── */
+.mdc-notched-outline__notch {
+  border-left-color: transparent !important;
+  border-right-color: transparent !important;
+}
+
+.admin-page { padding: 0; }
+
+/* ── Page Header ── */
+.page-head {
+  margin-bottom: 24px;
+}
+.page-head h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--adm-text, #1a1a2e);
+}
+.page-head .muted,
+.muted {
+  color: var(--adm-text-secondary, #6b7280);
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+.small { font-size: 12.5px; }
+
+/* ── Panel / Card ── */
+.panel {
+  background: var(--adm-card, #fff);
+  border: 1px solid var(--adm-border, #e5e7eb);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.panel + .panel { margin-top: 20px; }
+
+/* ── Toolbar ── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.search-box {
+  flex: 1;
+  min-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  border-radius: 10px;
+  padding: 0 14px;
+  background: var(--adm-card, #fff);
+  border: 1px solid var(--adm-border, #e5e7eb);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.search-box:focus-within {
+  border-color: var(--adm-primary, #d84e55);
+  box-shadow: 0 0 0 3px rgba(216, 78, 85, 0.1);
+}
+.search-box mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: var(--adm-text-secondary, #6b7280);
+}
+.search-box input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--adm-text, #1a1a2e);
+  font-size: 14px;
+  line-height: 24px;
+  padding: 11px 0;
+}
+.search-box input::placeholder {
+  color: var(--adm-text-secondary, #9ca3af);
+}
+
+.toolbar .filter {
+  width: 160px;
+  padding: 10px 12px;
+  border: 1px solid var(--adm-border, #e5e7eb);
+  border-radius: 10px;
+  background: var(--adm-card, #fff);
+  color: var(--adm-text, #1a1a2e);
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.toolbar .filter:focus {
+  border-color: var(--adm-primary, #d84e55);
+}
+.toolbar .filter option {
+  background: var(--adm-card, #fff);
+  color: var(--adm-text, #1a1a2e);
+}
+
+/* ── Loading / Empty ── */
+.loading-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 0;
+}
+.empty {
+  text-align: center;
+  color: var(--adm-text-secondary, #6b7280);
+  padding: 48px 24px;
+  font-size: 14px;
+}
+.empty mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  opacity: 0.3;
+  margin-bottom: 12px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ── Table Card ── */
+.table-scroll {
+  overflow-x: auto;
+  background: var(--adm-card, #fff);
+  border: 1px solid var(--adm-border, #e5e7eb);
+  border-radius: 14px;
+}
+.table-scroll .data-table { margin: 0; }
+.table-scroll .data-table th {
+  background: var(--adm-hover, #f9fafb);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* ── Data Table ── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  min-width: 600px;
+}
+.data-table th {
+  text-align: left;
+  padding: 12px 16px;
+  color: var(--adm-text-secondary, #6b7280);
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--adm-border, #e5e7eb);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--adm-border, #f3f4f6);
+  vertical-align: middle;
+  color: var(--adm-text, #1a1a2e);
+}
+.data-table tbody tr:last-child td { border-bottom: none; }
+.data-table tbody tr { transition: background 0.15s; }
+.data-table tbody tr:hover td { background: var(--adm-hover, #f9fafb); }
+
+.actions-col { white-space: nowrap; text-align: right; }
+
+/* ── Icon Button ── */
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--adm-text-secondary, #6b7280);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.icon-btn:hover { background: var(--adm-hover, #f3f4f6); color: var(--adm-text, #1a1a2e); }
+.icon-btn.danger:hover { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+.icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.icon-btn mat-icon { font-size: 19px; width: 19px; height: 19px; }
+
+/* ── Badge ── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge.st-ok, .badge.ok {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+.badge.st-err, .badge.danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+.badge.st-warn, .badge.warn {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+.badge.st-info, .badge.info {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+}
+.badge.muted-badge {
+  background: var(--adm-hover, #f3f4f6);
+  color: var(--adm-text-secondary, #6b7280);
+}
+.badge.primary {
+  background: rgba(216, 78, 85, 0.1);
+  color: #d84e55;
+}
+
+/* ── Avatar ── */
+.avatar {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--adm-primary, #d84e55), #b83a42);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.user-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.user-meta strong {
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--adm-text, #1a1a2e);
+}
+.user-meta span {
+  font-size: 12px;
+  color: var(--adm-text-secondary, #6b7280);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Pagination ── */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 12px 0;
+}
+.pager-info {
+  font-size: 13px;
+  color: var(--adm-text-secondary, #6b7280);
+}
+
+/* ── Form Grid ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.form-grid .full-row { grid-column: 1 / -1; }
+.full-width { width: 100%; }
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.form-row label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--adm-text-secondary, #6b7280);
+}
+.form-row input,
+.form-row select,
+.form-row textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--adm-border, #e5e7eb);
+  border-radius: 8px;
+  background: var(--adm-card, #fff);
+  color: var(--adm-text, #1a1a2e);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.form-row input:focus,
+.form-row select:focus,
+.form-row textarea:focus {
+  border-color: var(--adm-primary, #d84e55);
+}
+
+/* ── Utility ── */
+.text-right { text-align: right; }
+.mono { font-family: 'SF Mono', 'Fira Code', Consolas, monospace; font-size: 12.5px; }
+.mt-12 { margin-top: 12px; }
+.mb-12 { margin-bottom: 12px; }
+
+/* ── Page Error Bar ── */
+.page-error-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 560px) {
+  .toolbar { flex-direction: column; align-items: stretch; }
+  .toolbar .filter { width: 100%; }
+  .search-box { min-width: 0; }
+  .form-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Admin Dark Theme ── */
+html[data-theme="dark"] .page-error-bar {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #f87171;
+}
+
+html[data-theme="dark"] .panel {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme="dark"] .badge.st-ok {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+html[data-theme="dark"] .badge.st-err {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+html[data-theme="dark"] .badge.st-warn {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+html[data-theme="dark"] .badge.st-info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+html[data-theme="dark"] .badge.primary {
+  background: rgba(239, 91, 98, 0.15);
+  color: #ef5b62;
+}
+
+html[data-theme="dark"] .search-box {
+  background: var(--adm-card, #1a1d27);
+  border-color: var(--adm-border, #2a2d38);
+  box-shadow: none;
+}
+html[data-theme="dark"] .search-box:focus-within {
+  border-color: var(--adm-primary, #ef5b62);
+  box-shadow: 0 0 0 3px rgba(239, 91, 98, 0.15);
+}
+
+html[data-theme="dark"] .toolbar .filter {
+  background: var(--adm-card, #1a1d27);
+  border-color: var(--adm-border, #2a2d38);
+  color: var(--adm-text, #e4e6eb);
+}
+
+html[data-theme="dark"] .form-row input,
+html[data-theme="dark"] .form-row select,
+html[data-theme="dark"] .form-row textarea {
+  background: var(--adm-card, #1a1d27);
+  border-color: var(--adm-border, #2a2d38);
+  color: var(--adm-text, #e4e6eb);
+}
+
+html[data-theme="dark"] .icon-btn.danger:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
+html[data-theme="dark"] .avatar {
+  box-shadow: 0 0 0 2px rgba(239, 91, 98, 0.3);
+}
+
