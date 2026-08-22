@@ -590,3 +590,68 @@ body {
     width:auto;
     height:auto
   }
+/* Razorpay single-method note */
+.razorpay-note {
+    margin: 10px 4px 0;
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+/* Seat-hold countdown chip */
+.hold-timer-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0 0 10px 4px;
+    padding: 6px 14px;
+    border-radius: 18px;
+    background: #fff7ed;
+    color: #c2410c;
+    font-size: 13px;
+    font-weight: 600;
+}
+.hold-timer-chip strong {
+    font-size: 14px;
+    min-width: 38px;
+    text-align: center;
+    color: #ea580c;
+}
+.hold-timer-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Hold expired banner */
+.hold-expired-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 4px 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    font-size: 13px;
+}
+.hold-expired-banner .payment-success-btn {
+    margin-left: auto;
+}
+
+/* Back to seats link */
+.back-to-seats-link {
+    margin-top: 12px;
+    background: none;
+    border: none;
+    color: #2563eb;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: underline;
+}
+.back-to-seats-link:disabled {
+    color: #94a3b8;
+    cursor: not-allowed;
+}

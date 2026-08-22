@@ -25,7 +25,6 @@ export interface BoardingPoint {
   name: string;
   time: string;
   address: string;
-  contact: string;
   landmark: string;
 }
 
@@ -75,14 +74,20 @@ private loadReviews(): void {
           percent: Math.round(((res.stats.ratingBreakdown[stars] || 0) / total) * 100)
         }));
       }
-      this.reviews = (res.reviews || []).map((r: any) => ({
-        name: r.customerName || 'Anonymous',
-        initials: (r.customerName || 'A').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2),
+      const list = res.reviews || [];
+      // Real derived stats — no fabricated values.
+      this.verifiedReviews = list.filter((r: any) => r.author?.isVerified).length;
+      this.recommendPercent = list.length
+        ? Math.round((list.filter((r: any) => r.rating >= 4).length / list.length) * 100)
+        : 0;
+      this.reviews = list.map((r: any) => ({
+        name: r.author?.name || r.customerName || 'Anonymous',
+        initials: (r.author?.name || r.customerName || 'A').split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2),
         rating: r.rating,
-        date: r.createdAt || '',
+        date: r.createdAt ? new Date(r.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '',
         title: r.title || '',
         comment: r.comment || '',
-        verified: !!r.bookingId,
+        verified: !!r.author?.isVerified,
         travellerType: ''
       }));
     },
@@ -122,12 +127,9 @@ totalReviews = 0;
 verifiedReviews = 0;
 recommendPercent = 0;
 
-aspectRatings: { label: string; value: number; icon: string }[] = [
-  { label: 'classic.aspect.cleanliness', value: 4.4, icon: 'spa' },
-  { label: 'classic.aspect.punctuality', value: 4.1, icon: 'schedule' },
-  { label: 'classic.aspect.staff', value: 4.3, icon: 'support_agent' },
-  { label: 'classic.aspect.comfort', value: 4.2, icon: 'airline_seat_recline_normal' }
-];
+get roundedRating(): number {
+  return Math.round(this.overallRating);
+}
 
 reviews: Review[] = [];
 
@@ -146,7 +148,6 @@ get boardingPoints(): BoardingPoint[] {
     name: sub,
     time: formatClockTime((baseTime + index * 30) % (24 * 60), labels),
     address: this.translate.instant('classic.seats.busTerminal', { name: sub }),
-    contact: '1800-458-7890',
     landmark: this.translate.instant('classic.oppSubMall', { name: sub })
   }));
   if (!points.length) {
@@ -154,7 +155,6 @@ get boardingPoints(): BoardingPoint[] {
       name: this.routedetials?.departureLocation?.name || this.translate.instant('booking.mainTerminal'),
       time: formatClockTime(baseTime, labels),
       address: this.translate.instant('classic.seats.busTerminal', { name: this.translate.instant('booking.mainTerminal') }),
-      contact: '1800-458-7890',
       landmark: this.translate.instant('classic.oppCityMall')
     });
   }
@@ -169,7 +169,6 @@ get droppingPoints(): BoardingPoint[] {
     name: sub,
     time: formatClockTime((baseTime + index * 30) % (24 * 60), labels),
     address: this.translate.instant('classic.seats.centralBusStand', { name: sub }),
-    contact: '1800-458-7890',
     landmark: this.translate.instant('classic.nearSubMetro', { name: sub })
   }));
   if (!points.length) {
@@ -177,7 +176,6 @@ get droppingPoints(): BoardingPoint[] {
       name: this.routedetials?.arrivalLocation?.name || this.translate.instant('booking.centralTerminal'),
       time: formatClockTime(baseTime, labels),
       address: this.translate.instant('classic.seats.centralBusStand', { name: this.translate.instant('booking.centralTerminal') }),
-      contact: '1800-458-7890',
       landmark: this.translate.instant('classic.nearMetro')
     });
   }

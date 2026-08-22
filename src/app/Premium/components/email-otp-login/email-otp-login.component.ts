@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
+﻿import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../services/auth.service';
@@ -85,14 +85,14 @@ export class EmailOtpLoginComponent implements OnInit, AfterViewInit, OnDestroy 
     }
   }
 
-  // ── Email Validation ──
+  // â”€â”€ Email Validation â”€â”€
 
   isValidEmail(): boolean {
     const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return pattern.test(this.email.trim());
   }
 
-  // ── Send Email OTP ──
+  // â”€â”€ Send Email OTP â”€â”€
 
   sendEmailOtp(): void {
     this.errorMessage = '';
@@ -126,7 +126,7 @@ export class EmailOtpLoginComponent implements OnInit, AfterViewInit, OnDestroy 
     return index;
   }
 
-  // ── OTP Input Handling ──
+  // â”€â”€ OTP Input Handling â”€â”€
 
   onOtpInput(event: any, index: number): void {
     const input = event.target as HTMLInputElement;
@@ -190,7 +190,7 @@ export class EmailOtpLoginComponent implements OnInit, AfterViewInit, OnDestroy 
     }
   }
 
-  // ── Verify OTP ──
+  // â”€â”€ Verify OTP â”€â”€
 
   verifyOtp(): void {
     this.errorMessage = '';
@@ -203,21 +203,17 @@ export class EmailOtpLoginComponent implements OnInit, AfterViewInit, OnDestroy 
 
     this.isVerifying = true;
     this.authService.verifyEmailOtp(this.email.trim(), this.otp).subscribe({
-      next: (result) => {
+      next: () => {
         this.isVerifying = false;
-        this.authService.persistGoogleUser(result.customer, false);
-        if (result.token) {
-          this.authService.updateUser({ ...result.customer, token: result.token });
-        }
         this.navigateToDestination();
       },
       error: (error) => {
         this.isVerifying = false;
         const errKey = error?.error?.errorKey;
         if (errKey === 'otp_expired') {
-          this.errorMessage = this.translate.instant('auth.errOtpExpired');
+          this.errorMessage = this.translate.instant('auth.otpExpired');
         } else if (errKey === 'too_many_attempts') {
-          this.errorMessage = this.translate.instant('auth.errTooManyAttempts');
+          this.errorMessage = this.translate.instant('auth.otpTooMany');
         } else if (errKey === 'otp_invalid') {
           this.errorMessage = this.translate.instant('auth.errOtpInvalid');
         } else {
@@ -227,7 +223,7 @@ export class EmailOtpLoginComponent implements OnInit, AfterViewInit, OnDestroy 
     });
   }
 
-  // ── Google Sign-In ──
+  // â”€â”€ Google Sign-In â”€â”€
 
   private handleGoogleCallback(response: any): void {
     if (!response?.credential) return;
@@ -236,12 +232,8 @@ export class EmailOtpLoginComponent implements OnInit, AfterViewInit, OnDestroy 
     this.errorMessage = '';
 
     this.authService.googleLogin(response.credential).subscribe({
-      next: (result) => {
+      next: () => {
         this.isGoogleLoading = false;
-        this.authService.persistGoogleUser(result.customer, true);
-        if (result.token) {
-          this.authService.updateUser({ ...result.customer, token: result.token });
-        }
         this.navigateToDestination();
       },
       error: (error) => {
@@ -251,7 +243,7 @@ export class EmailOtpLoginComponent implements OnInit, AfterViewInit, OnDestroy 
     });
   }
 
-  // ── Countdown Timer ──
+  // â”€â”€ Countdown Timer â”€â”€
 
   private startCountdown(): void {
     this.countdown = 300;
@@ -279,7 +271,7 @@ export class EmailOtpLoginComponent implements OnInit, AfterViewInit, OnDestroy 
     return this.countdown <= 0;
   }
 
-  // ── Resend Cooldown ──
+  // â”€â”€ Resend Cooldown â”€â”€
 
   private startResendCooldown(): void {
     this.resendCooldown = 60;
@@ -304,7 +296,7 @@ export class EmailOtpLoginComponent implements OnInit, AfterViewInit, OnDestroy 
     this.sendEmailOtp();
   }
 
-  // ── Navigation Helpers ──
+  // â”€â”€ Navigation Helpers â”€â”€
 
   changeEmail(): void {
     this.mode = 'email';

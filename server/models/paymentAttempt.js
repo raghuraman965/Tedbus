@@ -42,6 +42,31 @@ const paymentAttemptSchema = new Schema({
     type: String,
     default: "",
   },
+  // Seat-hold this payment belongs to. The booking can only consume a
+  // payment whose hold is still active — abandoned checkouts simply expire.
+  holdId: {
+    type: String,
+    default: "",
+  },
+  // Booking context snapshot (route/bus/date/seats/segment) captured at
+  // order time so verification never depends on client-supplied context.
+  context: {
+    routeId: { type: String, default: "" },
+    busId: { type: String, default: "" },
+    date: { type: String, default: "" },
+    seats: { type: [Number], default: [] },
+    boardingStopSequence: { type: Number, default: null },
+    droppingStopSequence: { type: Number, default: null },
+  },
+  // Razorpay identifiers (present for gateway payments)
+  razorpayOrderId: {
+    type: String,
+    default: "",
+  },
+  razorpayPaymentId: {
+    type: String,
+    default: "",
+  },
   expiresAt: {
     type: Date,
     required: true,

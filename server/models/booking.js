@@ -143,6 +143,8 @@ const bookingSchema = new Schema({
   segmentDistanceKm: { type: Number, default: 0 },
   journeyDate: { type: String, default: "" },
   journeyId: { type: String, default: "" },
+  // Seat-hold that was converted into this booking (payment-flow linkage).
+  holdId: { type: String, default: "" },
   fareSnapshot: {
     baseFare: { type: Number, default: 0 },
     seatFare: { type: Number, default: 0 },
@@ -153,6 +155,18 @@ const bookingSchema = new Schema({
     pricePerKm: { type: Number, default: 0 },
     distance: { type: Number, default: 0 },
   },
+  // --- Cancellation / refund (all amounts computed server-side against the
+  // admin-configured cancellation policy — never trusted from the client).
+  cancelledAt: { type: Date, default: null },
+  cancelledBy: { type: String, default: "" },
+  refundAmount: { type: Number, default: 0 },
+  refundPercent: { type: Number, default: null },
+  refundStatus: {
+    type: String,
+    enum: ["none", "initiated", "processed", "failed", "not_applicable"],
+    default: "none",
+  },
+  cancellationReason: { type: String, default: "" },
 });
 
 module.exports = mongoose.model("Bookings", bookingSchema);

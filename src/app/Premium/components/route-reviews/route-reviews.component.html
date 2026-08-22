@@ -1,0 +1,144 @@
+<div class="rr-section">
+  <!-- ===== Header: stats summary ===== -->
+  <div class="rr-header" (click)="loadReviews()" *ngIf="!loading">
+    <div class="rr-score">
+      <span class="rr-avg">{{ stats.avgRating > 0 ? (stats.avgRating | number:'1.1-1') : '—' }}</span>
+      <span class="rr-stars">
+        <mat-icon *ngFor="let filled of starsArray(stats.avgRating)" [class.filled]="filled">star</mat-icon>
+      </span>
+      <span class="rr-count">{{ stats.totalReviews }} {{ 'reviews.count' | translate }}</span>
+    </div>
+    <button class="rr-write-btn" *ngIf="isLoggedIn && !myReviewId" (click)="toggleWriteForm(); $event.stopPropagation()">
+      <mat-icon>rate_review</mat-icon>{{ 'reviews.write' | translate }}
+    </button>
+  </div>
+
+  <!-- ===== Breakdown bars ===== -->
+  <div class="rr-breakdown" *ngIf="stats.totalReviews > 0 && !loading">
+    <div class="rr-bar-row" *ngFor="let star of [5,4,3,2,1]">
+      <span class="rr-bar-label">{{ star }}★</span>
+      <div class="rr-bar-track">
+        <div class="rr-bar-fill" [style.width.%]="breakdownPercent(star)"></div>
+      </div>
+      <span class="rr-bar-value">{{ stats.ratingBreakdown[star] || 0 }}</span>
+    </div>
+  </div>
+
+  <!-- ===== Write / edit form ===== -->
+  <div class="rr-form" *ngIf="showWriteForm">
+    <h5>
+      {{ editingReview ? ('reviews.editTitle' | translate) : ('reviews.formTitle' | translate) }}
+      <button class="rr-close-form" (click)="cancelEdit()"><mat-icon>close</mat-icon></button>
+    </h5>
+
+    <ng-container *ngIf="!editingReview">
+      <label class="rr-label">{{ 'reviews.selectJourney' | translate }}</label>
+      <select class="rr-select" [(ngModel)]="selectedBookingId" (change)="onBookingSelected()" [disabled]="checkingEligibility">
+        <option *ngFor="let j of myJourneys" [value]="j.bookingId">
+          {{ j.journeyDate }} · PNR {{ j.pnr }}
+        </option>
+      </select>
+      <p class="rr-hint" *ngIf="myJourneys.length === 0">{{ 'reviews.noCompletedJourneys' | translate }}</p>
+      <p class="rr-hint" *ngIf="checkingEligibility">{{ 'reviews.checking' | translate }}</p>
+    </ng-container>
+
+    <ng-container *ngIf="eligibility?.eligible || editingReview">
+      <label class="rr-label">{{ 'reviews.yourRating' | translate }}</label>
+      <div class="rr-input-stars"
+           (mouseleave)="hoverRating = 0">
+        <mat-icon *ngFor="let n of [1,2,3,4,5]"
+                  (click)="setRating(n)"
+                  (mouseenter)="hoverRating = n"
+                  [class.active]="n <= (hoverRating || formRating)">star</mat-icon>
+      </div>
+
+      <input class="rr-input" type="text" maxlength="120"
+             [(ngModel)]="formTitle"
+             [placeholder]="'reviews.titlePlaceholder' | translate">
+
+      <textarea class="rr-textarea" rows="4" maxlength="2000"
+                [(ngModel)]="formComment"
+                [placeholder]="'reviews.commentPlaceholder' | translate"></textarea>
+      <div class="rr-char-count" [class.over]="commentLength > maxChars">
+        {{ commentLength }}/{{ maxChars }} · {{ 'reviews.minChars' | translate:{ min: minChars } }}
+      </div>
+
+      <button class="rr-submit" (click)="submitReview()" [disabled]="!canSubmit()">
+        {{ editingReview ? ('reviews.updateBtn' | translate) : ('reviews.submitBtn' | translate) }}
+      </button>
+    </ng-container>
+
+    <p class="rr-error" *ngIf="formErrorKey">{{ formErrorKey | translate }}</p>
+  </div>
+
+  <!-- ===== Reviews list ===== -->
+  <div class="rr-list" *ngIf="!loading">
+    <div class="rr-item" *ngFor="let review of reviews; trackBy: trackByReviewId">
+      <div class="rr-avatar">{{ authorInitial(review) }}</div>
+      <div class="rr-body">
+        <div class="rr-item-head">
+          <span class="rr-author">{{ authorName(review) }}</span>
+          <span class="rr-badge verified" *ngIf="review.author?.isVerified" [matTooltip]="'reviews.verifiedBadge' | translate">
+            <mat-icon>verified</mat-icon>
+          </span>
+          <span class="rr-badge trusted" *ngIf="review.author?.trustedReviewer" [matTooltip]="'reviews.trustedBadge' | translate">
+            <mat-icon>workspace_premium</mat-icon>
+          </span>
+          <span class="rr-date">{{ reviewDate(review) }}</span>
+          <span class="rr-edited" *ngIf="review.isEdited">{{ 'reviews.edited' | translate }}</span>
+        </div>
+        <div class="rr-item-stars">
+          <mat-icon *ngFor="let filled of starsArray(review.rating)" [class.filled]="filled">star</mat-icon>
+        </div>
+        <div class="rr-title" *ngIf="review.title">{{ review.title }}</div>
+        <p class="rr-comment">{{ review.comment }}</p>
+        <div class="rr-actions">
+          <button class="rr-action" [class.voted]="hasVoted(review)"
+                  (click)="toggleHelpful(review)"
+                  [disabled]="!isLoggedIn"
+                  [matTooltip]="isLoggedIn ? '' : ('reviews.loginToVote' | translate)">
+            <mat-icon>thumb_up</mat-icon> {{ review.helpfulCount || 0 }}
+          </button>
+          <button class="rr-action report" *ngIf="isLoggedIn && review._id !== myReviewId && !reportedIds.has(review._id || '')"
+                  (click)="toggleReportPanel(review)">
+            <mat-icon>flag</mat-icon> {{ 'reviews.report' | translate }}
+          </button>
+          <ng-container *ngIf="review._id === myReviewId">
+            <button class="rr-action" *ngIf="canEditReview(review)" (click)="startEdit(review)">
+              <mat-icon>edit</mat-icon> {{ 'reviews.edit' | translate }}
+            </button>
+            <button class="rr-action report" (click)="deleteMyReview(review)">
+              <mat-icon>delete</mat-icon> {{ 'reviews.delete' | translate }}
+            </button>
+          </ng-container>
+        </div>
+
+        <div class="rr-report-panel" *ngIf="reportingReviewId === review._id">
+          <select class="rr-select" [(ngModel)]="reportReason">
+            <option value="spam">{{ 'reviews.reportReasons.spam' | translate }}</option>
+            <option value="abuse">{{ 'reviews.reportReasons.abuse' | translate }}</option>
+            <option value="fake">{{ 'reviews.reportReasons.fake' | translate }}</option>
+            <option value="harassment">{{ 'reviews.reportReasons.harassment' | translate }}</option>
+            <option value="other">{{ 'reviews.reportReasons.other' | translate }}</option>
+          </select>
+          <button class="rr-submit small" (click)="submitReport(review)">{{ 'reviews.reportSubmit' | translate }}</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="rr-empty" *ngIf="reviews.length === 0">{{ 'reviews.empty' | translate }}</p>
+    <p class="rr-error" *ngIf="loadError">{{ 'reviews.errors.loadFailed' | translate }}</p>
+  </div>
+
+  <div class="rr-pagination" *ngIf="totalPages > 1">
+    <button class="rr-page-btn" [disabled]="page === 1" (click)="goToPage(page - 1)">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <button class="rr-page-btn" *ngFor="let p of pageNumbers" [class.active]="p === page" (click)="goToPage(p)">{{ p }}</button>
+    <button class="rr-page-btn" [disabled]="page === totalPages" (click)="goToPage(page + 1)">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <div class="rr-loading" *ngIf="loading"><mat-icon>hourglass_top</mat-icon></div>
+</div>

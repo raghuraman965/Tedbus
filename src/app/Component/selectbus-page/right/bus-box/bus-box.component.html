@@ -23,7 +23,7 @@
             <div class="time-block">
                 <div class="time-value">{{busdeparturetime}}</div>
                 <div class="time-city">{{routedetails.departureLocation.name | cityName}}</div>
-                <div class="time-day">{{ 'search.today' | translate }}</div>
+                <div class="time-day">{{departureDayLabel}}</div>
             </div>
             <div class="timeline-mid">
                 <div class="duration-label">{{formatDurationFunc(routedetails.duration)}}</div>
@@ -34,12 +34,17 @@
                     <span class="rail-line"></span>
                     <span class="rail-dot end"></span>
                 </div>
-                <div class="via-label">{{ 'search.nonStop' | translate }}</div>
+                <div class="via-label" *ngIf="(routedetails?.stops?.length || 0) > 2; else nonStopLabel">
+                    {{ (routedetails.stops.length - 2) }} {{ 'search.stops' | translate }}
+                </div>
+                <ng-template #nonStopLabel>
+                    <div class="via-label">{{ 'search.nonStop' | translate }}</div>
+                </ng-template>
             </div>
             <div class="time-block right">
                 <div class="time-value">{{busarrivaltime}}</div>
                 <div class="time-city">{{routedetails.arrivalLocation.name | cityName}}</div>
-                <div class="time-day">{{ 'search.today' | translate }}</div>
+                <div class="time-day">{{arrivalDayLabel}}</div>
             </div>
         </div>
 
@@ -115,8 +120,8 @@
                 <div class="stop-info">
                     <span class="stop-name">{{ stop.stopName }}</span>
                     <span class="stop-times" *ngIf="stop.arrivalTime || stop.departureTime">
-                        <span *ngIf="stop.arrivalTime">Arr: {{ stop.arrivalTime }}</span>
-                        <span *ngIf="stop.departureTime">Dep: {{ stop.departureTime }}</span>
+                        <span *ngIf="stop.arrivalTime">Arr: {{ formatStopTime(stop.arrivalTime) }}</span>
+                        <span *ngIf="stop.departureTime">Dep: {{ formatStopTime(stop.departureTime) }}</span>
                     </span>
                     <span class="stop-boarding" *ngIf="stop.boardingPoints?.length">
                         Boarding: {{ stop.boardingPoints.join(', ') }}

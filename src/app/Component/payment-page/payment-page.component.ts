@@ -1,228 +1,174 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
 import { DataserviceService } from '../../service/dataservice.service';
-import { HttpClient } from '@angular/common/http';
 import { BusService } from '../../service/bus.service';
-import { FormControl } from '@angular/forms';
-import { PaymentSettingsService, PaymentSettings } from '../../service/payment-settings.service';
 import { TranslateService } from '@ngx-translate/core';
-import { url } from '../../config';
-import { formatClockTime, getJourneyDateLabel } from '../../utils/time-utils';
-
-interface PaymentMethod {
-  id: string;
-  label: string;
-  badge?: string;
-  icons: string[];
-}
+import { AuthService } from '../../Premium/services/auth.service';
+import { formatClockTime } from '../../utils/time-utils';
+import {
+  BookingDraftService,
+  DraftTrip,
+  DraftPassenger,
+} from '../../Premium/services/booking-draft.service';
 
 type PaymentStage = 'idle' | 'verifying' | 'booking' | 'generating' | 'success' | 'failed';
+
+// Fare breakdown shape returned by the server's fare engine. Every value is
+// per-seat except totalForSeats (all seats combined).
+interface FareBreakdown {
+  baseFare?: number;
+  seatFare?: number;
+  dynamicFare?: number;
+  tax?: number;
+  serviceFee?: number;
+  totalForSeats?: number;
+}
 
 @Component({
   selector: 'app-payment-page',
   templateUrl: './payment-page.component.html',
   styleUrl: './payment-page.component.css'
 })
-export class PaymentPageComponent implements OnInit {
-  passseatarray: any[] = []
-  passfare: number = 0
-  routedetails: any = []
-  busdepauturetime: number = 0
-  busarrivaltime: number = 0
-  customerid: any = {}
-  operatorname: string = ''
-  passengerdetails: any = []
-  email: string = ''
-  fare: number = 0
-  busid: string = ''
-  phonenumber: string = ''
-  departuredetails: any = {}
-  arrivaldetails: any = {}
-  duration: string = ''
-  isbuisnesstravel: boolean = false
-  isinsurance: boolean = false
-  iscoviddonated: Boolean = false
-  bookingdate: string = new Date().toISOString().split('T')[0]
+export class PaymentPageComponent implements OnInit, OnDestroy {
+  // Hydrated from the BookingDraft — never from URL params. URL-carried money
+  // data was the old flow's biggest hole; the server now owns all of it.
+  trip: DraftTrip | null = null;
+  passseatarray: number[] = [];
+  passengerdetails: DraftPassenger[] = [];
+  phonenumber: string = '';
+  bookingdate: string = '';
+  boardingPointName: string = '';
+  droppingPointName: string = '';
 
-  // Segment-based booking fields (set when user booked an intermediate segment)
-  boardingStopSequence: number | null = null
-  droppingStopSequence: number | null = null
-  boardingStopName: string = ''
-  droppingStopName: string = ''
-  segmentDistanceKm: number = 0
-  fareSnapshot: any = null
-  routeId: string = ''
+  customerid: any = {};
+  routedetails: any = {};
 
-  paymentMethods: PaymentMethod[] = [
-    {
-      id: 'credit',
-      label: 'payment.creditCard',
-      icons: [
-        'https://st.redbus.in/paas/images/mobile/v2/visa.png',
-        'https://st.redbus.in/paas/images/mobile/v2/mastercard.png',
-        'https://st.redbus.in/paas/images/web/v2/maestro.png'
-      ]
-    },
-    {
-      id: 'debit',
-      label: 'payment.debitCard',
-      icons: [
-        'https://st.redbus.in/paas/images/mobile/v2/visa.png',
-        'https://st.redbus.in/paas/images/mobile/v2/mastercard.png',
-        'https://st.redbus.in/paas/images/web/v2/maestro.png'
-      ]
-    },
-    {
-      id: 'wallets',
-      label: 'payment.wallets',
-      icons: ['https://st.redbus.in/paas/images/web/v2/amazonpay.png']
-    },
-    {
-      id: 'netbanking',
-      label: 'payment.netBanking',
-      icons: [
-        'https://st.redbus.in/paas/images/web/v2/axis.png',
-        'https://st.redbus.in/paas/images/web/v2/sbi.png',
-        'https://st.redbus.in/paas/images/web/v2/hdfc.png',
-        'https://st.redbus.in/paas/images/web/v2/icici.png',
-        'https://st.redbus.in/paas/images/web/v2/kotak.png'
-      ]
-    },
-    {
-      id: 'upi',
-      label: 'payment.upiId',
-      badge: 'payment.new',
-      icons: [
-        'https://st.redbus.in/paas/images/web/v2/upi/gpay.svg',
-        'https://st.redbus.in/paas/images/web/v2/upi/phonepe.svg',
-        'https://st.redbus.in/paas/images/web/v2/upi/amazonpay.svg'
-      ]
-    },
-    {
-      id: 'qr',
-      label: 'payment.qrCode',
-      badge: 'payment.new',
-      icons: [
-        'https://st.redbus.in/paas/images/web/v2/upi/gpay.svg',
-        'https://st.redbus.in/paas/images/web/v2/upi/phonepe.svg',
-        'https://st.redbus.in/paas/images/web/v2/upi/amazonpay.svg'
-      ]
-    },
-    {
-      id: 'stripe',
-      label: 'payment.stripe',
-      icons: []
-    }
-  ];
-
-  selectedMethod = new FormControl<string>('');
-
-  paymentSettings: PaymentSettings | null = null;
-  qrLoading: boolean = false;
-  qrError: string = '';
   processing: boolean = false;
   paymentSuccess: boolean = false;
   paymentError: string = '';
-  copied: boolean = false;
-  apiBase: string = url;
+
+  // Server-authoritative quote (refreshed from the payment order response so
+  // the displayed total ALWAYS equals the charged amount).
+  serverQuote: FareBreakdown | null = null;
 
   // Payment flow state machine.
   paymentStage: PaymentStage = 'idle';
   paymentFailedMessage: string = '';
   bookingResult: any = null;
 
+  // Seat-hold countdown
+  holdSecondsLeft: number = 0;
+  holdExpired: boolean = false;
+  private countdownTimer: any = null;
+
   private currentPaymentReference: string = '';
+  private currentOrder: any = null;
 
   constructor(
-    private route: ActivatedRoute,
     private router: Router,
     private dataservice: DataserviceService,
-    private http: HttpClient,
     private busservice: BusService,
-    private paymentSettingsService: PaymentSettingsService,
-    private translate: TranslateService
+    private authService: AuthService,
+    private translate: TranslateService,
+    private draft: BookingDraftService
   ) {}
 
   ngOnInit(): void {
-    this.route.params.subscribe(params => {
-      const passSeatsArray = params['selectedseat'];
-      const email = params['passemail'];
-      const phoneNumber = params['passphn'];
-      const isBusinessTravel = params['passisbuisness'];
-      const isInsurance = params['passinsurance'];
-      const passFare = params['passfare'] ?? params['seatprice'];
-      const busId = params['busid'];
-      const busArrivalTime = params['busarrivaltime'];
-      const busDepartureTime = params['busdeparturetime'];
-      const iscoviddonated = params['passiscoviddonate'];
-      const operatorname = params['operatorname']
-      this.operatorname = operatorname
-      const journeyDate = params['date'];
-      const routeId = params['routeId'];
-      if (journeyDate) {
-        this.bookingdate = String(journeyDate);
-      }
-      this.routeId = routeId || '';
-      this.passseatarray = this.parseSeats(passSeatsArray)
-      this.email = email
-      this.phonenumber = phoneNumber
-      this.isbuisnesstravel = isBusinessTravel
-      this.isinsurance = isInsurance
-      this.passfare = Number(passFare) || 0
-      this.busid = busId
-      this.busarrivaltime = busArrivalTime
-      this.busdepauturetime = busDepartureTime
-      this.iscoviddonated = iscoviddonated
+    this.hydrateFromDraft();
 
-      // Segment-based booking params (from premium booking drawer)
-      const boardingSeq = params['boardingStopSequence'];
-      const droppingSeq = params['droppingStopSequence'];
-      if (boardingSeq != null && droppingSeq != null) {
-        this.boardingStopSequence = parseInt(boardingSeq, 10);
-        this.droppingStopSequence = parseInt(droppingSeq, 10);
-        this.boardingStopName = params['boardingStopName'] || '';
-        this.droppingStopName = params['droppingStopName'] || '';
-        this.segmentDistanceKm = parseFloat(params['segmentDistanceKm']) || 0;
-        try {
-          this.fareSnapshot = params['fareSnapshot'] ? JSON.parse(params['fareSnapshot']) : null;
-        } catch { this.fareSnapshot = null; }
-      }
+    if (!this.trip || !this.passseatarray.length) {
+      // Deep-linked directly without a checkout session — nothing to pay for.
+      this.router.navigate(['/']);
+      return;
+    }
 
-      this.getloggedinuser()
-    })
+    const user = this.authService.currentUser;
+    if (!user || !user._id || !this.authService.token) {
+      this.redirectToLogin();
+      return;
+    }
+    this.customerid = user;
 
-    this.dataservice.currentdata.subscribe(data => {
-      this.routedetails = data;
-      console.log(data)
-    })
-    this.dataservice.passdata.subscribe(data => {
-      this.passengerdetails = data;
-      console.log(data)
-    })
+    this.startHoldCountdown();
   }
 
-  getloggedinuser(): any {
-    const loggedinuserjson = sessionStorage.getItem("Loggedinuser");
-    if (loggedinuserjson) {
-      this.customerid = JSON.parse(loggedinuserjson)
-      return this.customerid;
+  ngOnDestroy(): void {
+    if (this.countdownTimer) clearInterval(this.countdownTimer);
+  }
+
+  private hydrateFromDraft(): void {
+    const s = this.draft.snapshot;
+    this.trip = s.trip;
+    this.passseatarray = [...(s.seats || [])];
+    this.passengerdetails = [...(s.passengers || [])];
+    this.phonenumber = s.phone || '';
+    this.boardingPointName = s.boardingPoint || '';
+    this.droppingPointName = s.droppingPoint || '';
+    this.bookingdate = s.searchContext?.date || s.trip?.segment?.fromStop?.date || '';
+
+    // Hold already gone (tab was closed >10min)? Force a fresh selection.
+    if (s.hold && this.draft.holdRemainingMs <= 0) {
+      this.holdExpired = true;
+      this.draft.clearPaymentState();
     }
-    // Fallback for a session that expired after the page loaded — send the
-    // user to login and bring them back to this exact payment URL (which still
-    // carries the bus, route, date, passenger count and selected seats).
-    this.redirectToLogin();
-    return null;
+  }
+
+  private startHoldCountdown(): void {
+    this.updateCountdown();
+    this.countdownTimer = setInterval(() => this.updateCountdown(), 1000);
+  }
+
+  private updateCountdown(): void {
+    const ms = this.draft.holdRemainingMs;
+    this.holdSecondsLeft = Math.ceil(ms / 1000);
+    if (ms <= 0 && !this.holdExpired && this.trip) {
+      this.holdExpired = true;
+      this.draft.clearPaymentState();
+    }
+  }
+
+  get holdCountdownLabel(): string {
+    const total = Math.max(0, this.holdSecondsLeft);
+    const m = Math.floor(total / 60);
+    const sec = total % 60;
+    return `${m}:${String(sec).padStart(2, '0')}`;
+  }
+
+  /** Sends the user back to pick seats again after an expiry. */
+  reselectSeats(): void {
+    const ctx = this.draft.snapshot.searchContext;
+    this.draft.clearPaymentState();
+    if (ctx) {
+      this.router.navigate(['/view-seats'], {
+        queryParams: {
+          busId: this.trip?.busId,
+          routeId: this.trip?.routeId,
+          date: ctx.date,
+          from: ctx.from,
+          to: ctx.to
+        }
+      });
+    } else {
+      this.router.navigate(['/']);
+    }
+  }
+
+  /** User backs out before paying — give the held seats back immediately. */
+  backToSeats(): void {
+    const s = this.draft.snapshot;
+    if (s.hold && this.trip) {
+      this.busservice.releaseSeats(this.trip.busId, s.searchContext?.date || '', s.hold.holdId)
+        .subscribe({ complete: () => this.reselectSeats() });
+      return;
+    }
+    this.reselectSeats();
   }
 
   /** Guards the money step. The BookingAuthGuard normally intercepts guests
    *  before the page renders; this re-check covers a session that expired or
    *  was cleared while the user was already on the page. */
   private requireLoginForPayment(): boolean {
-    if (this.customerid && this.customerid._id) {
-      return true;
-    }
-    const restored = this.getloggedinuser();
-    if (restored && restored._id) {
+    if (this.customerid && this.customerid._id && this.authService.token) {
       return true;
     }
     this.redirectToLogin();
@@ -231,7 +177,8 @@ export class PaymentPageComponent implements OnInit {
 
   private redirectToLogin(): void {
     const current = this.router.url;
-    sessionStorage.setItem('tedbus_login_redirect', current);
+    try { sessionStorage.setItem('tedbus_login_redirect', current); } catch {}
+    try { localStorage.setItem('tedbus_login_redirect_ls', current); } catch {}
     this.router.navigate(['/login'], {
       queryParams: {
         redirect: current,
@@ -240,106 +187,76 @@ export class PaymentPageComponent implements OnInit {
     });
   }
 
-  onMethodChange(id: string): void {
-    this.selectedMethod.setValue(id);
-    this.copied = false;
-    this.paymentError = '';
-    this.paymentStage = 'idle';
-    if (id === 'qr') {
-      this.loadQrSettings();
+  /** Displayed total always comes from the server quote when available. */
+  get displayTotal(): number {
+    if (this.serverQuote?.totalForSeats != null) {
+      return this.serverQuote.totalForSeats;
     }
-  }
-
-  loadQrSettings(): void {
-    this.qrError = '';
-    this.qrLoading = true;
-    this.paymentSettingsService.getSettings().subscribe({
-      next: (settings) => {
-        this.paymentSettings = settings;
-        this.qrLoading = false;
-      },
-      error: () => {
-        this.qrLoading = false;
-        this.qrError = this.translate.instant('payment.qrLoadError');
-      }
-    });
-  }
-
-  get qrAvailable(): boolean {
-    return !!this.paymentSettings &&
-      this.paymentSettings.isActive &&
-      !!this.paymentSettings.qrImage;
-  }
-
-  get qrImageUrl(): string {
-    if (!this.paymentSettings?.qrImage) return '';
-    return this.paymentSettings.qrImage.startsWith('http')
-      ? this.paymentSettings.qrImage
-      : this.apiBase + this.paymentSettings.qrImage.replace(/^\//, '');
-  }
-
-  copyUpiId(): void {
-    if (!this.paymentSettings?.upiId) return;
-    const upiId = this.paymentSettings.upiId;
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(upiId).then(() => this.showCopied());
-    } else {
-      const input = document.createElement('input');
-      input.value = upiId;
-      document.body.appendChild(input);
-      input.select();
-      try { document.execCommand('copy'); this.showCopied(); } catch (e) {}
-      document.body.removeChild(input);
+    if (this.trip) {
+      return Math.round(this.trip.farePerSeat.total * this.seatCount);
     }
+    return 0;
   }
 
-  private showCopied(): void {
-    this.copied = true;
-    setTimeout(() => (this.copied = false), 2000);
+  get seatCount(): number {
+    return Array.isArray(this.passseatarray) ? this.passseatarray.length : 0;
   }
 
-  private buildBooking(): any {
-    const myBooking: any = {};
-    myBooking.customerId = this.customerid._id;
-    myBooking.passengerDetails = this.passengerdetails;
-    myBooking.email = this.customerid.email;
-    myBooking.phoneNumber = this.phonenumber;
-    myBooking.fare = Number(this.passfare);
-    myBooking.status = "upcoming";
-    myBooking.busId = this.busid;
-    const date = new Date();
-    myBooking.bookingDate = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-    myBooking.seats = Array.isArray(this.passseatarray) ? this.passseatarray : this.parseSeats(this.passseatarray);
-    myBooking.departureDetails = {
-      city: this.routedetails.departureLocation.name,
-      time: this.busdepauturetime,
-      date: this.bookingdate
+  /** Per-seat ticket fare (base + seat premium + dynamic component). */
+  get perSeatFare(): number {
+    const q: FareBreakdown = this.serverQuote || (this.trip?.farePerSeat as FareBreakdown) || {};
+    return (q.baseFare || 0) + (q.seatFare || 0) + (q.dynamicFare || 0);
+  }
+
+  /** Per-seat taxes + service fee, shown as ONE combined line so fees are
+   *  never double-counted in the breakup. */
+  get feesPerSeat(): number {
+    const q: FareBreakdown = this.serverQuote || (this.trip?.farePerSeat as FareBreakdown) || {};
+    return (q.tax || 0) + (q.serviceFee || 0);
+  }
+
+  readonly razorpayIcons = [
+    'https://st.redbus.in/paas/images/web/v2/upi/gpay.svg',
+    'https://st.redbus.in/paas/images/mobile/v2/visa.png',
+    'https://st.redbus.in/paas/images/mobile/v2/mastercard.png'
+  ];
+
+  get operatorname(): string {
+    return this.trip?.operatorName || '';
+  }
+
+  get boardingDisplayName(): string {
+    return this.boardingPointName || this.trip?.segment?.fromStop?.stopName || '';
+  }
+
+  get droppingDisplayName(): string {
+    return this.droppingPointName || this.trip?.segment?.toStop?.stopName || '';
+  }
+
+  get departureTimeDisplay(): string {
+    return this.trip?.segment?.departureDateTime
+      ? this.formatIsoTime(this.trip.segment.departureDateTime)
+      : this.trip?.segment?.fromStop?.departureTime || '';
+  }
+
+  get arrivalTimeDisplay(): string {
+    return this.trip?.segment?.arrivalDateTime
+      ? this.formatIsoTime(this.trip.segment.arrivalDateTime)
+      : this.trip?.segment?.toStop?.arrivalTime || '';
+  }
+
+  private formatIsoTime(iso: string): string {
+    try {
+      const d = new Date(iso);
+      const h = d.getHours();
+      const m = d.getMinutes();
+      return formatClockTime(`${h}:${String(m).padStart(2, '0')}`, {
+        am: this.translate.instant('common.am') || 'AM',
+        pm: this.translate.instant('common.pm') || 'PM'
+      });
+    } catch {
+      return '';
     }
-    myBooking.arrivalDetails = {
-      city: this.routedetails.arrivalLocation.name,
-      time: this.busarrivaltime,
-      date: this.bookingdate
-    }
-    myBooking.duration = this.routedetails.duration;
-    myBooking.isBusinessTravel = this.isbuisnesstravel;
-    myBooking.isInsurance = this.isinsurance;
-    myBooking.isCovidDonated = this.iscoviddonated;
-    myBooking.paymentReference = this.currentPaymentReference;
-    myBooking.paymentMethod = this.selectedMethod.value || 'upi';
-    myBooking.routeId = this.routeId;
-    return myBooking;
-  }
-
-  private buildSegmentBooking(): any {
-    const booking = this.buildBooking();
-    booking.boardingStopSequence = this.boardingStopSequence;
-    booking.droppingStopSequence = this.droppingStopSequence;
-    booking.boardingStopName = this.boardingStopName;
-    booking.droppingStopName = this.droppingStopName;
-    booking.segmentDistanceKm = this.segmentDistanceKm;
-    booking.fareSnapshot = this.fareSnapshot;
-    booking.routeId = this.routeId;
-    return booking;
   }
 
   private paymentFailed(message: string): void {
@@ -348,19 +265,37 @@ export class PaymentPageComponent implements OnInit {
     this.paymentStage = 'failed';
   }
 
-  /** Full flow: validate seats → verify payment → create booking → generate
-   *  ticket → navigate to the confirmation page. On any verification failure the
-   *  booking is NOT created and the user can retry with a fresh reference. */
+  // ── Razorpay ──
+
+  private loadRazorpayScript(): Promise<void> {
+    if ((window as any).Razorpay) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('razorpay-load-failed'));
+      document.body.appendChild(script);
+    });
+  }
+
+  /** Full flow: hold-gated server-priced Razorpay order → Checkout →
+   *  signature verification → booking creation against the SAME hold →
+   *  confirmation page. A booking is NEVER created unless the gateway
+   *  signature verified server-side AND the hold is still alive. */
   makepayment(): void {
     if (this.processing) return;
+    if (this.holdExpired || !this.draft.snapshot.hold) {
+      this.paymentError = this.translate.instant('booking.holdExpired');
+      return;
+    }
     if (!this.requireLoginForPayment()) {
       return;
     }
-    if (!this.routedetails || !this.routedetails.departureLocation) {
+    if (!this.trip) {
       this.paymentError = this.translate.instant('payment.errMissingDetails');
       return;
     }
-    const seats = Array.isArray(this.passseatarray) ? this.passseatarray : this.parseSeats(this.passseatarray);
+    const seats = this.passseatarray;
     if (!seats.length) {
       this.paymentError = this.translate.instant('booking.errNoSeats');
       return;
@@ -370,99 +305,167 @@ export class PaymentPageComponent implements OnInit {
     this.paymentError = '';
     this.paymentFailedMessage = '';
     this.bookingResult = null;
+    this.paymentStage = 'verifying';
 
-    // Pre-charge seat check — a seat taken since the drawer was opened must
-    // never be charged for. Backend atomically enforces this too at booking.
-    const seatPayload: any = { busId: this.busid, date: this.bookingdate, seats };
-    if (this.boardingStopSequence != null && this.droppingStopSequence != null) {
-      seatPayload.boardingSequence = this.boardingStopSequence;
-      seatPayload.droppingSequence = this.droppingStopSequence;
-    }
-    this.busservice.validateSeats(seatPayload).subscribe({
-      next: (result: any) => {
-        if (result && result.success === false && Array.isArray(result.conflicts) && result.conflicts.length) {
-          this.processing = false;
-          this.paymentError = this.translate.instant('payment.errSeatsTaken', {
-            seats: result.conflicts.join(', '),
-          });
-          return;
-        }
-        this.startVerifiedPaymentFlow(seats);
-      },
-      error: () => this.startVerifiedPaymentFlow(seats)
-    });
+    this.createOrderAndCheckout(seats);
   }
 
-  private startVerifiedPaymentFlow(seats: number[]): void {
-    this.paymentStage = 'verifying';
-    this.currentPaymentReference = 'REF' + Date.now() + Math.floor(Math.random() * 1e9);
-
-    this.busservice.verifyPayment({
-      paymentReference: this.currentPaymentReference,
-      customerId: this.customerid._id,
-      amount: Number(this.passfare),
-      method: this.selectedMethod.value || 'upi'
+  private createOrderAndCheckout(seats: number[]): void {
+    const ctx = this.draft.snapshot.searchContext;
+    const hold = this.draft.snapshot.hold!;
+    this.busservice.createPaymentOrder({
+      routeId: this.trip!.routeId,
+      busId: this.trip!.busId,
+      date: ctx?.date || '',
+      seats,
+      holdId: hold.holdId,
+      boardingStopSequence: this.trip!.segment.boardingStopSequence,
+      droppingStopSequence: this.trip!.segment.droppingStopSequence,
     }).subscribe({
-      next: (verification) => {
-        if (!verification || verification.success !== true) {
-          this.paymentFailed(this.translate.instant('payment.errVerifyFailed'));
-          return;
-        }
-        this.paymentStage = 'booking';
+      next: (order) => {
+        // Sync the visible total with the exact amount being charged.
+        if (order?.fare) this.serverQuote = order.fare;
+        this.currentOrder = order;
+        this.currentPaymentReference = order.paymentReference;
+        this.draft.setPaymentReference(order.paymentReference);
 
-        // Use segment-aware booking when boarding/dropping sequences are present
-        const hasSegmentData = this.boardingStopSequence != null && this.droppingStopSequence != null;
-        const bookingCall = hasSegmentData
-          ? this.busservice.addSegmentBooking(this.buildSegmentBooking())
-          : this.busservice.addbusmongo(this.buildBooking());
-
-        bookingCall.subscribe({
-          next: (booking) => {
-            this.bookingResult = booking;
-            this.paymentStage = 'generating';
-            setTimeout(() => {
-              this.processing = false;
-              this.paymentSuccess = true;
-              this.paymentStage = 'success';
-              const raw = booking as any;
-              const pnr = raw.pnr || String(raw._id || '').slice(-8).toUpperCase();
-              this.router.navigate(['/booking-confirmation', pnr]);
-            }, 1400);
-          },
-          error: (error) => {
-            console.error('Booking creation failed', error);
-            if (error?.status === 409) {
-              const seatList = error?.error?.conflictingSeats?.join(', ');
-              this.paymentFailed(this.translate.instant('payment.errSeatsTaken', { seats: seatList || '' }));
-            } else if (error?.status === 410 || error?.status === 400) {
-              this.paymentFailed(error?.error?.error || this.translate.instant('payment.errVerifyFailed'));
-            } else {
-              this.paymentFailed(this.translate.instant('payment.errGeneric'));
-            }
-          }
+        this.loadRazorpayScript().then(() => this.openCheckout(order)).catch(() => {
+          this.paymentFailed(this.translate.instant('payment.errGatewayLoad'));
         });
       },
       error: (error) => {
-        console.error('Payment verification failed', error);
-        if (error?.status === 409 || error?.status === 410) {
-          this.paymentFailed(error?.error?.error || this.translate.instant('payment.errVerifyFailed'));
+        console.error('Payment order failed', error);
+        if (error?.status === 409) {
+          const reason = error?.error?.reason;
+          if (reason === 'HOLD_EXPIRED' || reason === 'HOLD_NOT_FOUND' || reason === 'HOLD_SEAT_MISMATCH') {
+            this.draft.clearPaymentState();
+            this.paymentFailed(this.translate.instant('booking.holdExpired'));
+          } else {
+            const seatList = error?.error?.conflictingSeats?.join(', ');
+            this.paymentFailed(this.translate.instant('payment.errSeatsTaken', { seats: seatList || '' }));
+          }
+        } else if (error?.status === 410) {
+          this.draft.clearPaymentState();
+          this.paymentFailed(error?.error?.error || this.translate.instant('booking.holdExpired'));
         } else {
-          this.paymentFailed(this.translate.instant('payment.errVerifyFailed'));
+          this.paymentFailed(error?.error?.error || this.translate.instant('payment.errGeneric'));
         }
       }
     });
   }
 
-  payWithStripe(): void {
-    this.makepayment();
+  private openCheckout(order: any): void {
+    const Razorpay = (window as any).Razorpay;
+    if (!Razorpay) {
+      this.paymentFailed(this.translate.instant('payment.errGatewayLoad'));
+      return;
+    }
+
+    const options: any = {
+      key: order.keyId,
+      amount: order.amount,
+      currency: order.currency || 'INR',
+      name: 'TedBus',
+      description: `${this.operatorname || 'Bus ticket'} - ${this.formatCurrency(order.amount / 100)}`,
+      order_id: order.orderId,
+      prefill: {
+        name: this.customerid.name || '',
+        email: this.customerid.email || '',
+        contact: this.phonenumber || this.customerid.phone || ''
+      },
+      notes: { paymentReference: order.paymentReference },
+      theme: { color: '#E53935' },
+      handler: (response: any) => this.handlePaymentSuccess(response),
+      modal: {
+        ondismiss: () => {
+          // User closed Checkout without paying — nothing was charged and no
+          // booking exists. Return to the payment page so they can retry.
+          this.processing = false;
+          this.paymentStage = 'idle';
+        }
+      }
+    };
+
+    try {
+      const checkout = new Razorpay(options);
+      checkout.open();
+    } catch (err) {
+      console.error('Razorpay open failed', err);
+      this.paymentFailed(this.translate.instant('payment.errGatewayLoad'));
+    }
   }
 
-  payNow(): void {
-    this.makepayment();
+  private handlePaymentSuccess(response: any): void {
+    if (!response?.razorpay_order_id || !response?.razorpay_payment_id || !response?.razorpay_signature) {
+      this.paymentFailed(this.translate.instant('payment.errVerifyFailed'));
+      return;
+    }
+    this.paymentStage = 'verifying';
+    this.busservice.confirmPayment({
+      paymentReference: this.currentPaymentReference,
+      razorpay_order_id: response.razorpay_order_id,
+      razorpay_payment_id: response.razorpay_payment_id,
+      razorpay_signature: response.razorpay_signature
+    }).subscribe({
+      next: () => this.createBookingAfterVerifiedPayment(),
+      error: (error) => {
+        console.error('Payment confirmation failed', error);
+        this.paymentFailed(error?.error?.error || this.translate.instant('payment.errVerifyFailed'));
+      }
+    });
   }
 
-  completeQrPayment(): void {
-    this.makepayment();
+  private createBookingAfterVerifiedPayment(): void {
+    this.paymentStage = 'booking';
+
+    const validPassengers = this.passengerdetails.map((p) => ({
+      name: String(p.name || '').trim(),
+      age: Number(p.age),
+      gender: p.gender || undefined
+    }));
+
+    this.busservice.createBooking({
+      paymentReference: this.currentPaymentReference,
+      holdId: this.draft.snapshot.hold?.holdId || '',
+      passengerDetails: validPassengers,
+      phoneNumber: this.phonenumber || undefined
+    }).subscribe({
+      next: (booking) => {
+        this.bookingResult = booking;
+        this.paymentStage = 'generating';
+        setTimeout(() => {
+          this.processing = false;
+          this.paymentSuccess = true;
+          this.paymentStage = 'success';
+          const raw = booking as any;
+          const pnr = raw.pnr || String(raw._id || '').slice(-8).toUpperCase();
+          this.draft.setCreatedBooking(raw);
+          this.router.navigate(['/booking-confirmation', pnr]);
+        }, 1400);
+      },
+      error: (error) => {
+        console.error('Booking creation failed', error);
+        const reason = error?.error?.reason;
+        if (reason === 'HOLD_EXPIRED' || error?.status === 410) {
+          this.draft.clearPaymentState();
+          // Money captured but hold died — backend flagged it for support.
+          this.paymentFailed(
+            this.translate.instant('payment.errHoldDiedAfterPay') ||
+            error?.error?.error ||
+            'Your payment succeeded but the seat hold expired. Our support team will process your refund.'
+          );
+        } else if (reason === 'FARE_MISMATCH') {
+          this.paymentFailed(
+            error?.error?.error ||
+            'Pricing changed during checkout. Your payment will be refunded by support.'
+          );
+        } else if (error?.status === 409) {
+          this.paymentFailed(error?.error?.error || this.translate.instant('payment.errGeneric'));
+        } else {
+          this.paymentFailed(error?.error?.error || this.translate.instant('payment.errGeneric'));
+        }
+      }
+    });
   }
 
   /** Closes the failure panel back to the payment methods so the user can pay
@@ -472,6 +475,10 @@ export class PaymentPageComponent implements OnInit {
     this.processing = false;
     this.paymentFailedMessage = '';
     this.paymentError = '';
+    // If the hold is gone there is nothing to retry — force reselection.
+    if (this.holdExpired || !this.draft.snapshot.hold) {
+      this.reselectSeats();
+    }
   }
 
   goToProfile(): void {
@@ -479,7 +486,7 @@ export class PaymentPageComponent implements OnInit {
   }
 
   formatCurrency(amount: number): string {
-    return '\u20B9' + (amount || 0).toLocaleString('en-IN');
+    return '\u20B9' + (Math.round((amount || 0) * 100) / 100).toLocaleString('en-IN');
   }
 
   formatTime(hour: number | string): string {
@@ -487,20 +494,5 @@ export class PaymentPageComponent implements OnInit {
       am: this.translate.instant('common.am') || 'AM',
       pm: this.translate.instant('common.pm') || 'PM'
     });
-  }
-
-  parseSeats(value: any): number[] {
-    if (Array.isArray(value)) {
-      return value.map(Number).filter((n) => Number.isInteger(n) && n > 0);
-    }
-    if (typeof value === 'string') {
-      return value
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .map(Number)
-        .filter((n) => Number.isInteger(n) && n > 0);
-    }
-    return [];
   }
 }

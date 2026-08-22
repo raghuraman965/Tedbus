@@ -138,22 +138,66 @@ export class MyTripComponent implements OnChanges {
     }
   }
 
+  /** Cancel = always quote the live cancellation policy first so the user
+   *  sees EXACTLY what will be refunded before committing. */
   cancelBooking(b: any): void {
     const pnr = this.pnrOf(b);
     const id = b?._id || b?.id;
     if (!id) return;
-    const ok = confirm(this.translate.instant('trips.confirmCancel', { pnr }));
-    if (!ok) return;
     this.cancellingId = pnr;
-    this.busservice.cancelBooking(id).subscribe({
-      next: () => {
-        this.cancellingId = '';
-        this.refresh.emit();
+    this.busservice.refundQuote(id).subscribe({
+      next: (quote) => {
+        if (quote?.alreadyCancelled) {
+          this.cancellingId = '';
+          this.refresh.emit();
+          return;
+        }
+        if (quote && quote.allowed === false) {
+          this.cancellingId = '';
+          alert(quote.reason === 'JOURNEY_ALREADY_STARTED'
+            ? this.translate.instant('booking.cancelWindowClosed')
+            : this.translate.instant('trips.cancelFailed'));
+          return;
+        }
+        const amount = Number(quote?.refundAmount) || 0;
+        const percent = Number(quote?.refundPercent) || 0;
+        const detail = percent > 0
+          ? this.translate.instant('trips.refundPreview', { amount: this.formatMoney(amount), percent })
+          : this.translate.instant('trips.refundNone');
+        const ok = confirm(
+          `${this.translate.instant('trips.confirmCancel', { pnr })}\n${detail}`
+        );
+        if (!ok) {
+          this.cancellingId = '';
+          return;
+        }
+        this.busservice.cancelBooking(id).subscribe({
+          next: () => {
+            this.cancellingId = '';
+            this.refresh.emit();
+          },
+          error: (err) => {
+            this.cancellingId = '';
+            alert(err?.error?.error || this.translate.instant('trips.cancelFailed'));
+          }
+        });
       },
       error: (err) => {
         this.cancellingId = '';
         alert(err?.error?.error || this.translate.instant('trips.cancelFailed'));
       }
     });
+  }
+
+  /** Refund line shown on cancelled trip cards — straight off the booking
+   *  record the server wrote at cancellation time. */
+  refundLabel(b: any): string {
+    const status = b?.refundStatus;
+    const amount = Number(b?.refundAmount) || 0;
+    if (!status || status === 'none') return '';
+    const money = this.formatMoney(amount);
+    if (status === 'processed') return this.translate.instant('trips.refunded', { amount: money });
+    if (status === 'initiated') return this.translate.instant('trips.refundInitiated', { amount: money });
+    return this.translate.instant('trips.refundPending', { amount: money });
   }
 }

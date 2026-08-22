@@ -439,3 +439,23 @@
     justify-content: center;
   }
 }
+
+/* Refund status chip on cancelled cards */
+.mt-refund-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 16px 14px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #047857;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.mt-refund-chip mat-icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+}

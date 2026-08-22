@@ -78,7 +78,6 @@
                             <mat-icon>tour</mat-icon>
                             <span class="point-landmark">{{ 'classic.landmark' | translate: { landmark: point.landmark } }}</span>
                         </div>
-                        <div class="point-contact"><mat-icon>call</mat-icon>{{ point.contact }}</div>
                     </div>
                 </div>
             </div>
@@ -104,7 +103,6 @@
                             <mat-icon>tour</mat-icon>
                             <span class="point-landmark">{{ 'classic.landmark' | translate: { landmark: point.landmark } }}</span>
                         </div>
-                        <div class="point-contact"><mat-icon>call</mat-icon>{{ point.contact }}</div>
                     </div>
                 </div>
             </div>
@@ -121,14 +119,14 @@
             </div>
         </div>
 
-        <div class="reviews-overview">
+        <div class="reviews-overview" *ngIf="totalReviews > 0">
             <div class="rating-overall">
-                <div class="rating-big">{{ overallRating }}</div>
+                <div class="rating-big">{{ overallRating > 0 ? (overallRating | number:'1.1-1') : '—' }}</div>
                 <div class="rating-stars">
-                    <mat-icon *ngFor="let s of [1,2,3,4,5]">{{ s <= 4 ? 'star' : 'star_half' }}</mat-icon>
+                    <mat-icon *ngFor="let s of [1,2,3,4,5]" [class.filled]="s <= roundedRating">star</mat-icon>
                 </div>
                 <div class="rating-total">{{ 'classic.reviewsCount' | translate: { count: totalReviews } }}</div>
-                <div class="verified-badge">
+                <div class="verified-badge" *ngIf="verifiedReviews > 0">
                     <mat-icon>verified_user</mat-icon>
                     {{ 'classic.verifiedBookings' | translate: { count: verifiedReviews } }}
                 </div>
@@ -142,15 +140,9 @@
             </div>
         </div>
 
-        <div class="aspect-rating-row">
-            <div class="aspect-item" *ngFor="let aspect of aspectRatings">
-                <mat-icon>{{ aspect.icon }}</mat-icon>
-                <span class="aspect-label">{{ aspect.label | translate }}</span>
-                <span class="aspect-value">{{ aspect.value }}</span>
-            </div>
-        </div>
+        <p class="reviews-empty" *ngIf="totalReviews === 0">{{ 'reviews.empty' | translate }}</p>
 
-        <div class="feedback-strip">
+        <div class="feedback-strip" *ngIf="totalReviews > 0 && recommendPercent > 0">
             <mat-icon>thumb_up</mat-icon>
             <div class="feedback-text">
                 <span class="feedback-title">{{ 'classic.recommendText' | translate: { percent: recommendPercent } }}</span>
@@ -171,17 +163,16 @@
                             </span>
                         </div>
                         <div class="review-meta">
-                            <span class="review-type">{{ review.travellerType | translate }}</span>
-                            <span class="review-date">{{ review.date | translate }}</span>
+                            <span class="review-date">{{ review.date }}</span>
                         </div>
                     </div>
                     <div class="review-title">
                         <span class="review-title-stars">
                             <mat-icon *ngFor="let s of [1,2,3,4,5]" [class.filled]="s <= review.rating">star</mat-icon>
                         </span>
-                        <span class="review-title-text">{{ review.title | translate }}</span>
+                        <span class="review-title-text">{{ review.title }}</span>
                     </div>
-                    <p class="review-comment">{{ review.comment | translate }}</p>
+                    <p class="review-comment">{{ review.comment }}</p>
                 </div>
             </div>
         </div>

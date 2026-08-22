@@ -6,6 +6,13 @@ const busSchema = new Schema({
     type: String,
     required: true,
   },
+  // Registration / reference number shown in admin and on tickets (e.g. TN01AB1234).
+  busNumber: {
+    type: String,
+    required: false,
+    default: "",
+    trim: true,
+  },
   busType: {
     type: String,
     required: true,
@@ -13,6 +20,16 @@ const busSchema = new Schema({
   departureTime: {
     type: String,
     required: true,
+  },
+  arrivalTime: {
+    type: String,
+    required: false,
+    default: "",
+  },
+  amenities: {
+    type: [String],
+    required: false,
+    default: [],
   },
   rating: {
     type: [Number],
@@ -40,6 +57,11 @@ const busSchema = new Schema({
     type: Number,
     required: true,
   },
+  // Inactive buses never appear in customer search.
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
   // NEW: operating schedule (0=Sun, 1=Mon, ... 6=Sat)
   operatingDays: {
     type: [Number],
@@ -48,7 +70,9 @@ const busSchema = new Schema({
   // NEW: fare overrides per bus (route fareConfig is primary, these override)
   fareOverrides: {
     busTypeMultiplier: { type: Number, default: null },
-    seatTypePrices: { type: Map, of: Number, default: null },
+    // NOTE: Map fields must never default to null — mongoose Map validation
+    // calls .keys() on the value and crashes.
+    seatTypePrices: { type: Map, of: Number, default: () => ({}) },
   },
   // NEW: seat layout configuration
   seatLayout: {
@@ -57,7 +81,7 @@ const busSchema = new Schema({
     seatTypes: {
       type: Map,
       of: [Number],
-      default: null,
+      default: () => ({}),
     },
   },
 });

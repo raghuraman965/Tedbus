@@ -134,6 +134,12 @@
         <mat-icon>cancel</mat-icon> {{ 'trips.cancelled' | translate }}
       </span>
     </div>
+
+    <!-- Refund status (server-written at cancellation time) -->
+    <div class="mt-refund-chip" *ngIf="refundLabel(b) as rl">
+      <mat-icon>currency_rupee</mat-icon>
+      <span>{{ rl }}</span>
+    </div>
   </div>
 </div>
 

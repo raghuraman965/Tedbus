@@ -16,6 +16,7 @@ export class RightComponent implements OnInit, OnDestroy{
  matchedbus:Bus[]=[]
  routes:Route[]=[]
  seats:{[key:string]:any}={}
+ reviewStats:{[key:string]:{avgRating:number,totalReviews:number}}={}
  loading:boolean=true
  errorMessage:string=''
 
@@ -69,6 +70,7 @@ export class RightComponent implements OnInit, OnDestroy{
      this.matchedbus=response.matchedBuses;
      this.routes=response.route;
      this.seats=response.busidwithseatobj;
+     this.reviewStats=response.reviewStats || {};
      this.loading=false;
      this.afterSeatsLoaded();
     },

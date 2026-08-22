@@ -38,6 +38,26 @@ async function requireAuth(req, res, next) {
   }
 }
 
+// Same as requireAuth but anonymous requests continue without a user.
+// Used on public listing endpoints that personalize the response when a
+// valid Bearer token happens to be present (e.g. review viewer context).
+async function optionalAuth(req, res, next) {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : null;
+  if (!token) return next();
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    const customer = await Customer.findById(payload.id).lean().exec();
+    if (customer && !customer.isSuspended) {
+      req.user = customer;
+      req.userId = customer._id.toString();
+    }
+  } catch (err) {
+    // Invalid/expired token on a public endpoint: stay anonymous.
+  }
+  next();
+}
+
 function requireAdmin(req, res, next) {
   requireAuth(req, res, () => {
     if (!req.user || req.user.isAdmin !== true) {
@@ -47,4 +67,4 @@ function requireAdmin(req, res, next) {
   });
 }
 
-module.exports = { signToken, requireAuth, requireAdmin, JWT_SECRET };
+module.exports = { signToken, requireAuth, optionalAuth, requireAdmin, JWT_SECRET };

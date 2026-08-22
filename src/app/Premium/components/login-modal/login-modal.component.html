@@ -10,7 +10,7 @@
     <span>{{ dataMessage | translate }}</span>
   </div>
 
-  <!-- ============ EMAIL LOGIN ============ -->
+  <!-- ============ EMAIL STEP ============ -->
   <div class="modal-body" *ngIf="mode === 'email'">
     <h2>{{ 'auth.welcomeBack' | translate }}</h2>
     <p class="modal-subtitle">{{ 'auth.loginSubtitle' | translate }}</p>
@@ -22,159 +22,54 @@
 
     <div class="field-group">
       <label>{{ 'auth.email' | translate }}</label>
-      <input type="email" class="input-premium" [placeholder]="'auth.emailPlaceholder' | translate" [(ngModel)]="email" (keyup.enter)="submitEmailLogin()">
+      <input type="email" class="input-premium" [placeholder]="'auth.emailPlaceholder' | translate" [(ngModel)]="email" (keyup.enter)="sendOtp()">
     </div>
 
-    <div class="field-group">
-      <label>{{ 'auth.password' | translate }}</label>
-      <div class="password-field">
-        <input [type]="showPassword ? 'text' : 'password'" class="input-premium" [placeholder]="'auth.enterPassword' | translate" [(ngModel)]="password" (keyup.enter)="submitEmailLogin()">
-        <button type="button" class="visibility-toggle" (click)="togglePasswordVisibility()">
-          <mat-icon>{{ showPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-        </button>
-      </div>
-    </div>
-
-    <div class="options-row">
-      <label class="remember-me">
-        <input type="checkbox" [(ngModel)]="rememberMe">
-        <span>{{ 'auth.rememberMe' | translate }}</span>
-      </label>
-      <button class="link-btn" (click)="setMode('forgot')">{{ 'auth.forgotPassword' | translate }}</button>
-    </div>
-
-    <button class="btn-premium full-width" [disabled]="isSubmitting" (click)="submitEmailLogin()">
-      <mat-icon *ngIf="!isSubmitting">login</mat-icon>
+    <button class="btn-premium full-width" [disabled]="isSubmitting" (click)="sendOtp()">
+      <mat-icon *ngIf="!isSubmitting">mail</mat-icon>
       <span class="spinner" *ngIf="isSubmitting"></span>
-      {{ isSubmitting ? ('auth.signingIn' | translate) : ('auth.loginWithEmail' | translate) }}
+      {{ isSubmitting ? ('auth.sending' | translate) : ('auth.sendOtp' | translate) }}
     </button>
 
     <div class="divider"><span>{{ 'auth.or' | translate }}</span></div>
 
     <div id="login-modal-google-btn" class="google-btn-slot"></div>
-
-    <button class="btn-premium-outline full-width phone-toggle" (click)="setMode('phone')">
-      <mat-icon>smartphone</mat-icon>
-      {{ 'auth.loginWithPhone' | translate }}
-    </button>
   </div>
 
-  <!-- ============ PHONE LOGIN ============ -->
-  <div class="modal-body" *ngIf="mode === 'phone'">
-    <button class="back-link" (click)="setMode('email')">
+  <!-- ============ OTP STEP ============ -->
+  <div class="modal-body" *ngIf="mode === 'otp'">
+    <button class="back-link" (click)="changeEmail()">
       <mat-icon>arrow_back</mat-icon> {{ 'common.back' | translate }}
     </button>
-    <h2>{{ 'auth.loginWithPhone' | translate }}</h2>
-    <p class="modal-subtitle">{{ 'auth.phoneSubtitle' | translate }}</p>
+    <h2>{{ 'auth.enterOtp' | translate }}</h2>
+    <p class="modal-subtitle">{{ 'auth.otpSentTo' | translate:{ email: email } }}</p>
 
     <div class="error-banner" *ngIf="errorMessage">
       <mat-icon>error_outline</mat-icon>
       {{ errorMessage }}
     </div>
 
-    <div class="field-group">
-      <label>{{ 'auth.phoneNumber' | translate }}</label>
-      <input type="tel" class="input-premium" [placeholder]="'auth.mobilePlaceholder' | translate" [(ngModel)]="phone" [disabled]="otpSent" maxlength="10">
+    <div class="otp-row" *ngIf="!isCountdownExpired">
+      <input *ngFor="let d of otpDigits; let i = index; trackBy: trackByIndex"
+             type="text" inputmode="numeric" maxlength="1" class="otp-digit"
+             id="login-modal-otp-digit-{{i}}"
+             [value]="otpDigits[i]"
+             (input)="onOtpInput($event, i)"
+             (keydown)="onOtpKeydown($event, i)"
+             (paste)="onOtpPaste($event)" />
     </div>
 
-    <div class="field-group" *ngIf="otpSent">
-      <label>{{ 'auth.enterOtp' | translate }}</label>
-      <input type="text" class="input-premium" [placeholder]="'auth.otpPlaceholder' | translate" [(ngModel)]="otp" maxlength="4" (keyup.enter)="verifyOtp()">
-      <p class="dev-hint" *ngIf="devOtpHint">{{ devOtpHint }}</p>
-    </div>
+    <p class="countdown" *ngIf="!isCountdownExpired">{{ countdownDisplay }}</p>
+    <p class="countdown countdown--expired" *ngIf="isCountdownExpired">{{ 'auth.otpExpired' | translate }}</p>
 
-    <label class="remember-me" *ngIf="otpSent">
-      <input type="checkbox" [(ngModel)]="rememberMe">
-      <span>{{ 'auth.rememberMe' | translate }}</span>
-    </label>
-
-    <button class="btn-premium full-width" *ngIf="!otpSent" [disabled]="isSubmitting" (click)="sendOtp()">
-      <span class="spinner" *ngIf="isSubmitting"></span>
-      {{ isSubmitting ? ('auth.sending' | translate) : ('auth.sendOtp' | translate) }}
-    </button>
-
-    <button class="btn-premium full-width" *ngIf="otpSent" [disabled]="isSubmitting" (click)="verifyOtp()">
+    <button class="btn-premium full-width" [disabled]="isSubmitting || otp.length !== 6" (click)="verifyOtp()">
       <span class="spinner" *ngIf="isSubmitting"></span>
       {{ isSubmitting ? ('auth.verifying' | translate) : ('auth.verifyLogin' | translate) }}
     </button>
 
-    <p class="signup-hint">
-      {{ 'auth.newToTedbus' | translate }}
-      <button class="link-btn" (click)="startPhoneSignup()">{{ 'auth.signupWithPhone' | translate }}</button>
-    </p>
-  </div>
-
-  <!-- ============ PHONE SIGNUP ============ -->
-  <div class="modal-body" *ngIf="mode === 'phoneSignup'">
-    <button class="back-link" (click)="setMode('phone')">
-      <mat-icon>arrow_back</mat-icon> {{ 'common.back' | translate }}
+    <button class="link-btn resend-btn" *ngIf="canResend && isCountdownExpired" (click)="resendOtp()">
+      {{ 'auth.resendOtp' | translate }}
     </button>
-    <h2>{{ 'auth.signupWithPhone' | translate }}</h2>
-    <p class="modal-subtitle">{{ 'auth.phoneSignupSubtitle' | translate }}</p>
-
-    <div class="error-banner" *ngIf="errorMessage">
-      <mat-icon>error_outline</mat-icon>
-      {{ errorMessage }}
-    </div>
-
-    <div class="field-group">
-      <label>{{ 'auth.fullName' | translate }} <span class="optional-label">{{ 'auth.optional' | translate }}</span></label>
-      <input type="text" class="input-premium" [placeholder]="'auth.fullNamePlaceholder' | translate" [(ngModel)]="signupName" [disabled]="signupOtpSent">
-    </div>
-
-    <div class="field-group">
-      <label>{{ 'auth.phoneNumber' | translate }}</label>
-      <input type="tel" class="input-premium" [placeholder]="'auth.mobilePlaceholder' | translate" [(ngModel)]="signupPhone" [disabled]="signupOtpSent" maxlength="10">
-    </div>
-
-    <div class="field-group" *ngIf="signupOtpSent">
-      <label>{{ 'auth.enterOtp' | translate }}</label>
-      <input type="text" class="input-premium" [placeholder]="'auth.otpPlaceholder' | translate" [(ngModel)]="signupOtp" maxlength="4" (keyup.enter)="verifySignupOtp()">
-      <p class="dev-hint" *ngIf="signupDevOtpHint">{{ signupDevOtpHint }}</p>
-    </div>
-
-    <label class="remember-me" *ngIf="signupOtpSent">
-      <input type="checkbox" [(ngModel)]="rememberMe">
-      <span>{{ 'auth.rememberMe' | translate }}</span>
-    </label>
-
-    <button class="btn-premium full-width" *ngIf="!signupOtpSent" [disabled]="isSubmitting" (click)="sendSignupOtp()">
-      <span class="spinner" *ngIf="isSubmitting"></span>
-      {{ isSubmitting ? ('auth.sending' | translate) : ('auth.sendOtp' | translate) }}
-    </button>
-
-    <button class="btn-premium full-width" *ngIf="signupOtpSent" [disabled]="isSubmitting" (click)="verifySignupOtp()">
-      <span class="spinner" *ngIf="isSubmitting"></span>
-      {{ isSubmitting ? ('auth.verifying' | translate) : ('auth.verifyCreateAccount' | translate) }}
-    </button>
-  </div>
-
-  <!-- ============ FORGOT PASSWORD ============ -->
-  <div class="modal-body" *ngIf="mode === 'forgot'">
-    <button class="back-link" (click)="setMode('email')">
-      <mat-icon>arrow_back</mat-icon> {{ 'common.back' | translate }}
-    </button>
-    <h2>{{ 'auth.resetPassword' | translate }}</h2>
-    <p class="modal-subtitle">{{ 'auth.resetSubtitle' | translate }}</p>
-
-    <div class="success-banner" *ngIf="forgotSubmitted">
-      <mat-icon>check_circle</mat-icon>
-      {{ 'auth.resetSent' | translate }}
-    </div>
-
-    <ng-container *ngIf="!forgotSubmitted">
-      <div class="error-banner" *ngIf="errorMessage">
-        <mat-icon>error_outline</mat-icon>
-        {{ errorMessage }}
-      </div>
-      <div class="field-group">
-        <label>{{ 'auth.email' | translate }}</label>
-        <input type="email" class="input-premium" [placeholder]="'auth.emailPlaceholder' | translate" [(ngModel)]="forgotEmail" (keyup.enter)="submitForgotPassword()">
-      </div>
-      <button class="btn-premium full-width" (click)="submitForgotPassword()">
-        <mat-icon>send</mat-icon>
-        {{ 'auth.sendResetLink' | translate }}
-      </button>
-    </ng-container>
+    <p class="resend-wait" *ngIf="!canResend">{{ 'auth.resendIn' | translate:{ seconds: resendCooldown } }}</p>
   </div>
 </div>

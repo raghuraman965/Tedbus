@@ -235,3 +235,55 @@
   border-radius: 8px;
   margin: 8px 0 0;
 }
+
+/* -- Email OTP step -- */
+.otp-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 18px 0 10px;
+}
+
+.otp-digit {
+  width: 44px;
+  height: 52px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--brand-dark-gray, #1a1a2e);
+  background: var(--brand-light-gray, #fafafa);
+  border: 2px solid var(--brand-mid-gray, #e5e7eb);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.otp-digit:focus {
+  border-color: var(--brand-primary, #E53935);
+  box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.15);
+  background: var(--brand-white, #ffffff);
+}
+
+.countdown {
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--brand-text-muted, #6b7280);
+  margin: 4px 0 14px;
+}
+
+.countdown--expired {
+  color: var(--brand-primary, #E53935);
+}
+
+.resend-btn {
+  display: block;
+  margin: 12px auto 0;
+}
+
+.resend-wait {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--brand-text-muted, #6b7280);
+  margin: 12px 0 0;
+}

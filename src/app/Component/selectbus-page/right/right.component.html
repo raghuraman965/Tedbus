@@ -30,7 +30,7 @@
     <div *ngFor="let bus of matchedbus; index as i; trackBy: trackByBusId">
         <div *ngFor="let key of getkeys(); trackBy: trackByKey">
             <div *ngIf="bus._id === key">
-                <app-bus-box [rating]='bus.rating' [busid]="bus._id" [operatorname]="bus.operatorName" [bustype]="bus.busType"
+                <app-bus-box [rating]='bus.rating' [reviewStats]="reviewStats[bus._id || '']" [busid]="bus._id" [operatorname]="bus.operatorName" [bustype]="bus.busType"
                     [departuretime]="bus.departureTime" [livetracking]="bus.liveTracking" [reschedulable]="bus.reschedulable" [filledseats]="seats[key]"
                     [routedetails]="routes" [date]="date" [routeId]="getRouteId()" (seatsTaken)="onSeatsTaken(bus._id, $event)"></app-bus-box>
             </div>

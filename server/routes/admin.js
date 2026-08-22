@@ -46,6 +46,10 @@ router.get("/admin/payments", requireAdminAuth, admin.listPayments);
 router.get("/admin/payment-settings", requireAdminAuth, admin.getPaymentSettings);
 router.put("/admin/payment-settings", requireAdminAuth, admin.updatePaymentSettings);
 
+// Cancellation policy (drives every refund calculation, customer + admin)
+router.get("/admin/cancellation-policy", requireAdminAuth, admin.getCancellationPolicy);
+router.put("/admin/cancellation-policy", requireAdminAuth, admin.updateCancellationPolicy);
+
 // Community Moderation
 router.get("/admin/community/reports", requireAdminAuth, admin.listReports);
 router.put("/admin/community/reports/:id/status", requireAdminAuth, admin.updateReport);

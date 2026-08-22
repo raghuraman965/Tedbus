@@ -50,6 +50,9 @@ export interface SegmentInfo {
   durationHours: number;
   boardingPoints: string[];
   droppingPoints: string[];
+  dayOffset?: number;
+  departureDateTime?: string;
+  arrivalDateTime?: string;
 }
 
 export interface AvailabilityInfo {
@@ -86,6 +89,21 @@ export interface SearchBusResult {
     stops: RouteStop[];
   };
   segment: SegmentInfo;
+  /** Server-authoritative per-segment fare quote (mirrors checkout pricing). */
+  fare?: {
+    currency: string;
+    distanceKm: number;
+    occupancyPercent: number;
+    isWeekend: boolean;
+    perSeat: {
+      baseFare: number;
+      seatFare: number;
+      dynamicFare: number;
+      tax: number;
+      serviceFee: number;
+      total: number;
+    };
+  };
   availability: AvailabilityInfo;
   journeyDate: string;
   isToday: boolean;

@@ -7,7 +7,7 @@ import { SeatLiveService } from '../../../service/seat-live.service';
 import { Bus, SearchBusResult, SearchResult } from '../../../model/bus.model';
 import { Route } from '../../../model/routes.model';
 import { cardEntrance } from '../../animations/card-entrance';
-import { parseTimeToMinutes, addMinutesToDeparture, formatClockTime, formatDuration, getJourneyDateLabel } from '../../../utils/time-utils';
+import { parseTimeToMinutes, addMinutesToDeparture, formatClockTime, formatDuration, formatDurationFromMinutes, getJourneyDateLabel, getArrivalDateLabel } from '../../../utils/time-utils';
 
 interface EnrichedBus extends Bus {
   avgRating: number;
@@ -16,6 +16,7 @@ interface EnrichedBus extends Bus {
   busTypeLabel: string;
   departureHour: number;
   arrivalHour: number;
+  dayOffset: number;
   filledSeats: any[];
   availableSeats: number;
   _searchResult?: any;
@@ -125,68 +126,48 @@ export class PremiumSearchResultsComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.busService.searchBuses(this.departure, this.arrival, this.date, parseInt(this.passengers, 10)).subscribe({
       next: (response: SearchResult) => {
+        this.nextAvailableDates = response.nextAvailableDates || [];
         if (response.success && response.buses && response.buses.length > 0) {
           this.searchResults = response.buses;
-          this.nextAvailableDates = response.nextAvailableDates || [];
           this.allBuses = response.buses.map(result => this.enrichFromSearchResult(result));
-          this.loading = false;
-          this.afterSeatsLoaded();
+          this.errorMessage = '';
         } else {
-          this.nextAvailableDates = response.nextAvailableDates || [];
-          this.fetchBusesLegacy();
+          this.searchResults = [];
+          this.allBuses = [];
+          this.errorMessage = this.translate.instant('search.noBuses');
         }
-      },
-      error: (error) => {
-        console.warn('Advanced search API failed, falling back to legacy:', error);
-        this.fetchBusesLegacy();
-      }
-    });
-  }
-
-  private fetchBusesLegacy(): void {
-    this.busService.GETBUSDETAILS(this.departure, this.arrival, this.date).subscribe({
-      next: (response: any) => {
-        this.matchedRoute = response.route;
-        const seatsByBusId: { [key: string]: any[] } = response.busidwithseatobj || {};
-        const buses: Bus[] = response.matchedBuses || [];
-        this.allBuses = buses.map(bus => this.enrichBus(bus, seatsByBusId[bus._id as string] || []));
         this.loading = false;
         this.afterSeatsLoaded();
       },
       error: (error) => {
-        console.error('Error fetching buses', error);
+        console.error('Search API failed', error);
+        this.searchResults = [];
+        this.allBuses = [];
         this.errorMessage = this.translate.instant('search.loadError');
         this.loading = false;
       }
     });
   }
 
+  /** Retry handler for the error-state component. */
+  fetchBuses(): void {
+    this.fetchBusesAdvanced();
+  }
+
   private enrichFromSearchResult(result: SearchBusResult): EnrichedBus {
     const bus = result.bus;
-    const totalRating = (bus.rating || []).reduce((sum, r) => sum + r, 0);
-    const totalReviews = (bus.rating || []).length || 1;
-    const avgRating = +(totalRating / totalReviews).toFixed(1);
+
+    // Real review stats from the backend (visible reviews only) — the static
+    // seeded `rating` array is never used for display.
+    const realStats = (result as any).reviewStats || { avgRating: 0, totalReviews: 0 };
+    const avgRating = realStats.avgRating || 0;
+    const totalReviews = realStats.totalReviews || 0;
 
     const durationHours = result.segment?.durationMinutes ? result.segment.durationMinutes / 60 : 0;
-    // Compute actual per-seat fare from fareConfig
-    const fareConfig = result.route?.fareConfig;
-    const distance = result.segment?.distanceKm || result.route?.totalDistanceKm || 0;
-    const busType = bus.busType || 'standard';
-
-    let fare = 0;
-    if (fareConfig) {
-      fare = Math.max(fareConfig.baseFare || 0, distance * (fareConfig.pricePerKm || 1.5));
-      fare = Math.max(fare, fareConfig.minimumFare || 50);
-      const busMultiplier = fareConfig.busTypeMultipliers?.[busType] || 1.0;
-      fare = Math.round(fare * busMultiplier);
-    } else {
-      // Fallback: simple heuristic
-      const duration = durationHours;
-      if (busType === 'standard') fare = Math.round(50 * Math.floor(duration) / 2);
-      else if (busType === 'sleeper') fare = Math.round(100 * Math.floor(duration) / 2);
-      else if (busType === 'A/C Seater') fare = Math.round(125 * Math.floor(duration) / 2);
-      else fare = Math.round(75 * Math.floor(duration) / 2);
-    }
+    // Server-authoritative per-seat fare — identical inputs to the checkout
+    // engine, so the card price ALWAYS matches what payment/order charges.
+    // Client-side fare math is forbidden.
+    const fare = result.fare?.perSeat?.total ?? 0;
 
     let busTypeLabel = '';
     if (bus.busType === 'standard') {
@@ -200,8 +181,10 @@ export class PremiumSearchResultsComponent implements OnInit, OnDestroy {
     }
 
     const depMinutes = parseTimeToMinutes(bus.departureTime);
-    const durationMinutes = Math.round(durationHours * 60);
+    const durationMinutes = result.segment?.durationMinutes || Math.round(durationHours * 60);
     const arrMinutes = addMinutesToDeparture(depMinutes, durationMinutes);
+    // Day offset from the backend (0 = same day, 1 = overnight arrival)
+    const dayOffset = result.segment?.dayOffset ?? Math.floor((depMinutes + durationMinutes) / (24 * 60));
     const totalSeats = result.availability?.totalSeats || bus.totalSeats || 40;
     const filledSeats = result.availability?.soldSeatNumbers || [];
     const availableSeats = result.availability?.availableSeats ?? Math.max(totalSeats - filledSeats.length, 0);
@@ -214,31 +197,12 @@ export class PremiumSearchResultsComponent implements OnInit, OnDestroy {
       busTypeLabel,
       departureHour: depMinutes,
       arrivalHour: arrMinutes,
+      dayOffset,
       filledSeats,
       availableSeats,
       totalSeats,
       _searchResult: result
     };
-  }
-
-  fetchBuses(): void {
-    this.loading = true;
-    this.errorMessage = '';
-    this.busService.GETBUSDETAILS(this.departure, this.arrival, this.date).subscribe({
-      next: (response: any) => {
-        this.matchedRoute = response.route;
-        const seatsByBusId: { [key: string]: any[] } = response.busidwithseatobj || {};
-        const buses: Bus[] = response.matchedBuses || [];
-        this.allBuses = buses.map(bus => this.enrichBus(bus, seatsByBusId[bus._id as string] || []));
-        this.loading = false;
-        this.afterSeatsLoaded();
-      },
-      error: (error) => {
-        console.error('Error fetching buses', error);
-        this.errorMessage = this.translate.instant('search.loadError');
-        this.loading = false;
-      }
-    });
   }
 
   toggleRouteTimeline(busId: string): void {
@@ -345,77 +309,6 @@ export class PremiumSearchResultsComponent implements OnInit, OnDestroy {
         error: () => {}
       });
     });
-  }
-
-  private enrichBus(bus: Bus, filledSeats: any[]): EnrichedBus {
-    const totalRating = (bus.rating || []).reduce((sum, r) => sum + r, 0);
-    const totalReviews = (bus.rating || []).length || 1;
-    const avgRating = +(totalRating / totalReviews).toFixed(1);
-
-    const fareConfig = (this.matchedRoute as any)?.fareConfig;
-    const totalDistanceKm = (this.matchedRoute as any)?.totalDistanceKm || 0;
-
-    let fare = 0;
-    if (fareConfig && totalDistanceKm > 0) {
-      fare = Math.max(fareConfig.baseFare || 0, totalDistanceKm * (fareConfig.pricePerKm || 1.5));
-      fare = Math.max(fare, fareConfig.minimumFare || 50);
-      const busMultiplier = fareConfig.busTypeMultipliers?.[bus.busType] || 1.0;
-      fare = Math.round(fare * busMultiplier);
-    } else {
-      const duration = this.matchedRoute?.duration || 0;
-      if (bus.busType === 'standard') fare = Math.round(50 * Math.floor(duration) / 2);
-      else if (bus.busType === 'sleeper') fare = Math.round(100 * Math.floor(duration) / 2);
-      else if (bus.busType === 'A/C Seater') fare = Math.round(125 * Math.floor(duration) / 2);
-      else fare = Math.round(75 * Math.floor(duration) / 2);
-    }
-
-    let busTypeLabel = '';
-    if (bus.busType === 'standard') {
-      busTypeLabel = this.translate.instant('search.busTypes.standard');
-    } else if (bus.busType === 'sleeper') {
-      busTypeLabel = this.translate.instant('search.busTypes.sleeper');
-    } else if (bus.busType === 'A/C Seater') {
-      busTypeLabel = this.translate.instant('search.busTypes.acSeater');
-    } else {
-      busTypeLabel = this.translate.instant('search.busTypes.nonAc');
-    }
-
-    const duration = this.matchedRoute?.duration || 0;
-    const depMin = parseTimeToMinutes(bus.departureTime);
-    const durMin = Math.round(duration * 60);
-    const arrMin = addMinutesToDeparture(depMin, durMin);
-    const totalSeats = bus.totalSeats || 40;
-
-    const stops = (this.matchedRoute as any)?.stops || [];
-    const lastStop = stops.length > 0 ? stops[stops.length - 1] : null;
-    const _searchResult = {
-      bus: bus,
-      route: this.matchedRoute,
-      segment: {
-        fromStop: stops[0] || null,
-        toStop: lastStop,
-        distanceKm: totalDistanceKm,
-        durationMinutes: Math.round((this.matchedRoute?.duration || 0) * 60)
-      },
-      availability: {
-        totalSeats: bus.totalSeats || 40,
-        soldSeatNumbers: filledSeats,
-        availableSeats: Math.max((bus.totalSeats || 40) - filledSeats.length, 0)
-      }
-    };
-
-    return {
-      ...bus,
-      avgRating,
-      totalReviews,
-      fare,
-      busTypeLabel,
-      departureHour: depMin,
-      arrivalHour: arrMin,
-      filledSeats,
-      availableSeats: Math.max(totalSeats - filledSeats.length, 0),
-      _searchResult
-    };
   }
 
   private matchesBucket(hour: number, bucketKey: string): boolean {
@@ -552,6 +445,47 @@ export class PremiumSearchResultsComponent implements OnInit, OnDestroy {
 
   formatDurationFunc(decimalHours: number): string {
     return formatDuration(decimalHours);
+  }
+
+  /** Duration label from real segment data — never a raw number. */
+  busDurationLabel(bus: EnrichedBus): string {
+    const segMinutes = bus._searchResult?.segment?.durationMinutes;
+    if (segMinutes && segMinutes > 0) {
+      return formatDurationFromMinutes(segMinutes);
+    }
+    return this.formatDurationFunc(this.matchedRoute?.duration || 0);
+  }
+
+  /** Translated departure-day label (Today/Tomorrow/date). */
+  departureDayLabel(): string {
+    return this.translateDateLabel(getJourneyDateLabel(this.date));
+  }
+
+  /** Translated arrival-day label accounting for overnight day offset. */
+  arrivalDayLabel(bus: EnrichedBus): string {
+    const label = getArrivalDateLabel(this.date, bus.dayOffset || 0);
+    return this.translateDateLabel(label);
+  }
+
+  private translateDateLabel(label: string): string {
+    if (label === 'Today') return this.translate.instant('search.today');
+    if (label === 'Tomorrow') return this.translate.instant('search.tomorrow');
+    return label;
+  }
+
+  /** Formatted clock time for route stops. */
+  formatStopTime(value: string | number | null | undefined): string {
+    return formatClockTime(value, this.getAmpmLabels());
+  }
+
+  /** Route id for the reviews panel (advanced + legacy shapes). */
+  routeIdForBus(bus: EnrichedBus): string {
+    return (
+      bus._searchResult?.route?._id ||
+      (this.matchedRoute as any)?._id ||
+      (this.matchedRoute as any)?.id ||
+      ''
+    );
   }
 
   getJourneyDateLabel(): string {

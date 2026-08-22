@@ -55,6 +55,20 @@ function isValidEmail(email) {
   return typeof email === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+// Case-insensitive exact-match lookup so legacy accounts saved with mixed-case
+// emails (e.g. "User@X.com") are still found when someone logs in with
+// "user@x.com" - prevents accidental duplicate accounts.
+function escapeRegExp(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+async function findCustomerByEmail(email) {
+  const normalized = String(email || "").trim().toLowerCase();
+  if (!normalized) return null;
+  return Customer.findOne({
+    email: { $regex: `^${escapeRegExp(normalized)}$`, $options: "i" },
+  }).exec();
+}
+
 // ======================== EXISTING ENDPOINTS ========================
 
 exports.signup = async (req, res) => {
@@ -68,7 +82,7 @@ exports.signup = async (req, res) => {
       return res.status(400).json({ error: tReq(req, "auth.passwordTooShort") });
     }
 
-    const existingEmail = await Customer.findOne({ email }).exec();
+    const existingEmail = await findCustomerByEmail(email);
     if (existingEmail) {
       return res.status(409).json({ error: tReq(req, "auth.emailExists"), field: "email" });
     }
@@ -83,7 +97,7 @@ exports.signup = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     const customer = new Customer({
       name,
-      email,
+      email: String(email).trim().toLowerCase(),
       phone,
       password: passwordHash,
       authProvider: "email",
@@ -115,7 +129,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: tReq(req, "auth.loginRequired") });
     }
 
-    const customer = await Customer.findOne({ email }).exec();
+    const customer = await findCustomerByEmail(email);
     if (!customer || !customer.password) {
       return res.status(401).json({ error: tReq(req, "auth.invalidCredentials") });
     }
@@ -385,8 +399,9 @@ exports.verifyEmailOtp = async (req, res) => {
     // OTP verified successfully - remove from store
     otpStore.delete(`email:${normalizedEmail}`);
 
-    // Find or create customer by email
-    let customer = await Customer.findOne({ email: normalizedEmail }).exec();
+    // Find or create customer by email (case-insensitive so legacy
+    // mixed-case accounts are recognised instead of duplicated)
+    let customer = await findCustomerByEmail(normalizedEmail);
 
     if (!customer) {
       // Create new customer from email OTP login
@@ -422,6 +437,20 @@ exports.verifyEmailOtp = async (req, res) => {
       res.status(200).json(toAuthResponse(customer));
     }
   } catch (error) {
+    // Race safety: two concurrent first-time logins could both pass the
+    // findOne check; the unique index rejects the second save. Re-fetch and
+    // log the existing account in instead of failing with a 500.
+    if (error && error.code === 11000 && error.keyPattern && error.keyPattern.email) {
+      try {
+        const bodyEmail = req.body && req.body.email ? String(req.body.email).trim().toLowerCase() : "";
+        const existing = await findCustomerByEmail(bodyEmail);
+        if (existing) {
+          return res.status(200).json(toAuthResponse(existing));
+        }
+      } catch (refetchErr) {
+        console.error("error re-fetching customer after duplicate key", refetchErr);
+      }
+    }
     console.error("error verifying email otp", error);
     res.status(500).json({ error: tReq(req, "errors.auth.internal") });
   }
@@ -467,7 +496,7 @@ exports.googleLogin = async (req, res) => {
     const normalizedEmail = email.toLowerCase();
 
     // 1) Find by email first (most reliable - links accounts)
-    let customer = await Customer.findOne({ email: normalizedEmail }).exec();
+    let customer = await findCustomerByEmail(normalizedEmail);
 
     if (customer) {
       // Existing account found by email - link Google ID if not already linked

@@ -64,6 +64,7 @@ import { BusTrackingComponent } from './Premium/components/bus-tracking/bus-trac
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './shared/auth.interceptor';
+import { RouteReviewsComponent } from './Premium/components/route-reviews/route-reviews.component';
 
 // Lazy-loads each language file (assets/i18n/<lang>.json) only when needed.
 export function HttpLoaderFactory(http: HttpClient) {
@@ -146,6 +147,7 @@ export class HumanizedMissingHandler implements MissingTranslationHandler {
     MatSlideToggleModule,
     HttpClientModule,
     SharedModule,
+    RouteReviewsComponent,
     TranslateModule.forRoot({
       defaultLanguage: 'en',
       missingTranslationHandler: { provide: MissingTranslationHandler, useClass: HumanizedMissingHandler },

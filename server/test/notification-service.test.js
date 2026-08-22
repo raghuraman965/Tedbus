@@ -96,14 +96,49 @@ function matchesFilter(doc, filter) {
 }
 
 const TYPE_ENUM = [
+  // Booking
   "booking_confirmed",
   "booking_cancelled",
+  // Payment
+  "payment_successful",
+  "payment_failed",
+  "payment_pending",
+  // Journey / Trip
   "journey_reminder",
+  "trip_reminder_24h",
+  "trip_reminder_6h",
+  "trip_reminder_2h",
+  "trip_reminder_1h",
+  "trip_reminder_30m",
+  "boarding_reminder",
+  "journey_completed",
+  // Bus updates
   "bus_delayed",
   "bus_rescheduled",
+  "bus_cancelled",
+  "boarding_point_changed",
+  "timing_changed",
+  "route_changed",
+  // Cancellation / Refund
+  "ticket_cancelled",
+  "refund_initiated",
+  "refund_processing",
+  "refund_successful",
+  "refund_failed",
+  // Offers
   "offer",
   "coupon",
+  "coupon_expiring",
+  "personalized_offer",
+  "festival_offer",
+  // Community
   "community_activity",
+  "community_like",
+  "community_comment",
+  "community_reply",
+  "community_mention",
+  "community_post_approved",
+  "community_post_moderation",
   "review_reply",
   "account",
 ];
@@ -257,27 +292,29 @@ test("notifyBookingCancelled marks the email channel failed when SMTP is not con
 // ---------------------------------------------------------------------------
 
 test("sendJourneyReminders notifies upcoming departures and deduplicates", async () => {
-  const now = new Date();
-  const soon = new Date(now.getTime() + 2 * 60 * 60 * 1000);
+  // Departure exactly 2h out lands inside the "2h" reminder tier window
+  // (tier offset ±15 minutes) regardless of the current clock minute.
+  const dep = new Date(Date.now() + 2 * 60 * 60 * 1000);
+  const timeStr = `${String(dep.getHours()).padStart(2, "0")}:${String(dep.getMinutes()).padStart(2, "0")}`;
   const b = bookingFixture({
     _id: "b-reminder",
     customerId: "c1",
-    departureDetails: { city: "Chennai", date: yyyymmdd(soon), time: soon.getHours() },
+    departureDetails: { city: "Chennai", date: yyyymmdd(dep), time: timeStr },
   });
   bookings.push(b);
 
   const sent = await svc.sendJourneyReminders();
   assert.equal(sent, 1);
 
-  const n = notifModel.store.find((d) => d.type === "journey_reminder");
+  const n = notifModel.store.find((d) => d.category === "journey");
   assert.ok(n);
-  assert.equal(n.category, "journey");
+  assert.equal(n.type, "trip_reminder_2h");
   assert.equal(n.channels.inapp.status, "sent");
   assert.match(n.message, /Chennai → Bangalore/);
 
-  const before = notifModel.store.filter((d) => d.type === "journey_reminder").length;
+  const before = notifModel.store.filter((d) => d.category === "journey").length;
   await svc.sendJourneyReminders();
-  const after = notifModel.store.filter((d) => d.type === "journey_reminder").length;
+  const after = notifModel.store.filter((d) => d.category === "journey").length;
   assert.equal(after, before, "second run must not create a duplicate reminder");
 });
 
@@ -319,14 +356,14 @@ test("notifyBusStatusChange alerts every booking on the bus/date", async () => {
   const n = notifModel.store.find((d) => d.type === "bus_delayed");
   assert.ok(n);
   assert.equal(n.category, "bus");
-  assert.match(n.message, /delayed by 30 minutes/);
+  assert.match(n.message, /delayed by 30 min/);
 });
 
 // ---------------------------------------------------------------------------
 // Community bridge
 // ---------------------------------------------------------------------------
 
-test("bridgeCommunityNotification maps like -> community_activity (not reviews)", async () => {
+test("bridgeCommunityNotification maps like -> community_like (not reviews)", async () => {
   const n = await svc.bridgeCommunityNotification({
     userId: "c1",
     actorUserId: "c2",
@@ -336,11 +373,12 @@ test("bridgeCommunityNotification maps like -> community_activity (not reviews)"
   });
   assert.ok(n);
   assert.equal(n.category, "community");
-  assert.equal(n.type, "community_activity");
-  assert.equal(n.message, "Bob liked your post.");
+  assert.equal(n.type, "community_like");
+  assert.notEqual(n.type, "review_reply");
+  assert.match(n.message, /Bob liked your post/);
 });
 
-test("bridgeCommunityNotification maps comment reply -> community_activity, never review_reply", async () => {
+test("bridgeCommunityNotification maps comment reply -> community_reply, never review_reply", async () => {
   const n = await svc.bridgeCommunityNotification({
     userId: "c1",
     actorUserId: "c2",
@@ -349,9 +387,9 @@ test("bridgeCommunityNotification maps comment reply -> community_activity, neve
     commentId: "cm1",
     message: "replied to a comment on your post.",
   });
-  assert.equal(n.type, "community_activity");
+  assert.equal(n.type, "community_reply");
   assert.notEqual(n.type, "review_reply");
-  assert.match(n.message, /replied to a comment on your post/);
+  assert.match(n.message, /Bob replied to your comment/);
 });
 
 test("bridgeCommunityNotification maps verification_approved -> account with the message", async () => {

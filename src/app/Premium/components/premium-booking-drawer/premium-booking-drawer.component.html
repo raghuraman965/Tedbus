@@ -216,19 +216,19 @@
                 </div>
                 <div class="fare-line" *ngIf="dynamicFareInfo?.fare?.seatFare">
                     <span>{{ 'booking.seatPremium' | translate }}</span>
-                    <span>₹{{ dynamicFareInfo.fare.seatFare }}</span>
+                    <span>₹{{ seatPremiumTotal }}</span>
                 </div>
                 <div class="fare-line" *ngIf="dynamicFareInfo?.fare?.dynamicFare">
                     <span>{{ 'booking.dynamicFare' | translate }}</span>
-                    <span>₹{{ dynamicFareInfo.fare.dynamicFare }}</span>
+                    <span>₹{{ dynamicFareTotal }}</span>
                 </div>
                 <div class="fare-line" *ngIf="dynamicFareInfo?.fare?.tax">
                     <span>{{ 'booking.tax' | translate }}</span>
-                    <span>₹{{ dynamicFareInfo.fare.tax }}</span>
+                    <span>₹{{ taxTotal }}</span>
                 </div>
                 <div class="fare-line" *ngIf="dynamicFareInfo?.fare?.serviceFee">
                     <span>{{ 'booking.serviceFee' | translate }}</span>
-                    <span>₹{{ dynamicFareInfo.fare.serviceFee }}</span>
+                    <span>₹{{ serviceFeeTotal }}</span>
                 </div>
                 <div class="fare-line" *ngIf="gstEnabled && !dynamicFareInfo">
                     <span>{{ 'booking.gstPercent' | translate }}</span>

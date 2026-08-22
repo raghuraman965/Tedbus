@@ -163,6 +163,44 @@ export function getJourneyDateLabel(journeyDate: string | Date): string {
 }
 
 /**
+ * Format duration from total MINUTES into human-readable string.
+ * 600 → "10h 00m", 95 → "1h 35m"
+ * Used for segment.durationMinutes from the advanced search API.
+ */
+export function formatDurationFromMinutes(totalMinutes: number | null | undefined): string {
+  if (!totalMinutes || totalMinutes <= 0) return '0h 00m';
+  const mins = Math.round(totalMinutes);
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return `${h}h ${String(m).padStart(2, '0')}m`;
+}
+
+/**
+ * Day offset between departure and arrival: how many midnights are crossed.
+ * 0 = same day, 1 = next day (overnight), etc.
+ */
+export function getDayOffset(
+  departureMinutes: number,
+  durationMinutes: number | null | undefined
+): number {
+  if (!durationMinutes || durationMinutes <= 0) return 0;
+  return Math.floor((departureMinutes + durationMinutes) / (24 * 60));
+}
+
+/**
+ * Label for an arrival date given the journey date and day offset.
+ * Returns "Today" / "Tomorrow" / formatted date — never a hardcoded value.
+ */
+export function getArrivalDateLabel(journeyDate: string | Date, dayOffset: number): string {
+  if (!journeyDate) return '';
+  const base = journeyDate instanceof Date ? journeyDate : new Date(String(journeyDate));
+  if (isNaN(base.getTime())) return String(journeyDate);
+  const arrival = new Date(base.getTime());
+  arrival.setDate(arrival.getDate() + (dayOffset || 0));
+  return getJourneyDateLabel(arrival);
+}
+
+/**
  * Check if a journey is overnight (arrival is on the next day).
  */
 export function isOvernightJourney(departure: string | number, arrival: string | number): boolean {

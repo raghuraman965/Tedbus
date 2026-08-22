@@ -22,7 +22,9 @@ export class AuthInterceptor implements HttpInterceptor {
   ): Observable<HttpEvent<any>> {
     const token = this.authService.token;
 
+    let didAttachToken = false;
     if (req.url.startsWith(url) && token && !req.headers.has('Authorization')) {
+      didAttachToken = true;
       req = req.clone({
         setHeaders: {
           Authorization: `Bearer ${token}`
@@ -32,7 +34,24 @@ export class AuthInterceptor implements HttpInterceptor {
 
     return next.handle(req).pipe(
       catchError(error => {
-        if (error.status === 401 && !req.url.includes('/admin/')) {
+        // A 401 is only treated as "session expired" when ALL of these hold:
+        //  - it came from an app API (never admin panel auth),
+        //  - it is NOT a login/OTP/Google auth attempt (those legitimately
+        //    return 401 for bad credentials and must not nuke the session),
+        //  - we actually sent a token (so the server rejected a real session,
+        //    not an anonymous request to a protected endpoint), and
+        //  - we are not already on the login page (avoids redirect loops).
+        const isAuthEndpoint = req.url.includes('/auth/');
+        const isAdmin = req.url.includes('/admin/');
+        const alreadyOnLogin = this.router.url.startsWith('/login');
+
+        if (
+          error.status === 401 &&
+          !isAdmin &&
+          !isAuthEndpoint &&
+          didAttachToken &&
+          !alreadyOnLogin
+        ) {
           this.authService.logout();
           // Preserve the current URL so the user can resume their booking
           // after re-authenticating.

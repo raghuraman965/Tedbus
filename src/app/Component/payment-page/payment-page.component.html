@@ -31,68 +31,21 @@
         <div class="payment__fullContainer_leftContainer_paymentInstruments">
             <div class="choose_payment_heading">{{ 'payment.selectMethod' | translate }}</div>
 
-            <!-- Payment method radio group -->
+            <!-- Single payment method: Razorpay secure checkout. All real
+                 instruments (UPI / cards / netbanking / wallets) are offered
+                 inside the Razorpay window itself. -->
             <div class="payment__fullContainer_leftContainer_paymentInstrument">
-                <label *ngFor="let method of paymentMethods"
-                    class="payment__fullContainer_leftContainer_eachPaymentInstruments payment-option"
-                    [class.payment-option--active]="selectedMethod.value === method.id">
-                    <input class="payment-radio" type="radio" name="paymentMethod"
-                        [value]="method.id" [formControl]="selectedMethod"
-                        (change)="onMethodChange(method.id)" />
+                <label class="payment__fullContainer_leftContainer_eachPaymentInstruments payment-option payment-option--active">
                     <span class="payment-radio-dot"></span>
-                    <span class="radioButtonText">{{ method.label | translate }}</span>
-                    <span *ngIf="method.badge" class="payment__fullContainer_leftContainer_eachPaymentInstruments_new">
-                        {{ method.badge | translate }}
+                    <span class="radioButtonText">{{ 'payment.razorpay' | translate }}</span>
+                    <span class="paymentIconList">
+                        <img *ngFor="let icon of razorpayIcons" class="payment_icon_img" [src]="icon" alt="" />
                     </span>
-                    <span class="paymentIconList" *ngIf="method.icons.length">
-                        <img *ngFor="let icon of method.icons" class="payment_icon_img" [src]="icon" alt="" />
-                    </span>
-                    <span class="payment-radio-check" *ngIf="selectedMethod.value === method.id">
+                    <span class="payment-radio-check">
                         <mat-icon>check</mat-icon>
                     </span>
                 </label>
-            </div>
-
-            <!-- QR panel -->
-            <div *ngIf="selectedMethod.value === 'qr'" class="qr-panel">
-                <div class="qr-panel-title">
-                    <mat-icon>qr_code_scanner</mat-icon>
-                    {{ 'payment.qrTitle' | translate }}
-                </div>
-
-                <div *ngIf="qrLoading" class="qr-state qr-state--loading">
-                    <div class="qr-spinner"></div>
-                    <span>{{ 'payment.qrFetching' | translate }}</span>
-                </div>
-
-                <div *ngIf="!qrLoading && qrError" class="qr-state qr-state--error">
-                    <mat-icon>error_outline</mat-icon>
-                    <span>{{ qrError }}</span>
-                </div>
-
-                <div *ngIf="!qrLoading && !qrError && !qrAvailable" class="qr-state qr-state--error">
-                    <mat-icon>error_outline</mat-icon>
-                    <span>{{ 'payment.qrUnavailable' | translate }}</span>
-                </div>
-
-                <div *ngIf="!qrLoading && !qrError && qrAvailable" class="qr-content">
-                    <div class="qr-image-box">
-                        <img class="qr-image" [src]="qrImageUrl" [attr.alt]="'payment.scanToPay' | translate" />
-                    </div>
-                    <div class="qr-details">
-                        <div class="qr-merchant">{{ paymentSettings?.merchantName }}</div>
-                        <div class="qr-amount-label">{{ 'payment.amountPayable' | translate }}</div>
-                        <div class="qr-amount">{{ formatCurrency(passfare) }}</div>
-                        <div class="qr-upi-row">
-                            <span class="qr-upi-value">{{ paymentSettings?.upiId }}</span>
-                            <button class="qr-copy-btn" (click)="copyUpiId()">
-                                <mat-icon>{{ copied ? 'check_circle' : 'content_copy' }}</mat-icon>
-                                {{ copied ? ('payment.copied' | translate) : ('payment.copyUpiId' | translate) }}
-                            </button>
-                        </div>
-                        <p class="qr-hint">{{ 'payment.qrHint' | translate }}</p>
-                    </div>
-                </div>
+                <p class="razorpay-note">{{ 'payment.razorpayNote' | translate }}</p>
             </div>
 
             <!-- Error message -->
@@ -103,18 +56,7 @@
 
             <!-- Action button -->
             <div class="Payment__stripe">
-                <button *ngIf="selectedMethod.value === 'stripe'" class="Payment__stripe__button"
-                    [disabled]="processing" (click)="payWithStripe()">
-                    <span *ngIf="processing" class="btn-spinner"></span>
-                    {{ processing ? ('payment.processing' | translate) : ('payment.payWithStripe' | translate) }}
-                </button>
-                <button *ngIf="selectedMethod.value === 'qr'" class="Payment__stripe__button"
-                    [disabled]="processing || qrLoading || !qrAvailable" (click)="completeQrPayment()">
-                    <span *ngIf="processing" class="btn-spinner"></span>
-                    {{ processing ? ('payment.processing' | translate) : ('payment.completedPayment' | translate) }}
-                </button>
-                <button *ngIf="selectedMethod.value && selectedMethod.value !== 'qr' && selectedMethod.value !== 'stripe'"
-                    class="Payment__stripe__button" [disabled]="processing" (click)="payNow()">
+                <button class="Payment__stripe__button" [disabled]="processing" (click)="makepayment()">
                     <span *ngIf="processing" class="btn-spinner"></span>
                     {{ processing ? ('payment.processing' | translate) : ('payment.proceedToPay' | translate) }}
                 </button>
@@ -123,10 +65,22 @@
     </div>
 
     <div class="payment__fullContainer_rightContainer">
+        <!-- Seat-hold countdown -->
+        <div *ngIf="!holdExpired" class="hold-timer-chip">
+            <mat-icon class="hold-timer-icon">timer</mat-icon>
+            <span>{{ 'payment.seatsHeldFor' | translate }}</span>
+            <strong>{{ holdCountdownLabel }}</strong>
+        </div>
+        <div *ngIf="holdExpired" class="hold-expired-banner">
+            <mat-icon>hourglass_bottom</mat-icon>
+            <span>{{ 'booking.holdExpired' | translate }}</span>
+            <button class="payment-success-btn" (click)="reselectSeats()">{{ 'payment.reselectSeats' | translate }}</button>
+        </div>
+
         <div class="payment__fullContainer_rightContainer_trip_container">
           <div class="travel_operator_info">
             <div class="travel_title">{{ operatorname }}</div>
-            <div class="travel_specification">{{ 'payment.busType' | translate }}</div>
+            <div class="travel_specification">{{ trip?.busType || '' }}</div>
           </div>
           <div class="line"></div>
           <div style="display: flex; justify-content: space-between;">
@@ -141,7 +95,7 @@
             </div>
             <div style="display: flex; flex-direction: column; margin-right: 10px;">
               <div>{{ 'payment.seatsBooked' | translate }}</div>
-              <div>{{ passseatarray }}</div>
+              <div>{{ passseatarray.join(', ') }}</div>
             </div>
           </div>
           <div class="line"></div>
@@ -150,34 +104,42 @@
               <mat-icon class="icons">location_on</mat-icon>
               <div style="display: flex; flex-direction: column;">
                 <div class="travel_specification">{{ 'payment.boardingPoint' | translate }}</div>
-                <div>{{ routedetails.departureLocation.name | cityName }}</div>
+                <div>{{ boardingDisplayName | cityName }}</div>
                 <div>{{ bookingdate }}</div>
-                <div>{{ formatTime(busdepauturetime) }}</div>
-                 <div>{{routedetails.departureLocation.name | cityName}}</div>
-
+                <div>{{ departureTimeDisplay }}</div>
               </div>
             </div>
             <div style="display: flex; flex-direction: column;">
               <div class="travel_specification">{{ 'payment.droppingPoint' | translate }}</div>
-              <div>{{ routedetails.arrivalLocation.name | cityName }}</div>
+              <div>{{ droppingDisplayName | cityName }}</div>
               <div>{{ bookingdate }}</div>
-              <div>{{ formatTime(busarrivaltime) }}</div>
+              <div>{{ arrivalTimeDisplay }}</div>
             </div>
           </div>
           <div class="passangerInfo">
             <mat-icon class="icons">account_box</mat-icon>
             <div class="passangerName">{{ customerid.name }}</div>
           </div>
+          <button class="back-to-seats-link" (click)="backToSeats()" [disabled]="processing">
+            {{ 'payment.backToSeats' | translate }}
+          </button>
         </div>
         <div class="payment__fullContainer_rightContainer_fair_container">
           <div style="display: flex; justify-content: space-between;">
             <div class="travel_title">{{ 'payment.fareBreakup' | translate }}</div>
             <img src="https://s3.rdbuz.com/Images/webplatform/Common/Payment/down.svg" width="14" height="14" alt="">
           </div>
-          <div style="display: flex; justify-content: space-between; margin-top: 10px;"></div>
+          <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <div class="travel_specification">{{ 'payment.seatFare' | translate }} &times; {{ seatCount }}</div>
+            <div class="travel_specification">{{ formatCurrency(perSeatFare * seatCount) }}</div>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+            <div class="travel_specification">{{ 'payment.taxesAndFees' | translate }} &times; {{ seatCount }}</div>
+            <div class="travel_specification">{{ formatCurrency(feesPerSeat * seatCount) }}</div>
+          </div>
           <div style="display: flex; justify-content: space-between; margin-top: 10px;">
             <div class="travel_specification" style="font-weight: bold;">{{ 'payment.totalPayable' | translate }}</div>
-            <div class="travel_specification" style="font-weight: bold;">{{ formatCurrency(passfare) }}</div>
+            <div class="travel_specification" style="font-weight: bold;">{{ formatCurrency(displayTotal) }}</div>
           </div>
         </div>
         <div style="display: flex; justify-content: space-around; margin-top: 10px; width: 95%;">

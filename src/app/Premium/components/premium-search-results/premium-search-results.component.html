@@ -143,11 +143,11 @@
           <div class="timeline">
             <div class="time-block">
               <span class="time-value">{{ formatTime(bus.departureHour) }}</span>
-              <span class="time-city">{{ matchedRoute?.departureLocation?.name | cityName }}</span>
-              <span class="time-day">{{ 'search.today' | translate }}</span>
+              <span class="time-city">{{ (bus._searchResult?.segment?.fromStop?.stopName || matchedRoute?.departureLocation?.name) | cityName }}</span>
+              <span class="time-day">{{ departureDayLabel() }}</span>
             </div>
             <div class="timeline-mid">
-              <span class="duration-label">{{ formatDurationFunc(matchedRoute?.duration || 0) }}</span>
+              <span class="duration-label">{{ busDurationLabel(bus) }}</span>
               <div class="timeline-rail">
                 <span class="rail-dot start"></span>
                 <span class="rail-line"></span>
@@ -155,15 +155,20 @@
                 <span class="rail-line"></span>
                 <span class="rail-dot end"></span>
               </div>
-              <span class="via-label">{{ 'search.nonStop' | translate }}</span>
+              <span class="via-label" *ngIf="(bus._searchResult?.route?.stops?.length || 0) > 2; else nonStopLabel">
+                {{ (bus._searchResult.route.stops.length - 2) }} {{ 'search.stops' | translate }}
+              </span>
+              <ng-template #nonStopLabel>
+                <span class="via-label">{{ 'search.nonStop' | translate }}</span>
+              </ng-template>
               <span class="segment-info" *ngIf="bus._searchResult?.segment?.fromStop && bus._searchResult?.segment?.toStop">
                 {{ bus._searchResult.segment.distanceKm }} km · {{ bus._searchResult.segment.fromStop?.stopName | cityName }} → {{ bus._searchResult.segment.toStop?.stopName | cityName }}
               </span>
             </div>
             <div class="time-block right">
               <span class="time-value">{{ formatTime(bus.arrivalHour) }}</span>
-              <span class="time-city">{{ matchedRoute?.arrivalLocation?.name | cityName }}</span>
-              <span class="time-day">{{ 'search.today' | translate }}</span>
+              <span class="time-city">{{ (bus._searchResult?.segment?.toStop?.stopName || matchedRoute?.arrivalLocation?.name) | cityName }}</span>
+              <span class="time-day">{{ arrivalDayLabel(bus) }}</span>
             </div>
           </div>
 
@@ -225,7 +230,7 @@
               </div>
               <div class="stop-info">
                 <span class="stop-name">{{ stop.stopName }}</span>
-                <span class="stop-time">{{ stop.departureTime }}</span>
+                <span class="stop-time">{{ formatStopTime(stop.sequence === bus._searchResult.segment?.fromStop?.sequence ? bus._searchResult.segment.fromStop.departureTime : stop.departureTime) }}</span>
                 <span class="stop-distance" *ngIf="stop.distanceFromOrigin > 0">{{ stop.distanceFromOrigin }} km</span>
               </div>
             </div>
@@ -233,8 +238,14 @@
           <div class="route-summary">
             <span>{{ (bus._searchResult.route?.stops?.length || 0) }} {{ 'search.stops' | translate }}</span>
             <span>{{ bus._searchResult.segment.distanceKm }} km</span>
-            <span>{{ bus._searchResult.segment.durationMinutes }} min</span>
+            <span>{{ busDurationLabel(bus) }}</span>
           </div>
+
+          <app-route-reviews
+            *ngIf="routeIdForBus(bus)"
+            [routeId]="routeIdForBus(bus)"
+            [busId]="bus._id || ''">
+          </app-route-reviews>
         </div>
 
         <div class="seat-selection-panel" *ngIf="expandedBusId === bus._id">

@@ -21,6 +21,8 @@ const customerSchema = new Schema({
     type: String,
     required: true,
     unique: true,
+    trim: true,
+    lowercase: true,
   },
   dateOfBirth: {
     type: String,

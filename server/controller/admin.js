@@ -13,6 +13,9 @@ const ModerationLog = require("../models/moderationLog");
 const Notification = require("../models/notification");
 const Review = require("../models/review");
 const Offer = require("../models/offer");
+const CancellationPolicy = require("../models/cancellationPolicy");
+const { releaseSeats, releaseSegmentSeats } = require("./seatReservation");
+const { computeRefundForBooking } = require("../services/refundService");
 const paymentCtrl = require("./paymentSettings");
 const notificationCtrl = require("./notification");
 
@@ -326,10 +329,61 @@ exports.listBuses = async (req, res) => {
   }
 };
 
+// Bus schema fields an admin may write. Legacy form keys (busname/busnumber/
+// busoperator/seats/fare/photos) are mapped onto the REAL schema fields so the
+// admin panel stops writing phantom columns that search can never read.
+const BUS_FIELDS = [
+  "operatorName",
+  "busType",
+  "busNumber",
+  "departureTime",
+  "arrivalTime",
+  "totalSeats",
+  "amenities",
+  "images",
+  "routes",
+  "seatLayout",
+  "operatingDays",
+  "fareOverrides",
+  "liveTracking",
+  "reschedulable",
+  "isActive",
+];
+
+function normalizeBusBody(body) {
+  const out = pickFields(body, BUS_FIELDS);
+  const legacy = {
+    busname: "operatorName",
+    busoperator: "operatorName",
+    busnumber: "busNumber",
+    seats: "totalSeats",
+    photos: "images",
+    fare: null,
+  };
+  for (const [from] of Object.entries(legacy)) {
+    if (body[from] === undefined) continue;
+    const to = legacy[from];
+    if (to && out[to] === undefined) out[to] = body[from];
+  }
+  if (out.operatorName !== undefined) out.operatorName = String(out.operatorName).trim();
+  if (out.busNumber !== undefined) out.busNumber = String(out.busNumber).trim();
+  if (out.totalSeats !== undefined) {
+    const n = parseInt(out.totalSeats, 10);
+    out.totalSeats = Number.isInteger(n) && n > 0 ? Math.min(n, 80) : 40;
+  }
+  if (typeof out.amenities === "string") {
+    out.amenities = out.amenities.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  if (typeof out.operatingDays === "string") {
+    out.operatingDays = out.operatingDays.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  if (out.routes !== undefined) out.routes = String(out.routes);
+  return out;
+}
+
 exports.createBus = async (req, res) => {
   try {
-    const body = pickFields(req.body, ["busname","busnumber","busoperator","operatorName","busType","seats","amenities","fare","routes","seatLayout","photos","departureTime","arrivalTime","isActive"]);
-    if (body.routes) body.routes = String(body.routes);
+    const body = normalizeBusBody(req.body);
     const bus = await Bus.create(body);
     res.status(201).json({ ok: true, data: bus });
   } catch (err) {
@@ -339,8 +393,7 @@ exports.createBus = async (req, res) => {
 
 exports.updateBus = async (req, res) => {
   try {
-    const body = pickFields(req.body, ["busname","busnumber","busoperator","operatorName","busType","seats","amenities","fare","routes","seatLayout","photos","departureTime","arrivalTime","isActive"]);
-    if (body.routes) body.routes = String(body.routes);
+    const body = normalizeBusBody(req.body);
     const bus = await Bus.findByIdAndUpdate(
       req.params.id,
       { $set: body },
@@ -525,29 +578,63 @@ exports.cancelBooking = async (req, res) => {
       return res.status(400).json({ ok: false, message: "Booking is already cancelled." });
     }
     const prevStatus = booking.status;
+
+    // Same policy math as the customer path — admins cannot invent refunds.
+    const quote = await computeRefundForBooking(booking.toObject());
+    const now = new Date();
     booking.status = "cancelled";
-    booking.paymentStatus = "refunded";
+    booking.cancelledAt = now;
+    booking.cancelledBy = "admin";
+    booking.refundAmount = quote.refundAmount;
+    booking.refundPercent = quote.refundPercent;
+    // Admin cancellations are processed immediately (not merely initiated):
+    // paymentStatus flips to refunded only when money is actually owed back.
+    if (quote.refundAmount > 0) {
+      booking.paymentStatus = "refunded";
+      booking.refundStatus = "processed";
+    } else {
+      booking.refundStatus = "not_applicable";
+    }
+    booking.cancellationReason = String(req.body?.reason || "Cancelled by admin").slice(0, 200);
     booking.timeline = booking.timeline || [];
-    booking.timeline.push({ status: "cancelled", at: new Date() });
+    booking.timeline.push({
+      status: "cancelled",
+      at: now,
+      meta: { by: "admin", refundAmount: quote.refundAmount, refundPercent: quote.refundPercent },
+    });
     await booking.save();
 
-    const SeatLock = require("../models/seatLock");
-    if (booking.busId) {
-      await SeatLock.updateOne(
-        { busId: String(booking.busId), date: booking.departureDetails?.date },
-        { $pull: { bookedSeats: { $in: booking.seats || [] } } }
+    const date = String(booking.departureDetails?.date || "");
+    const busId = String(booking.busId || "");
+    if (busId && date) {
+      // Shared release: removes the segment rows AND rebuilds the legacy
+      // bookedSeats mirror so every viewer sees those seats free again.
+      await releaseSegmentSeats(busId, date, String(booking._id)).catch((e) =>
+        console.error("admin segment release error:", e.message)
       );
+      await releaseSeats(busId, date, booking.seats || []).catch((e) =>
+        console.error("admin flat release error:", e.message)
+      );
+      try {
+        const { broadcastSeatsReleased } = require("../services/socket");
+        broadcastSeatsReleased(busId, date, booking.seats || []);
+      } catch (broadcastError) {
+        console.error("seat release broadcast error:", broadcastError.message);
+      }
     }
 
     const notificationService = require("../services/notificationService");
     await notificationService.notifyBookingCancelled(booking).catch((e) =>
       console.error("cancel notification error:", e.message)
     );
-    await notificationService.notifyRefundInitiated(booking, booking.fare).catch((e) =>
-      console.error("refund notification error:", e.message)
-    );
+    await notificationService
+      .notifyRefundInitiated(booking, booking.refundAmount)
+      .catch((e) => console.error("refund notification error:", e.message));
 
-    res.json({ ok: true, data: { booking, previousStatus: prevStatus } });
+    res.json({
+      ok: true,
+      data: { booking, previousStatus: prevStatus, refund: { amount: quote.refundAmount, percent: quote.refundPercent } },
+    });
   } catch (err) {
     res.status(500).json({ ok: false, message: "Could not cancel booking." });
   }
@@ -662,6 +749,72 @@ exports.listPayments = async (req, res) => {
 
 exports.getPaymentSettings = paymentCtrl.getPaymentSettings;
 exports.updatePaymentSettings = paymentCtrl.updatePaymentSettings;
+
+// ---------------- Cancellation policy (global, admin-editable) ----------------
+
+exports.getCancellationPolicy = async (req, res) => {
+  try {
+    const policy = await CancellationPolicy.getGlobal();
+    res.json({ ok: true, data: policy });
+  } catch (err) {
+    res.status(500).json({ ok: false, message: "Could not load cancellation policy." });
+  }
+};
+
+const VALID_DAYS = new Set(["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]);
+
+exports.updateCancellationPolicy = async (req, res) => {
+  try {
+    const body = pickFields(req.body, ["refundSlabs", "serviceFeeRefundable", "taxRefundable", "allowCancellationAfterDeparture"]);
+    const update = {};
+
+    if (body.refundSlabs !== undefined) {
+      if (!Array.isArray(body.refundSlabs) || body.refundSlabs.length === 0) {
+        return res.status(400).json({ ok: false, message: "refundSlabs must be a non-empty array." });
+      }
+      const slabs = [];
+      for (const s of body.refundSlabs) {
+        const hours = Number(s.minHoursBeforeDeparture);
+        const pct = Number(s.refundPercent);
+        if (!Number.isFinite(hours) || hours < 0) {
+          return res.status(400).json({ ok: false, message: "Each slab needs minHoursBeforeDeparture >= 0." });
+        }
+        if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+          return res.status(400).json({ ok: false, message: "Each slab needs refundPercent between 0 and 100." });
+        }
+        slabs.push({
+          minHoursBeforeDeparture: Math.round(hours),
+          refundPercent: Math.round(pct),
+          label: String(s.label || "").slice(0, 60),
+        });
+      }
+      // Highest-hours-first ordering; reject duplicate thresholds.
+      const seen = new Set();
+      for (const s of slabs) {
+        if (seen.has(s.minHoursBeforeDeparture)) {
+          return res.status(400).json({ ok: false, message: `Duplicate threshold ${s.minHoursBeforeDeparture}h.` });
+        }
+        seen.add(s.minHoursBeforeDeparture);
+      }
+      update.refundSlabs = slabs.sort((a, b) => b.minHoursBeforeDeparture - a.minHoursBeforeDeparture);
+    }
+
+    for (const flag of ["serviceFeeRefundable", "taxRefundable", "allowCancellationAfterDeparture"]) {
+      if (body[flag] !== undefined) update[flag] = !!body[flag];
+    }
+
+    let policy = await CancellationPolicy.findOne({ key: "global" }).exec();
+    if (!policy) {
+      policy = await CancellationPolicy.create({ key: "global", ...update });
+    } else {
+      Object.assign(policy, update);
+      await policy.save();
+    }
+    res.json({ ok: true, data: policy });
+  } catch (err) {
+    res.status(400).json({ ok: false, message: "Could not update cancellation policy." });
+  }
+};
 
 // ---------------- Cancellations ----------------
 
@@ -1136,11 +1289,22 @@ exports.updateReview = async (req, res) => {
     if (typeof visible !== "boolean") {
       return res.status(400).json({ ok: false, message: "visible (boolean) is required." });
     }
-    const review = await Review.findByIdAndUpdate(
-      req.params.id,
-      { $set: { visible } },
-      { new: true }
-    ).lean();
+    // Keep legacy `visible` flag and new moderation `status` in sync.
+    const update = visible
+      ? {
+          visible: true,
+          status: "visible",
+          moderatedAt: null,
+          moderationReason: "",
+        }
+      : {
+          visible: false,
+          status: "hidden",
+          moderatedAt: new Date(),
+          moderationReason: "admin_hidden",
+        };
+    const review = await Review.findByIdAndUpdate(req.params.id, { $set: update }, { new: true })
+      .lean();
     if (!review) return res.status(404).json({ ok: false, message: "Review not found." });
     res.json({ ok: true, data: review });
   } catch (err) {

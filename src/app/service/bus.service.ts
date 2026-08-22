@@ -59,9 +59,40 @@ export class BusService {
     return this.http.post<any>(`${this.busbookapi}calculate-fare`, payload);
   }
 
-  /** Create a segment-aware booking */
-  addSegmentBooking(booking: any): Observable<Booking> {
-    return this.http.post<Booking>(`${this.busbookapi}segment`, booking, { headers: this.authHeaders() });
+  // ===== Lock-on-proceed flow =====
+
+  /** Places a 10-minute hold on the selected seats and returns the
+   *  server-computed fare quote + holdId/expiresAt. */
+  lockSeats(payload: {
+    routeId: string; busId: string; date: string; seats: number[];
+    boardingStopSequence: number; droppingStopSequence: number;
+  }): Observable<any> {
+    return this.http.post<any>(this.busbookapi + 'seats/lock', payload, { headers: this.authHeaders() });
+  }
+
+  /** Explicitly gives up a seat hold when the user backs out. */
+  releaseSeats(busId: string, date: string, holdId: string): Observable<any> {
+    return this.http.post<any>(this.busbookapi + 'seats/release', { busId, date, holdId }, { headers: this.authHeaders() });
+  }
+
+  /** THE booking creation endpoint. Requires paymentReference + holdId — both
+   *  are validated server-side; nothing here is trusted from the client. */
+  createBooking(payload: {
+    paymentReference: string;
+    holdId: string;
+    passengerDetails: Array<{ name: string; age: number; gender?: string }>;
+    phoneNumber?: string;
+    isBusinessTravel?: boolean;
+    businessDetails?: { gstNumber?: string; companyName?: string };
+    isInsurance?: boolean;
+    isCovidDonated?: boolean;
+  }): Observable<Booking> {
+    return this.http.post<Booking>(this.busbookapi, payload, { headers: this.authHeaders() });
+  }
+
+  /** What would this cancellation refund? (policy-computed, live) */
+  refundQuote(bookingId: string): Observable<any> {
+    return this.http.get<any>(this.busbookapi + `refund-quote/${bookingId}`, { headers: this.authHeaders() });
   }
 
   // ===== Legacy endpoints (backward compat) =====
@@ -75,37 +106,29 @@ export class BusService {
     return this.http.get<{ routes: any[] }>(`${this.apiurl}available`);
   }
 
-  addbusmongo(myBooking: any): Observable<Booking> {
-    const busbook: Booking = {
-      customerId: myBooking.customerId,
-      passengerDetails: myBooking.passengerDetails,
-      email: myBooking.email,
-      phoneNumber: myBooking.phoneNumber,
-      fare: myBooking.fare,
-      status: myBooking.status,
-      bookingDate: myBooking.bookingDate,
-      busId: myBooking.busId,
-      seats: myBooking.seats,
-      departureDetails: myBooking.departureDetails,
-      arrivalDetails: myBooking.arrivalDetails,
-      duration: myBooking.duration,
-      isBusinessTravel: myBooking.isBusinessTravel,
-      isInsurance: myBooking.isInsurance,
-      isCovidDonated: myBooking.isCovidDonated,
-      paymentReference: myBooking.paymentReference,
-      paymentMethod: myBooking.paymentMethod,
-      transactionId: myBooking.transactionId
-    };
-    return this.http.post<Booking>(this.busbookapi, busbook, { headers: this.authHeaders() });
-  }
-
   getbusmongo(id: string): Observable<Booking[]> {
     const apiUrl = `${this.busbookapi}${id}`;
     return this.http.get<Booking[]>(apiUrl, { headers: this.authHeaders() });
   }
 
-  verifyPayment(payload: { paymentReference: string; customerId: string; amount: number; method: string; }): Observable<any> {
-    return this.http.post<any>(this.busbookapi + 'verify-payment', payload, { headers: this.authHeaders() });
+  /** Asks the server to price the booking (authoritative) and open a Razorpay
+   *  order for exactly that amount. The response carries everything Checkout
+   *  needs plus the paymentReference used to consume the payment later. */
+  createPaymentOrder(payload: {
+    routeId: string; busId: string; date: string; seats: number[];
+    holdId: string;
+    boardingStopSequence?: number; droppingStopSequence?: number; seatType?: string;
+  }): Observable<any> {
+    return this.http.post<any>(this.busbookapi + 'payment/order', payload, { headers: this.authHeaders() });
+  }
+
+  /** Verifies the Razorpay signature server-side. Only a success here marks
+   *  the payment attempt verified so the booking can be created. */
+  confirmPayment(payload: {
+    paymentReference: string; razorpay_order_id: string;
+    razorpay_payment_id: string; razorpay_signature: string;
+  }): Observable<any> {
+    return this.http.post<any>(this.busbookapi + 'payment/confirm', payload, { headers: this.authHeaders() });
   }
 
   validateSeats(payload: { busId: string; date: string; seats: number[]; boardingSequence?: number; droppingSequence?: number }): Observable<any> {

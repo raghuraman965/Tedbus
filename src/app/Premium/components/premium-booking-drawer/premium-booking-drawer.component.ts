@@ -5,6 +5,10 @@ import { TranslateService } from '@ngx-translate/core';
 import { DataserviceService } from '../../../service/dataservice.service';
 import { BusService } from '../../../service/bus.service';
 import { AuthService } from '../../services/auth.service';
+import {
+  BookingDraftService,
+  DraftTrip,
+} from '../../services/booking-draft.service';
 import { LoginModalComponent } from '../login-modal/login-modal.component';
 import { formatClockTime, formatDuration, parseTimeToMinutes, addMinutesToDeparture, getJourneyDateLabel } from '../../../utils/time-utils';
 
@@ -70,6 +74,7 @@ export class PremiumBookingDrawerComponent implements OnInit, OnChanges {
     private translate: TranslateService,
     private busservice: BusService,
     private authService: AuthService,
+    private draftService: BookingDraftService,
     private dialog: MatDialog
   ) {}
 
@@ -170,22 +175,44 @@ export class PremiumBookingDrawerComponent implements OnInit, OnChanges {
   }
 
   // ---- Fare ----
+  get seatCount(): number {
+    return this.selectedseat?.length || 0;
+  }
+
   get baseFare(): number {
     if (this.dynamicFareInfo?.fare?.totalForSeats != null) {
       return this.dynamicFareInfo.fare.totalForSeats;
     }
-    return (this.selectedseat?.length || 0) * this.seatprice;
+    return this.seatCount * this.seatprice;
+  }
+
+  /** Server fare values are PER SEAT — every displayed line must be scaled by
+   *  the seat count so the breakup adds up to the charged total. */
+  get seatPremiumTotal(): number {
+    return (this.dynamicFareInfo?.fare?.seatFare || 0) * this.seatCount;
+  }
+
+  get dynamicFareTotal(): number {
+    return (this.dynamicFareInfo?.fare?.dynamicFare || 0) * this.seatCount;
+  }
+
+  get taxTotal(): number {
+    return (this.dynamicFareInfo?.fare?.tax ?? 0) * this.seatCount;
+  }
+
+  get serviceFeeTotal(): number {
+    return (this.dynamicFareInfo?.fare?.serviceFee ?? 0) * this.seatCount;
   }
 
   get gstAmount(): number {
     if (this.dynamicFareInfo?.fare?.tax != null) {
-      return this.dynamicFareInfo.fare.tax;
+      return this.taxTotal;
     }
     return this.gstEnabled ? Math.round(this.baseFare * 0.05) : 0;
   }
 
   get serviceFeeAmount(): number {
-    return this.dynamicFareInfo?.fare?.serviceFee ?? 0;
+    return this.serviceFeeTotal;
   }
 
   get totalFare(): number {
@@ -322,50 +349,132 @@ export class PremiumBookingDrawerComponent implements OnInit, OnChanges {
       .validateSeats({ busId: this.busid, date: this.date, seats: this.selectedseat })
       .subscribe({
         next: (result: any) => {
-          this.seatChecking = false;
           if (result && result.success === false && Array.isArray(result.conflicts) && result.conflicts.length) {
+            this.seatChecking = false;
             this.seatsTaken.emit(result.conflicts);
             return;
           }
-          this.navigateToPayment();
+          this.lockSeatsAndContinue();
         },
         error: () => {
-          this.seatChecking = false;
-          this.navigateToPayment();
+          // Pre-check endpoint unavailable — the lock call below still
+          // enforces everything server-side, so continue.
+          this.lockSeatsAndContinue();
         }
       });
   }
 
-  private navigateToPayment(): void {
-    const routeParams: any = {
-      operatorname: this.operatorname,
-      date: this.date,
-      selectedseat: this.selectedseat,
-      passemail: this.passemail,
-      passphn: this.passphn,
-      passiscoviddonate: false,
-      passisbuisness: false,
-      passinsurance: false,
-      seatprice: this.seatprice,
-      passfare: this.totalFare,
-      busid: this.busid,
-      busarrivaltime: this.busarrivaltime,
-      busdeparturetime: this.busdeparturetime,
-      routeId: this.routeId || ''
+  /** Proceed = LOCK. A 10-minute hold is placed on the exact seats before we
+   *  leave this page; the payment page then prices its order against that
+   *  hold, so seats can never be double-sold between drawer and gateway. */
+  private lockSeatsAndContinue(): void {
+    const segment = this.searchResult?.segment;
+    const route = this.searchResult?.route;
+    const rid = route?._id || route?.id || this.routeId;
+
+    this.busservice
+      .lockSeats({
+        routeId: rid || '',
+        busId: this.busid,
+        date: this.date,
+        seats: this.selectedseat,
+        boardingStopSequence: segment?.fromStop?.sequence ?? 1,
+        droppingStopSequence: segment?.toStop?.sequence ?? 9999
+      })
+      .subscribe({
+        next: (hold) => {
+          this.seatChecking = false;
+          if (!hold?.holdId) {
+            alert(this.translate.instant('booking.errGeneric'));
+            return;
+          }
+          this.populateDraft(rid, hold);
+          this.router.navigate(['/payment']);
+        },
+        error: (error) => {
+          this.seatChecking = false;
+          const conflicts = error?.error?.conflictingSeats || error?.error?.conflicts;
+          if (error?.status === 409 && Array.isArray(conflicts) && conflicts.length) {
+            this.seatsTaken.emit(conflicts);
+            return;
+          }
+          if (error?.status === 401) {
+            const ref = this.dialog.open(LoginModalComponent, {
+              panelClass: 'premium-dialog-panel',
+              autoFocus: false,
+              data: { message: 'auth.loginToContinue' }
+            });
+            ref.afterClosed().subscribe((success: boolean) => {
+              if (success && this.authService.isLoggedIn) {
+                this.continueBooking();
+              }
+            });
+            return;
+          }
+          alert(error?.error?.error || this.translate.instant('booking.errGeneric'));
+        }
+      });
+  }
+
+  /** Writes the full checkout context into the session draft so the payment
+   *  page needs NO data from the URL. Money values here are display-only; the
+   *  server re-prices authoritatively when the payment order is created. */
+  private populateDraft(routeId: string | null, hold: any): void {
+    const fare: any = this.dynamicFareInfo?.fare || {};
+    const perSeatBase = Number(fare.baseFare) || this.seatprice;
+    const seatFare = Number(fare.seatFare) || 0;
+    const dynamicFare = Number(fare.dynamicFare) || 0;
+    const tax = Number(fare.tax ?? fare.taxes) || 0;
+    const serviceFee = Number(fare.serviceFee ?? fare.serviceCharges) || 0;
+
+    const trip: DraftTrip = {
+      busId: this.busid,
+      routeId: routeId || '',
+      operatorName: this.operatorname,
+      busType: this.routedetails?.type || this.routedetails?.busType || '',
+      totalSeats: this.searchResult?.bus?.totalSeats || this.searchResult?.totalSeats,
+      segment: {
+        fromStop: this.searchResult?.segment?.fromStop || { stopName: this.boardingPoint },
+        toStop: this.searchResult?.segment?.toStop || { stopName: this.droppingPoint },
+        boardingStopSequence: this.searchResult?.segment?.fromStop?.sequence ?? 1,
+        droppingStopSequence: this.searchResult?.segment?.toStop?.sequence ?? 9999,
+        distanceKm: this.segmentDistance || 0
+      },
+      farePerSeat: {
+        baseFare: perSeatBase,
+        seatFare,
+        dynamicFare,
+        tax,
+        serviceFee,
+        total: perSeatBase + seatFare + dynamicFare + tax + serviceFee
+      }
     };
 
-    if (this.searchResult) {
-      routeParams.boardingStopSequence = this.searchResult?.segment?.fromStop?.sequence;
-      routeParams.droppingStopSequence = this.searchResult?.segment?.toStop?.sequence;
-      routeParams.boardingStopName = this.boardingPoint;
-      routeParams.droppingStopName = this.droppingPoint;
-      routeParams.segmentDistanceKm = this.segmentDistance;
-      routeParams.fareSnapshot = JSON.stringify(this.dynamicFareInfo?.fare || {});
-      routeParams.routeId = this.searchResult?.route?._id || this.searchResult?.route?.id || '';
-    }
+    this.draftService.setSearchContext({
+      from: this.searchResult?.searchFrom || this.boardingPoint,
+      to: this.searchResult?.searchTo || this.droppingPoint,
+      date: this.date,
+      passengers: this.selectedseat.length
+    });
+    this.draftService.setBoardingPoint(this.boardingPoint);
+    this.draftService.setDroppingPoint(this.droppingPoint);
+    this.draftService.setSeats(this.selectedseat);
+    this.draftService.setPassengers(
+      this.passdetails.map((p) => ({
+        name: String(p.name || '').trim(),
+        age: p.age === '' ? null : Number(p.age),
+        gender: (p.gender ? p.gender.toLowerCase() : '') as 'male' | 'female' | 'other' | ''
+      }))
+    );
+    this.draftService.setPhone(String(this.passphn || '').trim());
+    this.draftService.setTrip(trip);
+    this.draftService.setHold({
+      holdId: hold.holdId,
+      expiresAt: new Date(hold.expiresAt).toISOString()
+    });
 
+    // Legacy in-memory channels kept for pages not yet migrated.
     this.dataservice.passobj(this.passdetails);
     this.dataservice.sendobj(this.routedetails);
-    this.router.navigate(['/payment', routeParams]);
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, map } from 'rxjs';
 import { url } from '../../config';
 
 export interface AuthUser {
@@ -154,11 +154,20 @@ export class AuthService {
     return this.http.post<{ success: boolean; message: string }>(this.apiUrl + 'send-email-otp', { email });
   }
 
-  verifyEmailOtp(email: string, otp: string): Observable<{ customer: any; token: string }> {
-    return this.http.post<{ customer: any; token: string }>(this.apiUrl + 'verify-email-otp', { email, otp });
+  /** Verifies the email OTP and persists the session (customer + JWT) in one
+   *  step, so every caller ends up with the exact same storage shape. */
+  verifyEmailOtp(email: string, otp: string, rememberMe: boolean = false): Observable<AuthUser> {
+    return this.http.post<{ customer: any; token: string }>(this.apiUrl + 'verify-email-otp', { email, otp }).pipe(
+      map(result => ({ ...result.customer, token: result.token } as AuthUser)),
+      tap(user => this.persistSession(user, rememberMe))
+    );
   }
 
-  googleLogin(credential: string): Observable<{ customer: any; token: string }> {
-    return this.http.post<{ customer: any; token: string }>(this.apiUrl + 'google-login', { credential });
+  /** Verifies the Google ID token server-side and persists the session. */
+  googleLogin(credential: string, rememberMe: boolean = true): Observable<AuthUser> {
+    return this.http.post<{ customer: any; token: string }>(this.apiUrl + 'google-login', { credential }).pipe(
+      map(result => ({ ...result.customer, token: result.token } as AuthUser)),
+      tap(user => this.persistSession(user, rememberMe))
+    );
   }
 }

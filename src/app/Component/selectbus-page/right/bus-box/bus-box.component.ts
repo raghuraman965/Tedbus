@@ -1,13 +1,15 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
-import { parseTimeToMinutes, addMinutesToDeparture, formatClockTime, formatDuration } from '../../../../utils/time-utils';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
+import { parseTimeToMinutes, addMinutesToDeparture, formatClockTime, formatDuration, getJourneyDateLabel, getArrivalDateLabel } from '../../../../utils/time-utils';
 
 @Component({
   selector: 'app-bus-box',
   templateUrl: './bus-box.component.html',
   styleUrl: './bus-box.component.css'
 })
-export class BusBoxComponent {
+export class BusBoxComponent implements OnChanges, OnInit {
 @Input() rating:number[]=[];
+@Input() reviewStats:{avgRating:number,totalReviews:number}|undefined
 @Input() operatorname:string=''
 @Input() bustype:string=''
 @Input() departuretime:string=""
@@ -25,21 +27,17 @@ seatprivce:number=0
 bustypename:string=''
 busdeparturetime:string='';
 busarrivaltime:string='';
+departureDayLabel:string=''
+arrivalDayLabel:string=''
+dayOffset:number=0
 operatorInitial:string=''
 totalSeats:number=40
 showRouteTimeline:boolean=false
-constructor(){}
+constructor(private translate: TranslateService){}
 ngOnInit(): void{
   this.operatorInitial=(this.operatorname || 'B').trim().charAt(0).toUpperCase();
   this.totalSeats=40;
-  this.rating.forEach((item,index)=> {
-    this.avgrating+=  item;
-    this.totalreview += 1;
-  });
-  if(this.totalreview==0){
-    this.totalreview=1
-  }
-  this.avgrating=+this.avgrating/this.totalreview
+  this.applyRating();
   this.seatprivce = this.computeFare();
   if(this.bustype ==='standard'){
     this.bustypename='search.types.standard';
@@ -54,8 +52,42 @@ ngOnInit(): void{
   const depMinutes = parseTimeToMinutes(this.departuretime);
   const durationMinutes = Math.round((this.routedetails?.duration || 0) * 60);
   const arrMinutes = addMinutesToDeparture(depMinutes, durationMinutes);
+  this.dayOffset = Math.floor((depMinutes + durationMinutes) / (24 * 60));
   this.busdeparturetime = formatClockTime(depMinutes);
   this.busarrivaltime = formatClockTime(arrMinutes);
+  this.departureDayLabel = this.translateDayLabel(getJourneyDateLabel(this.date));
+  this.arrivalDayLabel = this.translateDayLabel(getArrivalDateLabel(this.date, this.dayOffset));
+}
+
+/** Real review stats from the backend win over the static seeded array. */
+ngOnChanges(): void {
+  this.applyRating();
+}
+
+private applyRating(): void {
+  if (this.reviewStats && (this.reviewStats.totalReviews > 0 || !this.rating?.length)) {
+    this.avgrating = this.reviewStats.avgRating || 0;
+    this.totalreview = this.reviewStats.totalReviews || 0;
+  } else {
+    let sum = 0;
+    let count = 0;
+    (this.rating || []).forEach((item) => {
+      sum += item;
+      count += 1;
+    });
+    this.avgrating = count ? +(sum / count).toFixed(1) : 0;
+    this.totalreview = count;
+  }
+}
+
+private translateDayLabel(label: string): string {
+  if (label === 'Today') return this.translate.instant('search.today');
+  if (label === 'Tomorrow') return this.translate.instant('search.tomorrow');
+  return label;
+}
+
+formatStopTime(value: string | number | null | undefined): string {
+  return formatClockTime(value);
 }
 
 computeFare(): number {

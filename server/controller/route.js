@@ -2,6 +2,7 @@ const Route = require("../models/route");
 const Bus = require("../models/bus");
 const { getSoldSeats, getSegmentSoldSeats } = require("./seatReservation");
 const { tReq } = require("../services/i18n");
+const { getBusRatingStatsMap } = require("../services/reviewService");
 
 exports.getavailableroutes = async (req, res) => {
   try {
@@ -102,7 +103,17 @@ exports.getoneroute = async (req, res) => {
       const soldSeats = await getSoldSeats(matchedbuses[i]._id.toString(), date);
       busidwithseatobj[matchedbuses[i]._id.toString()] = soldSeats;
     }
-    res.send({ route: route, matchedBuses: matchedbuses, busidwithseatobj });
+
+    // Real review stats (visible reviews only) keyed by busId — replaces the
+    // static seeded `rating` arrays on the frontend.
+    const reviewStatsMap = await getBusRatingStatsMap(matchedbuses.map((b) => b._id));
+
+    res.send({
+      route: route,
+      matchedBuses: matchedbuses,
+      busidwithseatobj,
+      reviewStats: reviewStatsMap,
+    });
   } catch (err) {
     console.error("getoneroute error:", err.message);
     res.status(500).json({
