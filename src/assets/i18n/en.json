@@ -45,7 +45,7 @@
     "confirmDelete": "Are you sure you want to delete this?",
     "acSeater": "A/C Seater",
     "noImage": "No Image",
-    "currencySymbol": "â‚¹"
+    "currencySymbol": "₹"
   },
   "theme": {
     "light": "Light",
@@ -339,19 +339,19 @@
     },
     "offers": {
       "first": {
-        "title": "Save up to â‚¹250 on your first booking",
+        "title": "Save up to ₹250 on your first booking",
         "subtitle": "Valid till 30 Nov"
       },
       "south": {
-        "title": "Save up to â‚¹300 on AP & TS routes",
+        "title": "Save up to ₹300 on AP & TS routes",
         "subtitle": "Valid till 30 Nov"
       },
       "weekend": {
-        "title": "Flat â‚¹150 off on weekend trips",
+        "title": "Flat ₹150 off on weekend trips",
         "subtitle": "Valid till 15 Dec"
       },
       "app": {
-        "title": "Extra â‚¹200 off on app bookings",
+        "title": "Extra ₹200 off on app bookings",
         "subtitle": "Valid till 31 Dec"
       }
     }
@@ -424,7 +424,7 @@
     "proceedToBook": "Proceed To Book",
     "selectSeatHint": "Select at least one seat to continue",
     "premiumBooking": "Premium Booking",
-    "checkingSeats": "Checking seatsâ€¦",
+    "checkingSeats": "Checking seats…",
     "duration": "{{h}}h",
     "boardingDropping": "Boarding & Dropping Points",
     "boardingPoint": "Boarding Point",
@@ -465,7 +465,7 @@
     "errGst": "Enter a valid 15-character GSTIN",
     "fareSummary": "Fare Summary",
     "selectedSeats": "Selected Seats",
-    "seatsXPrice": "{{count}} seat(s) Ã— â‚¹{{price}}",
+    "seatsXPrice": "{{count}} seat(s) × ₹{{price}}",
     "gstPercent": "GST (5%)",
     "totalPayable": "Total Payable",
     "taxNote": "Taxes, if any, will be calculated during payment.",
@@ -938,7 +938,7 @@
     "allDestinations": "All Destinations",
     "clearAll": "Clear All",
     "loadMoreStories": "Load More Stories",
-    "endOfFeed": "You've reached the end â€” that's every story so far.",
+    "endOfFeed": "You've reached the end — that's every story so far.",
     "noStoriesFound": "No stories found. Try a different filter or search term.",
     "noStoriesYet": "No stories yet. Be the first to share your journey!",
     "loadPostsError": "Could not load community posts right now. Please try again.",
@@ -1255,7 +1255,7 @@
       "selectedSeats": "Selected Seats",
       "selectAtLeastOne": "Select at least one seat to proceed",
       "fareTotal": "Fare",
-      "checking": "Checking availabilityâ€¦",
+      "checking": "Checking availability…",
       "justBookedOne": "Seat {{seat}} has just been booked by another traveler. Please choose another seat.",
       "justBookedMany": "Seats {{seats}} have just been booked by another traveler. Please choose different seats."
     }
@@ -1269,7 +1269,7 @@
     "addStop": "Add a stop",
     "stopPlaceholder": "Search a stop",
     "mapPickTitle": "Click anywhere on the map to add a stop",
-    "clickOnMap": "Click on mapâ€¦",
+    "clickOnMap": "Click on map…",
     "addStopOnMap": "Add stop on map",
     "clearPlannerTitle": "Clear planner",
     "stop": "Stop {{n}}",
@@ -1279,10 +1279,10 @@
     "removeStop": "Remove stop",
     "stopsHint": "Use the arrows to reorder stops. The route recalculates automatically.",
     "planRoute": "Plan Route",
-    "calculating": "Calculating best routes with real-time trafficâ€¦",
+    "calculating": "Calculating best routes with real-time traffic…",
     "planHint": "Select a source and destination to plan your journey.",
     "cachedHint": "Showing cached result (from previous request)",
-    "calculatingRoute": "Calculating routeâ€¦",
+    "calculatingRoute": "Calculating route…",
     "mapEmptyTitle": "Your route will appear here.",
     "mapEmptySub": "Set a source and destination to begin.",
     "loadingMap": "Loading Google Maps...",
@@ -1305,7 +1305,7 @@
     "saveRoute": "Save this route",
     "nameThisRoute": "Name this route",
     "saveNamePlaceholder": "e.g. Weekend trip to Jaipur",
-    "saving": "Savingâ€¦",
+    "saving": "Saving…",
     "loginToSave": "Login to save your favourite routes to your profile.",
     "loginSignup": "Login / Sign up",
     "mapProviderError": "Map provider was unreachable - switched to a backup tile source.",
@@ -1470,9 +1470,9 @@
       "username": "Username",
       "usernamePlaceholder": "admin",
       "password": "Password",
-      "passwordPlaceholder": "â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢",
+      "passwordPlaceholder": "••••••••",
       "signIn": "Sign In",
-      "backToTedBus": "â† Back to TedBus",
+      "backToTedBus": "← Back to TedBus",
       "defaultHint": "Default: admin / Admin@123",
       "failed": "Login failed. Please try again."
     },
@@ -2226,7 +2226,7 @@
       "empty": "No routes found.",
       "total": "Total",
       "colRouteName": "Route Name",
-      "colSourceDestination": "Source â†’ Destination",
+      "colSourceDestination": "Source → Destination",
       "colDistance": "Distance",
       "colDuration": "Duration",
       "colFare": "Fare",
@@ -2598,10 +2598,10 @@
     "editTitle": "Edit your review",
     "selectJourney": "Select your completed journey",
     "noCompletedJourneys": "You can review a route after completing a journey on it.",
-    "checking": "Checking eligibilityâ€¦",
+    "checking": "Checking eligibility…",
     "yourRating": "Your rating",
     "titlePlaceholder": "Give your review a title (optional)",
-    "commentPlaceholder": "Share details of your own experienceâ€¦",
+    "commentPlaceholder": "Share details of your own experience…",
     "minChars": "minimum {{min}} characters",
     "submitBtn": "Submit Review",
     "updateBtn": "Update Review",
