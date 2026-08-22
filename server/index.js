@@ -96,12 +96,23 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 // all other SW-served assets work without a separate proxy.
 const DIST_DIR = path.join(__dirname, '..', 'dist', 'frontend', 'browser');
 const fs = require('fs');
-if (fs.existsSync(DIST_DIR)) {
-  // Serve static assets (JS, CSS, images) with caching headers.
+
+const possibleDistDirs = [
+  path.join(__dirname, '..', 'dist', 'frontend', 'browser'),
+  path.join(__dirname, '..', 'frontend', 'dist', 'frontend', 'browser'),
+];
+
+const DIST_DIR = possibleDistDirs.find(dir => fs.existsSync(dir));
+
+console.log('📁 Angular DIST_DIR:', DIST_DIR || 'NOT FOUND');
+
+if (DIST_DIR) {
   app.use(express.static(DIST_DIR, {
     maxAge: '1d',
-    index: false, // let the catch-all handle '/' → index.html
+    index: false,
   }));
+} else {
+  console.error('❌ Angular build directory not found');
 }
 
 const DBURL = process.env.MONGODB_URI;
@@ -113,8 +124,17 @@ mongoose
   .connect(DBURL, {
     serverSelectionTimeoutMS: 10000,
   })
-  .then(() => {
+  .then(async () => {
     console.log("✅ MongoDB Connected Successfully");
+    // Sync model indexes (e.g. the unique bookingId index on reviews) so the
+    // "one review per completed journey" rule is enforced at the DB level.
+    try {
+      const Review = require("./models/review");
+      await Review.syncIndexes();
+      console.log("✅ Review indexes synced");
+    } catch (idxErr) {
+      console.error("❌ Review index sync failed:", idxErr.message);
+    }
   })
   .catch((err) => {
     console.error("❌ Full MongoDB Error:");
@@ -127,13 +147,16 @@ app.get('/api/health', (req, res) => res.json({ ok: true, timestamp: Date.now() 
 // Angular SPA catch-all: every GET that wasn't matched by an API route or
 // static file is served index.html so Angular's router handles the path.
 app.get('*', (req, res) => {
-  const indexPath = path.join(DIST_DIR, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.send('Hello, TedBus is working');
+  if (DIST_DIR) {
+    const indexPath = path.join(DIST_DIR, 'index.html');
+
+    if (fs.existsSync(indexPath)) {
+      return res.sendFile(indexPath);
+    }
   }
-})
+
+  res.send('Hello, TedBus is working');
+});
 
 const PORT = process.env.PORT || 5000
 const server = http.createServer(app)
