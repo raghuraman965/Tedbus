@@ -94,15 +94,16 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 // calls; in production the Express server itself hosts the built files so
 // service-worker registration, push-subscriptionchange re-subscribe, and
 // all other SW-served assets work without a separate proxy.
-const DIST_DIR = path.join(__dirname, '..', 'dist', 'frontend', 'browser');
 const fs = require('fs');
 
 const possibleDistDirs = [
   path.join(__dirname, '..', 'dist', 'frontend', 'browser'),
   path.join(__dirname, '..', 'frontend', 'dist', 'frontend', 'browser'),
 ];
+let DIST_DIR = path.join(__dirname, '../dist/frontend');
 
-const DIST_DIR = possibleDistDirs.find(dir => fs.existsSync(dir));
+DIST_DIR = possibleDistDirs.find(dir => fs.existsSync(dir));
+
 
 console.log('📁 Angular DIST_DIR:', DIST_DIR || 'NOT FOUND');
 
@@ -194,3 +195,30 @@ function startNotificationScheduler() {
 if (process.env.NODE_ENV !== "test") {
   startNotificationScheduler();
 }
+
+// ---------------------------------------------------------------------------
+// Seat-hold expiry sweeper. Temporary seat holds created on "Proceed to
+// Booking" must disappear automatically when payment is abandoned, otherwise
+// seats would stay invisible to everyone until manual cleanup. Availability
+// checks already ignore expired holds lazily; this sweeper physically removes
+// them so the documents stay small.
+// ---------------------------------------------------------------------------
+const { sweepExpiredHolds } = require("./controller/seatReservation");
+
+let holdSweepTimer = null;
+function startHoldSweeper() {
+  if (holdSweepTimer) return;
+  holdSweepTimer = setInterval(async () => {
+    try {
+      const removed = await sweepExpiredHolds();
+      if (removed > 0) console.log(`[seat-holds] swept ${removed} expired hold(s)`);
+    } catch (err) {
+      console.error("[seat-holds] sweep error:", err.message);
+    }
+  }, 60 * 1000);
+  console.log("[seat-holds] Expiry sweeper started (every 60s).");
+}
+
+mongoose.connection.once("open", () => {
+  if (process.env.NODE_ENV !== "test") startHoldSweeper();
+});
